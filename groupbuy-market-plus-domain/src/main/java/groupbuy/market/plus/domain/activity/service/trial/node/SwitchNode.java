@@ -21,13 +21,13 @@ public class SwitchNode extends AbstractGroupBuyMarketSupport<MarketProductEntit
     private MarketNode marketNode;
 
     @Override
-    public TrialBalanceEntity apply(MarketProductEntity marketProductEntity, DefaultActivityStrategyFactory.DynamicContext dynamicContext) throws Exception {
+    public TrialBalanceEntity doApply(MarketProductEntity marketProductEntity, DefaultActivityStrategyFactory.DynamicContext dynamicContext) throws Exception {
+        log.info("拼团商品试算服务-开关节点 userId：{}", marketProductEntity.getUserId());
         return router(marketProductEntity, dynamicContext);
     }
 
     @Override
     public StrategyHandler<MarketProductEntity, DefaultActivityStrategyFactory.DynamicContext, TrialBalanceEntity> get(MarketProductEntity marketProductEntity, DefaultActivityStrategyFactory.DynamicContext dynamicContext) {
-        log.info("进入规则树-开关节点");
         return marketNode;
     }
 }

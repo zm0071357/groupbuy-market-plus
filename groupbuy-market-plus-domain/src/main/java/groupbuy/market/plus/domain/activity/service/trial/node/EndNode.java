@@ -8,11 +8,15 @@ import groupbuy.market.plus.types.design.framework.tree.StrategyHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+/**
+ * 尾节点
+ */
 @Slf4j
 @Service
 public class EndNode extends AbstractGroupBuyMarketSupport<MarketProductEntity, DefaultActivityStrategyFactory.DynamicContext, TrialBalanceEntity> {
     @Override
-    public TrialBalanceEntity apply(MarketProductEntity marketProductEntity, DefaultActivityStrategyFactory.DynamicContext dynamicContext) throws Exception {
+    public TrialBalanceEntity doApply(MarketProductEntity marketProductEntity, DefaultActivityStrategyFactory.DynamicContext dynamicContext) throws Exception {
+        log.info("拼团商品试算服务-尾节点 userId：{}", marketProductEntity.getUserId());
         return TrialBalanceEntity.builder()
                 .goodsId(marketProductEntity.getGoodId())
                 .build();
@@ -20,7 +24,6 @@ public class EndNode extends AbstractGroupBuyMarketSupport<MarketProductEntity, 
 
     @Override
     public StrategyHandler<MarketProductEntity, DefaultActivityStrategyFactory.DynamicContext, TrialBalanceEntity> get(MarketProductEntity marketProductEntity, DefaultActivityStrategyFactory.DynamicContext dynamicContext) {
-        log.info("进入规则树-尾节点");
         return defaultStrategyHandler;
     }
 

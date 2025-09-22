@@ -2,6 +2,8 @@ package groupbuy.market.plus.domain.activity.service.trial.factory;
 
 import groupbuy.market.plus.domain.activity.model.entity.MarketProductEntity;
 import groupbuy.market.plus.domain.activity.model.entity.TrialBalanceEntity;
+import groupbuy.market.plus.domain.activity.model.valobj.ActivityVO;
+import groupbuy.market.plus.domain.activity.model.valobj.SkuVO;
 import groupbuy.market.plus.domain.activity.service.trial.node.RootNode;
 import groupbuy.market.plus.types.design.framework.tree.StrategyHandler;
 import lombok.AllArgsConstructor;
@@ -39,7 +41,17 @@ public class DefaultActivityStrategyFactory {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class DynamicContext {
-        private String text;
+
+        /**
+         * 拼团商品
+         */
+        private SkuVO skuVO;
+
+        /**
+         * 拼团活动
+         */
+        private ActivityVO activityVO;
+
     }
 
 }
