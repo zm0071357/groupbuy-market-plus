@@ -1,0 +1,1 @@
+package groupbuy.market.plus.types.design.framework.link;

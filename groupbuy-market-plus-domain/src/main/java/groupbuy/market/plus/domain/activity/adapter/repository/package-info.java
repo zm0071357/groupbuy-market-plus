@@ -1,0 +1,1 @@
+package groupbuy.market.plus.domain.activity.adapter.repository;
