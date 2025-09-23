@@ -25,7 +25,7 @@ public class IndexGroupBuyMarketServiceTest {
     public void test_indexMarketTrial() throws Exception {
         indexGroupBuyMarketService.indexMarketTrial(MarketProductEntity.builder()
                 .userId("399547479")
-                .goodId("9890001")
+                .goodsId("9890001")
                 .activityId("100123")
                 .channel("c01")
                 .source("s01")

@@ -12,6 +12,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+
 /**
  * 规则树工厂
  * 初始化根节点（串联整个链路）、定义上下文信息
@@ -51,6 +53,16 @@ public class DefaultActivityStrategyFactory {
          * 拼团活动
          */
         private ActivityVO activityVO;
+
+        /**
+         * 优惠价格
+         */
+        private BigDecimal deductionPrice;
+
+        /**
+         * 支付价格
+         */
+        private BigDecimal payPrice;
 
     }
 

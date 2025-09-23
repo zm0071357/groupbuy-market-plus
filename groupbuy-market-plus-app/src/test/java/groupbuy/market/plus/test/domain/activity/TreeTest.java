@@ -25,7 +25,7 @@ public class TreeTest {
     public void testTreeFramework() throws Exception {
         indexGroupBuyMarketService.indexMarketTrial(MarketProductEntity.builder()
                         .userId("399547479")
-                        .goodId("1001")
+                        .goodsId("1001")
                         .channel("c01")
                         .source("s01")
                 .build());

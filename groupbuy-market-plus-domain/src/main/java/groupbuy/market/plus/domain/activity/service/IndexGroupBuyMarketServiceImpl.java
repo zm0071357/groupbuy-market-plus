@@ -21,7 +21,7 @@ public class IndexGroupBuyMarketServiceImpl implements IndexGroupBuyMarketServic
     public TrialBalanceEntity indexMarketTrial(MarketProductEntity marketProductEntity) throws Exception {
         StrategyHandler<MarketProductEntity, DefaultActivityStrategyFactory.DynamicContext, TrialBalanceEntity> strategyHandler = defaultActivityStrategyFactory.strategyHandler();
         TrialBalanceEntity trialBalanceEntity = strategyHandler.apply(marketProductEntity, new DefaultActivityStrategyFactory.DynamicContext());
-        log.info("用户ID：{}，商品ID：{}，试算结果：{}", marketProductEntity.getUserId(), marketProductEntity.getGoodId(), JSON.toJSONString(trialBalanceEntity));
+        log.info("用户ID：{}，商品ID：{}，试算结果：{}", marketProductEntity.getUserId(), marketProductEntity.getGoodsId(), JSON.toJSONString(trialBalanceEntity));
         return trialBalanceEntity;
     }
 }

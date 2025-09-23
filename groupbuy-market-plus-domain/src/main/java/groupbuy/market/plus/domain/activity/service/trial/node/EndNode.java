@@ -14,11 +14,15 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 public class EndNode extends AbstractGroupBuyMarketSupport<MarketProductEntity, DefaultActivityStrategyFactory.DynamicContext, TrialBalanceEntity> {
+
     @Override
     public TrialBalanceEntity doApply(MarketProductEntity marketProductEntity, DefaultActivityStrategyFactory.DynamicContext dynamicContext) throws Exception {
         log.info("拼团商品试算服务-尾节点 userId：{}", marketProductEntity.getUserId());
         return TrialBalanceEntity.builder()
-                .goodsId(marketProductEntity.getGoodId())
+                .goodsId(marketProductEntity.getGoodsId())
+                .originalPrice(dynamicContext.getSkuVO().getOriginalPrice())
+                .deductionPrice(dynamicContext.getDeductionPrice())
+                .payPrice(dynamicContext.getPayPrice())
                 .build();
     }
 
