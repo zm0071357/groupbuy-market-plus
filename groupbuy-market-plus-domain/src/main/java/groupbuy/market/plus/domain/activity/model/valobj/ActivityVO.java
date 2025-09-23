@@ -1,6 +1,8 @@
 package groupbuy.market.plus.domain.activity.model.valobj;
 
+import groupbuy.market.plus.types.common.Constants;
 import lombok.*;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.Date;
 import java.util.List;
@@ -123,6 +125,39 @@ public class ActivityVO {
         private String tagId;
     }
 
+    /**
+     * 人群标签用户 - 可见限制
+     * 该值为1 - 不可见
+     * 该值为2 - 可见
+     * 没设置 - 可见
+     *
+     */
+    public boolean isVisible() {
+        String[] split = this.tagScope.split(Constants.SPLIT);
+        if (split.length > 0 && StringUtils.isNotBlank(split[0]) && split[0].equals("1")) {
+            return false;
+        }
+        else if (split.length > 0 && StringUtils.isNotBlank(split[0]) && split[0].equals("2")) {
+            return true;
+        }
+        return true;
+    }
 
+    /**
+     * 人群标签用户 - 可参与限制
+     * 该值为1 - 不可参与
+     * 该值为2 - 可参与
+     * 没设置 - 可参与
+     */
+    public boolean isEnable() {
+        String[] split = this.tagScope.split(Constants.SPLIT);
+        if (split.length == 2 && StringUtils.isNotBlank(split[1]) && split[1].equals("1")) {
+            return false;
+        }
+        else if (split.length == 2 && StringUtils.isNotBlank(split[1]) && split[1].equals("2")) {
+            return true;
+        }
+        return true;
+    }
 
 }

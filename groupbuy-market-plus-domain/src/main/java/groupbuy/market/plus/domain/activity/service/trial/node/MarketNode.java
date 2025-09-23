@@ -36,29 +36,7 @@ public class MarketNode extends AbstractGroupBuyMarketSupport<MarketProductEntit
     private ErrorNode errorNode;
 
     @Resource
-    private ThreadPoolExecutor threadPoolExecutor;
-
-    @Resource
     private Map<String, DisCountService> disCountServiceMap;
-
-    @Override
-    protected void multiThread(MarketProductEntity marketProductEntity, DefaultActivityStrategyFactory.DynamicContext dynamicContext) throws ExecutionException, InterruptedException, TimeoutException {
-        // 异步查询拼团商品
-        GetSkuVOThreadTask getSkuVOThreadTask = new GetSkuVOThreadTask(marketProductEntity.getGoodsId(), activityRepository);
-        FutureTask<SkuVO> skuVOFutureTask = new FutureTask<>(getSkuVOThreadTask);
-        threadPoolExecutor.execute(skuVOFutureTask);
-
-        // 异步查询拼团商品
-        GetActivityVOThreadTask getActivityVOThreadTask = new GetActivityVOThreadTask(marketProductEntity.getGoodsId(), marketProductEntity.getSource(), marketProductEntity.getChannel(), activityRepository);
-        FutureTask<ActivityVO> activityVOFutureTask = new FutureTask<>(getActivityVOThreadTask);
-        threadPoolExecutor.execute(activityVOFutureTask);
-
-        // 写入上下文
-        dynamicContext.setSkuVO(skuVOFutureTask.get(timeout, TimeUnit.MINUTES));
-        dynamicContext.setActivityVO(activityVOFutureTask.get(timeout, TimeUnit.MINUTES));
-
-        log.info("用户ID：{}，异步线程加载数据「GroupBuyActivityDiscountVO、SkuVO」完成", marketProductEntity.getUserId());
-    }
 
     @Override
     protected TrialBalanceEntity doApply(MarketProductEntity marketProductEntity, DefaultActivityStrategyFactory.DynamicContext dynamicContext) throws Exception {

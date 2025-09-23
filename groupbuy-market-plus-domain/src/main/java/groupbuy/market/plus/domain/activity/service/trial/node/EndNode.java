@@ -8,6 +8,8 @@ import groupbuy.market.plus.types.design.framework.tree.StrategyHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+
 /**
  * 尾节点
  */
@@ -21,8 +23,8 @@ public class EndNode extends AbstractGroupBuyMarketSupport<MarketProductEntity, 
         return TrialBalanceEntity.builder()
                 .goodsId(marketProductEntity.getGoodsId())
                 .originalPrice(dynamicContext.getSkuVO().getOriginalPrice())
-                .deductionPrice(dynamicContext.getDeductionPrice())
-                .payPrice(dynamicContext.getPayPrice())
+                .deductionPrice(dynamicContext.getDeductionPrice() == null ? BigDecimal.ZERO : dynamicContext.getSkuVO().getOriginalPrice())
+                .payPrice(dynamicContext.getPayPrice() == null ? dynamicContext.getSkuVO().getOriginalPrice() : dynamicContext.getPayPrice())
                 .build();
     }
 

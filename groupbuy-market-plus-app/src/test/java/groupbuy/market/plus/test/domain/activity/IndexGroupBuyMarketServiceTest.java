@@ -23,8 +23,21 @@ public class IndexGroupBuyMarketServiceTest {
 
     @Test
     public void test_indexMarketTrial() throws Exception {
+        // 在人群标签范围内的用户
         indexGroupBuyMarketService.indexMarketTrial(MarketProductEntity.builder()
                 .userId("399547479")
+                .goodsId("9890001")
+                .activityId("100123")
+                .channel("c01")
+                .source("s01")
+                .build());
+    }
+
+    @Test
+    public void test_indexMarketTrial2() throws Exception {
+        // 不在人群标签范围内的用户
+        indexGroupBuyMarketService.indexMarketTrial(MarketProductEntity.builder()
+                .userId("test")
                 .goodsId("9890001")
                 .activityId("100123")
                 .channel("c01")

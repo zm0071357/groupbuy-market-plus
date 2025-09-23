@@ -55,6 +55,11 @@ public class DefaultActivityStrategyFactory {
         private ActivityVO activityVO;
 
         /**
+         * 是否可以进行优惠试算
+         */
+        private boolean isDiscount;
+
+        /**
          * 优惠价格
          */
         private BigDecimal deductionPrice;
