@@ -13,6 +13,7 @@ import groupbuy.market.plus.infrastructure.dao.po.Activity;
 import groupbuy.market.plus.infrastructure.dao.po.Discount;
 import groupbuy.market.plus.infrastructure.dao.po.SCSkuActivity;
 import groupbuy.market.plus.infrastructure.dao.po.Sku;
+import groupbuy.market.plus.infrastructure.dcc.DCCServiceImpl;
 import groupbuy.market.plus.types.common.Constants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
@@ -36,6 +37,9 @@ public class ActivityRepositoryImpl implements ActivityRepository {
 
     @Resource
     private DiscountDao discountDao;
+
+    @Resource
+    private DCCServiceImpl dccServiceImpl;
 
     @Override
     public SkuVO getSkuByGoodsId(String goodsId) {
@@ -104,6 +108,16 @@ public class ActivityRepositoryImpl implements ActivityRepository {
                 .activityId(scSkuActivity.getActivityId())
                 .goodsId(scSkuActivity.getGoodsId())
                 .build();
+    }
+
+    @Override
+    public boolean downgradeSwitch() {
+        return dccServiceImpl.isDowngradeSwitch();
+    }
+
+    @Override
+    public boolean cutRange(String userId) {
+        return dccServiceImpl.isCutRange(userId);
     }
 
 }

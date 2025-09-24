@@ -5,6 +5,8 @@ import groupbuy.market.plus.domain.activity.model.entity.TrialBalanceEntity;
 import groupbuy.market.plus.domain.activity.service.AbstractGroupBuyMarketSupport;
 import groupbuy.market.plus.domain.activity.service.trial.factory.DefaultActivityStrategyFactory;
 import groupbuy.market.plus.types.design.framework.tree.StrategyHandler;
+import groupbuy.market.plus.types.enums.ResponseCodeEnum;
+import groupbuy.market.plus.types.exception.AppException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +25,15 @@ public class SwitchNode extends AbstractGroupBuyMarketSupport<MarketProductEntit
     @Override
     public TrialBalanceEntity doApply(MarketProductEntity marketProductEntity, DefaultActivityStrategyFactory.DynamicContext dynamicContext) throws Exception {
         log.info("拼团商品试算服务-开关节点 userId：{}", marketProductEntity.getUserId());
+        String userId = marketProductEntity.getUserId();
+        // 降级拦截
+        if (activityRepository.downgradeSwitch()) {
+            throw new AppException(ResponseCodeEnum.E0003.getCode(), ResponseCodeEnum.E0003.getInfo());
+        }
+        // 切量拦截
+        if (!activityRepository.cutRange(userId)) {
+            throw new AppException(ResponseCodeEnum.E0004.getCode(), ResponseCodeEnum.E0004.getInfo());
+        }
         return router(marketProductEntity, dynamicContext);
     }
 
