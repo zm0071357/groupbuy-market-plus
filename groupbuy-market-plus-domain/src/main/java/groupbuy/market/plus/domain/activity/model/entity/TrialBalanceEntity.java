@@ -1,5 +1,6 @@
 package groupbuy.market.plus.domain.activity.model.entity;
 
+import groupbuy.market.plus.domain.activity.model.valobj.ActivityVO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -43,19 +44,9 @@ public class TrialBalanceEntity {
     private BigDecimal payPrice;
 
     /**
-     * 拼团目标数量
+     * 拼团活动信息
      */
-    private Integer targetCount;
-
-    /**
-     * 拼团开始时间
-     */
-    private Date startTime;
-
-    /**
-     * 拼团结束时间
-     */
-    private Date endTime;
+    private ActivityVO activityVO;
 
     /**
      * 是否可见拼团

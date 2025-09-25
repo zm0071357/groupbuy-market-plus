@@ -27,7 +27,7 @@ public class IndexGroupBuyMarketServiceTest {
         indexGroupBuyMarketService.indexMarketTrial(MarketProductEntity.builder()
                 .userId("399547479")
                 .goodsId("9890001")
-                .activityId("100123")
+                .activityId(100123L)
                 .channel("c01")
                 .source("s01")
                 .build());
@@ -39,7 +39,7 @@ public class IndexGroupBuyMarketServiceTest {
         indexGroupBuyMarketService.indexMarketTrial(MarketProductEntity.builder()
                 .userId("test")
                 .goodsId("9890001")
-                .activityId("100123")
+                .activityId(100123L)
                 .channel("c01")
                 .source("s01")
                 .build());

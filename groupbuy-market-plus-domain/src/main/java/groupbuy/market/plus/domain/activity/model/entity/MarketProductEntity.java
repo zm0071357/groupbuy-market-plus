@@ -27,7 +27,7 @@ public class MarketProductEntity {
     /**
      * 活动ID
      */
-    private String activityId;
+    private Long activityId;
 
     /**
      * 来源

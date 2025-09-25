@@ -1,0 +1,1 @@
+package groupbuy.market.plus.domain.trade.adapter.port;

@@ -23,8 +23,9 @@ public class EndNode extends AbstractGroupBuyMarketSupport<MarketProductEntity, 
         return TrialBalanceEntity.builder()
                 .goodsId(marketProductEntity.getGoodsId())
                 .originalPrice(dynamicContext.getSkuVO().getOriginalPrice())
-                .deductionPrice(dynamicContext.getDeductionPrice() == null ? BigDecimal.ZERO : dynamicContext.getSkuVO().getOriginalPrice())
+                .deductionPrice(dynamicContext.getDeductionPrice() == null ? BigDecimal.ZERO : dynamicContext.getDeductionPrice())
                 .payPrice(dynamicContext.getPayPrice() == null ? dynamicContext.getSkuVO().getOriginalPrice() : dynamicContext.getPayPrice())
+                .activityVO(dynamicContext.getActivityVO())
                 .build();
     }
 

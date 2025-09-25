@@ -3,6 +3,7 @@ package groupbuy.market.plus.domain.activity.service.discount.impl;
 import groupbuy.market.plus.domain.activity.model.valobj.ActivityVO;
 import groupbuy.market.plus.domain.activity.service.discount.AbstractDiscountService;
 import groupbuy.market.plus.types.common.Constants;
+import groupbuy.market.plus.types.common.GroupBuyConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -30,7 +31,7 @@ public class MJServiceImpl extends AbstractDiscountService {
         BigDecimal payPrice = originalPrice.subtract(deductionPrice);
         // 最低价格不能低于0.01元
         if (payPrice.compareTo(BigDecimal.ZERO) <= 0) {
-            return new BigDecimal("0.01");
+            return GroupBuyConstants.MinPrice;
         }
         return payPrice;
     }
