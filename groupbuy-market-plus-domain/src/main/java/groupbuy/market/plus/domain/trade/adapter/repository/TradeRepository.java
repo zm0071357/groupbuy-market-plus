@@ -1,8 +1,11 @@
 package groupbuy.market.plus.domain.trade.adapter.repository;
 
 import groupbuy.market.plus.domain.trade.model.aggregate.LockOrderAggregate;
+import groupbuy.market.plus.domain.trade.model.aggregate.SettleOrderAggregate;
 import groupbuy.market.plus.domain.trade.model.entity.ActivityEntity;
+import groupbuy.market.plus.domain.trade.model.entity.GroupBuyTeamEntity;
 import groupbuy.market.plus.domain.trade.model.entity.LockOrderEntity;
+import groupbuy.market.plus.domain.trade.model.entity.SettleOrderEntity;
 import groupbuy.market.plus.domain.trade.model.valobj.TeamProgressVO;
 
 public interface TradeRepository {
@@ -51,4 +54,34 @@ public interface TradeRepository {
      * @return
      */
     TeamProgressVO getTeamProgress(String teamId);
+
+    /**
+     * 锁单订单的支付情况
+     * @param userId 用户ID
+     * @param outTradeNo 外部交易单号
+     * @return
+     */
+    LockOrderEntity checkLockOrderStatusByOutTradeNo(String userId, String outTradeNo);
+
+    /**
+     * 根据组队ID获取组队
+     * @param teamId 组队ID
+     * @return
+     */
+    GroupBuyTeamEntity getTeamById(String teamId);
+
+    /**
+     * SC黑名单
+     * @param resource 来源
+     * @param channel 渠道
+     * @return
+     */
+    boolean isBlack(String resource, String channel);
+
+    /**
+     * 结算
+     * @param settleOrderAggregate
+     * @return
+     */
+    SettleOrderEntity settleOrder(SettleOrderAggregate settleOrderAggregate);
 }

@@ -1,7 +1,11 @@
 package groupbuy.market.plus.infrastructure.dcc;
 
 import groupbuy.market.plus.types.annotations.DCCValue;
+import groupbuy.market.plus.types.common.Constants;
 import org.springframework.stereotype.Service;
+
+import java.util.Arrays;
+import java.util.List;
 
 @Service
 public class DCCServiceImpl {
@@ -13,8 +17,12 @@ public class DCCServiceImpl {
     private String downgradeSwitch;
 
     // 切量开关
-    @DCCValue(value = "cutRange:50")
+    @DCCValue(value = "cutRange:100")
     private String cutRange;
+
+    // SC黑名单
+    @DCCValue(value = "scBlack:s02,c02")
+    private String scBlack;
 
     /**
      * 降级开关是否开启
@@ -40,4 +48,15 @@ public class DCCServiceImpl {
         return false;
     }
 
+    /**
+     * SC是否黑名单
+     * @param resource 来源
+     * @param channel 渠道
+     * @return
+     */
+    public boolean isBlack(String resource, String channel) {
+        String[] split = scBlack.split(Constants.SPLIT);
+        List<String> scBlackList = Arrays.asList(split);
+        return scBlackList.contains(resource) || scBlackList.contains(channel);
+    }
 }

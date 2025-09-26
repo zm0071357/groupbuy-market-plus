@@ -32,4 +32,18 @@ public interface GroupBuyTeamOrderDao {
      * @return
      */
     GroupBuyTeamOrder getNoPayLockOrderByOutTradeNo(GroupBuyTeamOrder groupBuyTeamOrderReq);
+
+    /**
+     * 锁单订单的支付情况
+     * @param groupBuyTeamOrderReq
+     * @return
+     */
+    GroupBuyTeamOrder checkLockOrderStatusByOutTradeNo(GroupBuyTeamOrder groupBuyTeamOrderReq);
+
+    /**
+     * 更新订单状态为消费完成
+     * @param groupBuyTeamOrderReq
+     * @return
+     */
+    Integer updateOrderStatusComplete(GroupBuyTeamOrder groupBuyTeamOrderReq);
 }

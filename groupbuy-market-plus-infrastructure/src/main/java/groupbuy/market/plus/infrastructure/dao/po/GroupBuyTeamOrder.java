@@ -88,7 +88,7 @@ public class GroupBuyTeamOrder {
     private Integer isHeader;
 
     /**
-     * 状态；0初始锁定、1消费完成、2用户退单
+     * 状态；0初始锁定、1支付完成、2用户退单、3超时关单
      */
     private Integer status;
 
@@ -96,6 +96,11 @@ public class GroupBuyTeamOrder {
      * 外部交易单号-确保外部调用唯一幂等
      */
     private String outTradeNo;
+
+    /**
+     * 外部交易单号支付完成时间
+     */
+    private Date outTradeNoPayTime;
 
     /**
      * 业务唯一ID

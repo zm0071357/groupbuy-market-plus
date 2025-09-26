@@ -13,8 +13,9 @@ import lombok.NoArgsConstructor;
 public enum OrderStatusEnum {
 
     CREATE(0, "初始创建"),
-    COMPLETE(1, "消费完成"),
-    CLOSE(2, "超时关单"),
+    COMPLETE(1, "支付完成"),
+    RETURN(2, "用户退单"),
+    CLOSE(3, "超时关单"),
     ;
 
     private Integer code;

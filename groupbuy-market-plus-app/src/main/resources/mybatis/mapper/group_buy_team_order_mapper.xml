@@ -19,6 +19,7 @@
         <result column="is_header" property="isHeader"/>
         <result column="status" property="status"/>
         <result column="out_trade_no" property="outTradeNo"/>
+        <result column="out_trade_no_pay_time" property="outTradeNoPayTime"/>
         <result column="biz_id" property="bizId"/>
         <result column="create_time" property="createTime"/>
         <result column="update_time" property="updateTime"/>
@@ -48,10 +49,24 @@
     </select>
 
     <select id="getNoPayLockOrderByOutTradeNo" resultMap="dataMap" parameterType="groupbuy.market.plus.infrastructure.dao.po.GroupBuyTeamOrder">
-        select user_id, team_id, order_id, activity_id, start_time,
-               end_time, goods_id, source, channel, original_price, deduction_price, status
+        select user_id, team_id, order_id, activity_id, start_time, end_time,
+               goods_id, source, channel, original_price, deduction_price, pay_price, status
         from group_buy_team_order
         where user_id = #{userId} and out_trade_no = #{outTradeNo} and status = 0
     </select>
+
+    <select id="checkLockOrderStatusByOutTradeNo" resultMap="dataMap" parameterType="groupbuy.market.plus.infrastructure.dao.po.GroupBuyTeamOrder">
+        select user_id, team_id, order_id, activity_id, start_time, end_time,
+               goods_id, source, channel, original_price, deduction_price,
+               pay_price, is_header, out_trade_no, out_trade_no_pay_time, status
+        from group_buy_team_order
+        where user_id = #{userId} and out_trade_no = #{outTradeNo}
+    </select>
+
+    <update id="updateOrderStatusComplete" parameterType="groupbuy.market.plus.infrastructure.dao.po.GroupBuyTeamOrder">
+        update group_buy_team_order
+        set status = 1, out_trade_no_pay_time = #{outTradeNoPayTime}, update_time = now()
+        where out_trade_no = #{outTradeNo} and user_id = #{userId} and status = 0
+    </update>
 
 </mapper>

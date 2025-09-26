@@ -47,4 +47,25 @@
         where team_id = #{teamId}
     </select>
 
+    <select id="getTeamById" resultMap="dataMap" parameterType="java.lang.String">
+        select team_id, activity_id, target_count, complete_count, lock_count,
+               status, start_time, end_time
+        from group_buy_team
+        where team_id = #{teamId}
+    </select>
+
+    <update id="updateTeamAddCompleteCount" parameterType="java.lang.String">
+        <![CDATA[
+        update group_buy_team
+        set complete_count = complete_count + 1, update_time= now()
+        where team_id = #{teamId} and complete_count < target_count
+        ]]>
+    </update>
+
+    <update id="updateTeamStatusComplete" parameterType="java.lang.String">
+        update group_buy_team
+        set status = 1, update_time= now()
+        where team_id = #{teamId} and status = 0
+    </update>
+
 </mapper>

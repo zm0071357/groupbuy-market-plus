@@ -25,4 +25,25 @@ public interface GroupBuyTeamDao {
      * @return
      */
     GroupBuyTeam getTeamProgress(String teamId);
+
+    /**
+     * 根据组队ID获取组队
+     * @param teamId 组队ID
+     * @return
+     */
+    GroupBuyTeam getTeamById(String teamId);
+
+    /**
+     * 更新拼团组队进度 - 完成数量+1
+     * @param teamId 组队ID
+     * @return
+     */
+    Integer updateTeamAddCompleteCount(String teamId);
+
+    /**
+     * 更新拼团组队状态为完成
+     * @param teamId 组队ID
+     * @return
+     */
+    Integer updateTeamStatusComplete(String teamId);
 }

@@ -2,6 +2,7 @@ package groupbuy.market.plus.infrastructure.adapter.repository;
 
 import groupbuy.market.plus.domain.trade.adapter.repository.TradeRepository;
 import groupbuy.market.plus.domain.trade.model.aggregate.LockOrderAggregate;
+import groupbuy.market.plus.domain.trade.model.aggregate.SettleOrderAggregate;
 import groupbuy.market.plus.domain.trade.model.entity.*;
 import groupbuy.market.plus.domain.trade.model.valobj.ActivityStatusEnum;
 import groupbuy.market.plus.domain.trade.model.valobj.OrderStatusEnum;
@@ -12,6 +13,7 @@ import groupbuy.market.plus.infrastructure.dao.GroupBuyTeamOrderDao;
 import groupbuy.market.plus.infrastructure.dao.po.Activity;
 import groupbuy.market.plus.infrastructure.dao.po.GroupBuyTeam;
 import groupbuy.market.plus.infrastructure.dao.po.GroupBuyTeamOrder;
+import groupbuy.market.plus.infrastructure.dcc.DCCServiceImpl;
 import groupbuy.market.plus.types.common.Constants;
 import groupbuy.market.plus.types.common.GroupBuyConstants;
 import groupbuy.market.plus.types.enums.ResponseCodeEnum;
@@ -40,6 +42,9 @@ public class TradeRepositoryImpl implements TradeRepository {
 
     @Resource
     private GroupBuyTeamOrderDao groupBuyTeamOrderDao;
+
+    @Resource
+    private DCCServiceImpl dccServiceImpl;
 
     @Override
     public ActivityEntity getActivityById(Long activityId) {
@@ -212,4 +217,96 @@ public class TradeRepositoryImpl implements TradeRepository {
                 .lockCount(groupBuyTeam.getLockCount())
                 .build();
     }
+
+    @Override
+    public LockOrderEntity checkLockOrderStatusByOutTradeNo(String userId, String outTradeNo) {
+        GroupBuyTeamOrder groupBuyTeamOrderReq = new GroupBuyTeamOrder();
+        groupBuyTeamOrderReq.setUserId(userId);
+        groupBuyTeamOrderReq.setOutTradeNo(outTradeNo);
+        GroupBuyTeamOrder groupBuyTeamOrder = groupBuyTeamOrderDao.checkLockOrderStatusByOutTradeNo(groupBuyTeamOrderReq);
+        if (groupBuyTeamOrder == null) {
+            return null;
+        }
+        return LockOrderEntity.builder()
+                .teamId(groupBuyTeamOrder.getTeamId())
+                .orderId(groupBuyTeamOrder.getOrderId())
+                .isHeader(groupBuyTeamOrder.getIsHeader() == 1)
+                .payPrice(groupBuyTeamOrder.getPayPrice())
+                .outTradeNo(groupBuyTeamOrder.getOutTradeNo())
+                .outTradeNoPayTime(groupBuyTeamOrder.getOutTradeNoPayTime())
+                .orderStatusEnum(OrderStatusEnum.valueOf(groupBuyTeamOrder.getStatus()))
+                .build();
+    }
+
+    @Override
+    public GroupBuyTeamEntity getTeamById(String teamId) {
+        GroupBuyTeam groupBuyTeam = groupBuyTeamDao.getTeamById(teamId);
+        if (groupBuyTeam == null) {
+            return null;
+        }
+        return GroupBuyTeamEntity.builder()
+                .teamId(teamId)
+                .activityId(groupBuyTeam.getActivityId())
+                .startTime(groupBuyTeam.getStartTime())
+                .endTime(groupBuyTeam.getEndTime())
+                .targetCount(groupBuyTeam.getTargetCount())
+                .completeCount(groupBuyTeam.getCompleteCount())
+                .lockCount(groupBuyTeam.getLockCount())
+                .status(groupBuyTeam.getStatus())
+                .build();
+    }
+
+    @Override
+    public boolean isBlack(String resource, String channel) {
+        return dccServiceImpl.isBlack(resource, channel);
+    }
+
+    @Transactional(timeout = 500)
+    @Override
+    public SettleOrderEntity settleOrder(SettleOrderAggregate settleOrderAggregate) {
+        UserEntity userEntity = settleOrderAggregate.getUserEntity();
+        GroupBuyTeamEntity groupBuyTeamEntity = settleOrderAggregate.getGroupBuyTeamEntity();
+        OrderPaySuccessEntity orderPaySuccessEntity = settleOrderAggregate.getOrderPaySuccessEntity();
+        log.info("结算开始，用户ID：{}，外部交易单号：{}", userEntity.getUserId(), orderPaySuccessEntity.getOutTradeNo());
+
+        // 更新订单状态为消费完成
+        GroupBuyTeamOrder groupBuyTeamOrderReq = new GroupBuyTeamOrder();
+        groupBuyTeamOrderReq.setUserId(orderPaySuccessEntity.getUserId());
+        groupBuyTeamOrderReq.setOutTradeNo(orderPaySuccessEntity.getOutTradeNo());
+        groupBuyTeamOrderReq.setOutTradeNoPayTime(orderPaySuccessEntity.getOutTradeNoPayTime());
+        Integer updateOrderStatusCount = groupBuyTeamOrderDao.updateOrderStatusComplete(groupBuyTeamOrderReq);
+        if (updateOrderStatusCount != 1) {
+            throw new AppException(ResponseCodeEnum.UPDATE_ZERO.getCode(), ResponseCodeEnum.UPDATE_ZERO.getInfo());
+        }
+
+        // 更新拼团组队进度
+        Integer updateTeamProgressCount = groupBuyTeamDao.updateTeamAddCompleteCount(groupBuyTeamEntity.getTeamId());
+        if (updateTeamProgressCount != 1) {
+            throw new AppException(ResponseCodeEnum.UPDATE_ZERO.getCode(), ResponseCodeEnum.UPDATE_ZERO.getInfo());
+        }
+
+        // 最后一笔 - 拼团成功
+        if (groupBuyTeamEntity.getTargetCount() - groupBuyTeamEntity.getCompleteCount() == 1) {
+            log.info("拼团目标完成，组队ID：{}", groupBuyTeamEntity.getTeamId());
+            // 更新拼团组队为完成
+            Integer updateTeamStatusCount = groupBuyTeamDao.updateTeamStatusComplete(groupBuyTeamEntity.getTeamId());
+            if (updateTeamStatusCount != 1) {
+                throw new AppException(ResponseCodeEnum.UPDATE_ZERO.getCode(), ResponseCodeEnum.UPDATE_ZERO.getInfo());
+            }
+            //TODO:回调任务 - 通知商城系统发货
+        }
+
+        log.info("结算完成，用户ID：{}，外部交易单号：{}", userEntity.getUserId(), orderPaySuccessEntity.getOutTradeNo());
+
+        return SettleOrderEntity.builder()
+                .userId(userEntity.getUserId())
+                .teamId(groupBuyTeamEntity.getTeamId())
+                .activityId(groupBuyTeamEntity.getActivityId())
+                .outTradeNo(orderPaySuccessEntity.getOutTradeNo())
+                .outTradeNoPayTime(orderPaySuccessEntity.getOutTradeNoPayTime())
+                .source(orderPaySuccessEntity.getSource())
+                .channel(orderPaySuccessEntity.getChannel())
+                .build();
+    }
+
 }

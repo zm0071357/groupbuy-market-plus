@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.Date;
 
 /**
  * 锁单订单实体
@@ -36,6 +37,16 @@ public class LockOrderEntity {
      * 支付价格
      */
     private BigDecimal payPrice;
+
+    /**
+     * 外部交易单号-确保外部调用唯一幂等
+     */
+    private String outTradeNo;
+
+    /**
+     * 外部交易单号支付完成时间
+     */
+    private Date outTradeNoPayTime;
 
     /**
      * 订单状态枚举

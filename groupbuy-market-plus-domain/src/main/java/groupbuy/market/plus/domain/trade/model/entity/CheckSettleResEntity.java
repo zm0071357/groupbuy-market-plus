@@ -1,5 +1,6 @@
 package groupbuy.market.plus.domain.trade.model.entity;
 
+import groupbuy.market.plus.domain.trade.model.valobj.TeamStatusEnum;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -8,13 +9,13 @@ import lombok.NoArgsConstructor;
 import java.util.Date;
 
 /**
- * 拼团组队实体
+ * 结算校验结果
  */
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class GroupBuyTeamEntity {
+public class CheckSettleResEntity {
 
     /**
      * 组队ID
@@ -22,24 +23,9 @@ public class GroupBuyTeamEntity {
     private String teamId;
 
     /**
-     * 活动ID
+     *  活动ID
      */
     private Long activityId;
-
-    /**
-     * 拼团开始时间
-     */
-    private Date startTime;
-
-    /**
-     * 拼团结束时间
-     */
-    private Date endTime;
-
-    /**
-     * 拼团时长
-     */
-    private Integer validTime;
 
     /**
      * 目标数量
@@ -57,8 +43,17 @@ public class GroupBuyTeamEntity {
     private Integer lockCount;
 
     /**
-     * 订单状态
+     * 拼团组队状态（0-拼单中、1-完成、2-失败）
      */
-    private Integer status;
+    private TeamStatusEnum status;
 
+    /**
+     * 拼团开始时间
+     */
+    private Date startTime;
+
+    /**
+     * 拼团结束时间
+     */
+    private Date endTime;
 }
