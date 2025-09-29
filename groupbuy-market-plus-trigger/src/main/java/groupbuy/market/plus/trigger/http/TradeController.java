@@ -1,4 +1,4 @@
-package groupbuy.market.plus.trigger;
+package groupbuy.market.plus.trigger.http;
 
 import com.alibaba.fastjson.JSON;
 import groupbuy.market.plus.api.TradeService;
@@ -101,6 +101,7 @@ public class TradeController implements TradeService {
                             .endTime(trialBalanceEntity.getActivityVO().getEndTime())
                             .validTime(trialBalanceEntity.getActivityVO().getValidTime())
                             .targetCount(trialBalanceEntity.getActivityVO().getTarget())
+                            .notifyUrl(lockOrderRequestDTO.getNotifyUrl())
                             .build(),
                     OrderDetailEntity.builder()
                             .outTradeNo(lockOrderRequestDTO.getOutTradeNo())

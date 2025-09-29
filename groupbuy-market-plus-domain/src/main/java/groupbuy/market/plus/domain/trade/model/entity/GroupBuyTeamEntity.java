@@ -61,4 +61,9 @@ public class GroupBuyTeamEntity {
      */
     private Integer status;
 
+    /**
+     * 回调地址
+     */
+    private String notifyUrl;
+
 }

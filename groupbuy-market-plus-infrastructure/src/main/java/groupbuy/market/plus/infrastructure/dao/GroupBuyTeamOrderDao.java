@@ -3,6 +3,8 @@ package groupbuy.market.plus.infrastructure.dao;
 import groupbuy.market.plus.infrastructure.dao.po.GroupBuyTeamOrder;
 import org.apache.ibatis.annotations.Mapper;
 
+import java.util.List;
+
 @Mapper
 public interface GroupBuyTeamOrderDao {
 
@@ -46,4 +48,11 @@ public interface GroupBuyTeamOrderDao {
      * @return
      */
     Integer updateOrderStatusComplete(GroupBuyTeamOrder groupBuyTeamOrderReq);
+
+    /**
+     * 根据组队ID获取拼团完成的外部交易单号列表
+     * @param teamId 组队ID
+     * @return
+     */
+    List<String> getCompleteTeamOutTradeNoList(String teamId);
 }

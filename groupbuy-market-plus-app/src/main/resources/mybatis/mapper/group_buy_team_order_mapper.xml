@@ -69,4 +69,10 @@
         where out_trade_no = #{outTradeNo} and user_id = #{userId} and status = 0
     </update>
 
+    <select id="getCompleteTeamOutTradeNoList" resultType="java.lang.String" parameterType="java.lang.String">
+        select out_trade_no
+        from group_buy_team_order
+        where team_id = #{teamId} and status = 1
+    </select>
+
 </mapper>

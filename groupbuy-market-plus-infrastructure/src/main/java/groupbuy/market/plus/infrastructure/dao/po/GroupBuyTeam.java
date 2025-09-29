@@ -88,6 +88,11 @@ public class GroupBuyTeam {
     private Date endTime;
 
     /**
+     * 回调地址
+     */
+    private String notifyUrl;
+
+    /**
      * 创建时间
      */
     private Date createTime;

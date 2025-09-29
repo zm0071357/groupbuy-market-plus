@@ -2,11 +2,10 @@ package groupbuy.market.plus.domain.trade.adapter.repository;
 
 import groupbuy.market.plus.domain.trade.model.aggregate.LockOrderAggregate;
 import groupbuy.market.plus.domain.trade.model.aggregate.SettleOrderAggregate;
-import groupbuy.market.plus.domain.trade.model.entity.ActivityEntity;
-import groupbuy.market.plus.domain.trade.model.entity.GroupBuyTeamEntity;
-import groupbuy.market.plus.domain.trade.model.entity.LockOrderEntity;
-import groupbuy.market.plus.domain.trade.model.entity.SettleOrderEntity;
+import groupbuy.market.plus.domain.trade.model.entity.*;
 import groupbuy.market.plus.domain.trade.model.valobj.TeamProgressVO;
+
+import java.util.List;
 
 public interface TradeRepository {
 
@@ -84,4 +83,38 @@ public interface TradeRepository {
      * @return
      */
     SettleOrderEntity settleOrder(SettleOrderAggregate settleOrderAggregate);
+
+    /**
+     * 获取未执行的回调任务列表
+     * @return
+     */
+    List<NotifyTaskEntity> getUnNotifyTask();
+
+    /**
+     * 根据组队ID获取回调任务
+     * @param teamId 组队ID
+     * @return
+     */
+    List<NotifyTaskEntity> getUnNotifyTask(String teamId);
+
+    /**
+     * 更新回调任务状态为完成
+     * @param teamId 组队ID
+     * @return
+     */
+    int updateNotifyTaskSuccess(String teamId);
+
+    /**
+     * 更新回调任务状态为重试
+     * @param teamId 组队ID
+     * @return
+     */
+    int updateNotifyTaskRetry(String teamId);
+
+    /**
+     * 更新回调任务状态为失败
+     * @param teamId 组队ID
+     * @return
+     */
+    int updateNotifyTaskFail(String teamId);
 }

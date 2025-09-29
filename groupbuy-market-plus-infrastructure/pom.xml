@@ -20,6 +20,10 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp-sse</artifactId>
+        </dependency>
         <!-- 系统模块 -->
         <dependency>
             <groupId>top.xiaoming-programming</groupId>

@@ -1,4 +1,4 @@
-package groupbuy.market.plus.trigger;
+package groupbuy.market.plus.trigger.http;
 
 import groupbuy.market.plus.api.DCCService;
 import groupbuy.market.plus.api.dto.UpdateConfigDTO;

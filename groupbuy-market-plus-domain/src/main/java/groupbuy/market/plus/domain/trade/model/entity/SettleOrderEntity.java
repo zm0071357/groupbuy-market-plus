@@ -51,4 +51,9 @@ public class SettleOrderEntity {
      */
     private String channel;
 
+    /**
+     * 拼团是否完成
+     */
+    private Boolean isComplete;
+
 }

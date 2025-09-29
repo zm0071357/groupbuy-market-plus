@@ -45,5 +45,10 @@ public class LockOrderRequestDTO {
      */
     private String outTradeNo;
 
+    /**
+     * 回调地址
+     */
+    private String notifyUrl;
+
 }
 
