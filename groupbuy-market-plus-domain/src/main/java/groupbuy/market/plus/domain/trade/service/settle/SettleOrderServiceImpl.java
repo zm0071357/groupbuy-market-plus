@@ -33,7 +33,7 @@ public class SettleOrderServiceImpl implements SettleOrderService{
         // 责任链过滤
         CheckSettleEntity checkSettleEntity = CheckSettleEntity.builder()
                 .userId(orderPaySuccessEntity.getUserId())
-                .resource(orderPaySuccessEntity.getSource())
+                .source(orderPaySuccessEntity.getSource())
                 .channel(orderPaySuccessEntity.getChannel())
                 .outTradeNo(orderPaySuccessEntity.getOutTradeNo())
                 .outTradeNoPayTime(orderPaySuccessEntity.getOutTradeNoPayTime())

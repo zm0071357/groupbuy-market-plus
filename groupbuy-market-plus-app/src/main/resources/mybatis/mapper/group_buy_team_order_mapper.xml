@@ -75,4 +75,23 @@
         where team_id = #{teamId} and status = 1
     </select>
 
+    <select id="getUserTeamIdList" resultType="java.lang.String" parameterType="groupbuy.market.plus.infrastructure.dao.po.GroupBuyTeamOrder">
+        select team_id
+        from group_buy_team_order
+        where activity_id = #{activityId} and user_id = #{userId} and source = #{source} and goods_id = #{goodsId}
+                and channel = #{channel} and end_time > now() and status in (0, 1)
+        order by id desc
+    </select>
+
+    <select id="getRandomTeamIdList" resultType="java.lang.String">
+        select team_id
+        from group_buy_team_order
+        where activity_id = #{groupBuyTeamOrderReq.activityId} and user_id != #{groupBuyTeamOrderReq.userId}
+          and source = #{groupBuyTeamOrderReq.source} and goods_id = #{groupBuyTeamOrderReq.goodsId}
+          and channel = #{groupBuyTeamOrderReq.channel} and end_time > now() and status in (0, 1)
+        order by id desc
+        limit #{limitCount}
+    </select>
+
+
 </mapper>

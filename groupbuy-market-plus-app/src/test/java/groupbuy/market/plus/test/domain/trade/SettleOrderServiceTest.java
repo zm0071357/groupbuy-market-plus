@@ -1,5 +1,7 @@
 package groupbuy.market.plus.test.domain.trade;
 
+import groupbuy.market.plus.api.TradeService;
+import groupbuy.market.plus.api.dto.SettleOrderRequestDTO;
 import groupbuy.market.plus.domain.trade.model.entity.OrderPaySuccessEntity;
 import groupbuy.market.plus.domain.trade.service.settle.SettleOrderService;
 import lombok.extern.slf4j.Slf4j;
@@ -21,18 +23,17 @@ import java.util.Date;
 public class SettleOrderServiceTest {
 
     @Resource
-    private SettleOrderService settleOrderService;
+    private TradeService tradeService;
 
     @Test
     public void test_settleOrder() throws Exception {
-        OrderPaySuccessEntity orderPaySuccessEntity = OrderPaySuccessEntity.builder()
-                .userId("134137257")
-                .outTradeNo("LTZF965313106592")
-                .outTradeNoPayTime(new Date())
-                .source("s01")
-                .channel("c01")
-                .build();
-        settleOrderService.settleOrder(orderPaySuccessEntity);
+        SettleOrderRequestDTO settleOrderRequestDTO = new SettleOrderRequestDTO();
+        settleOrderRequestDTO.setUserId("399547479");
+        settleOrderRequestDTO.setOutTradeNo("LTZF123456789123");
+        settleOrderRequestDTO.setOutTradeNoPayTime(new Date());
+        settleOrderRequestDTO.setSource("s01");
+        settleOrderRequestDTO.setChannel("c01");
+        tradeService.settleOrder(settleOrderRequestDTO);
     }
 
 }

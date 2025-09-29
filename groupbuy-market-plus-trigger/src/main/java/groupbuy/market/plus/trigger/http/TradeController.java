@@ -4,16 +4,16 @@ import com.alibaba.fastjson.JSON;
 import groupbuy.market.plus.api.TradeService;
 import groupbuy.market.plus.api.dto.LockOrderRequestDTO;
 import groupbuy.market.plus.api.dto.LockOrderResponseDTO;
+import groupbuy.market.plus.api.dto.SettleOrderRequestDTO;
+import groupbuy.market.plus.api.dto.SettleOrderResponseDTO;
 import groupbuy.market.plus.api.response.Response;
 import groupbuy.market.plus.domain.activity.model.entity.MarketProductEntity;
 import groupbuy.market.plus.domain.activity.model.entity.TrialBalanceEntity;
 import groupbuy.market.plus.domain.activity.service.IndexGroupBuyMarketService;
-import groupbuy.market.plus.domain.trade.model.entity.GroupBuyTeamEntity;
-import groupbuy.market.plus.domain.trade.model.entity.LockOrderEntity;
-import groupbuy.market.plus.domain.trade.model.entity.OrderDetailEntity;
-import groupbuy.market.plus.domain.trade.model.entity.UserEntity;
+import groupbuy.market.plus.domain.trade.model.entity.*;
 import groupbuy.market.plus.domain.trade.model.valobj.TeamProgressVO;
 import groupbuy.market.plus.domain.trade.service.lock.LockOrderService;
+import groupbuy.market.plus.domain.trade.service.settle.SettleOrderService;
 import groupbuy.market.plus.types.enums.ResponseCodeEnum;
 import groupbuy.market.plus.types.exception.AppException;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +30,9 @@ public class TradeController implements TradeService {
 
     @Resource
     private LockOrderService lockOrderService;
+
+    @Resource
+    private SettleOrderService settleOrderService;
 
     @Resource
     private IndexGroupBuyMarketService indexGroupBuyMarketService;
@@ -97,6 +100,7 @@ public class TradeController implements TradeService {
                     GroupBuyTeamEntity.builder()
                             .teamId(lockOrderRequestDTO.getTeamId())
                             .activityId(lockOrderRequestDTO.getActivityId())
+                            .goodsId(lockOrderRequestDTO.getGoodsId())
                             .startTime(trialBalanceEntity.getActivityVO().getStartTime())
                             .endTime(trialBalanceEntity.getActivityVO().getEndTime())
                             .validTime(trialBalanceEntity.getActivityVO().getValidTime())
@@ -140,5 +144,53 @@ public class TradeController implements TradeService {
         }
     }
 
+    @PostMapping("/settle_order")
+    @Override
+    public Response<SettleOrderResponseDTO> settleOrder(@RequestBody SettleOrderRequestDTO settleOrderRequestDTO) {
+        try {
+            // 参数校验
+            if (StringUtils.isBlank(settleOrderRequestDTO.getUserId()) || StringUtils.isBlank(settleOrderRequestDTO.getOutTradeNo()) || StringUtils.isBlank(settleOrderRequestDTO.getSource()) ||
+                StringUtils.isBlank(settleOrderRequestDTO.getChannel()) || settleOrderRequestDTO.getOutTradeNoPayTime() == null) {
+                return Response.<SettleOrderResponseDTO>builder()
+                        .code(ResponseCodeEnum.ILLEGAL_PARAMETER.getCode())
+                        .info(ResponseCodeEnum.ILLEGAL_PARAMETER.getInfo())
+                        .build();
+            }
+            // 结算
+            SettleOrderEntity settleOrderEntity = settleOrderService.settleOrder(OrderPaySuccessEntity.builder()
+                            .userId(settleOrderRequestDTO.getUserId())
+                            .outTradeNo(settleOrderRequestDTO.getOutTradeNo())
+                            .outTradeNoPayTime(settleOrderRequestDTO.getOutTradeNoPayTime())
+                            .source(settleOrderRequestDTO.getSource())
+                            .channel(settleOrderRequestDTO.getChannel())
+                            .build());
+            return Response.<SettleOrderResponseDTO>builder()
+                    .code(ResponseCodeEnum.SUCCESS.getCode())
+                    .info(ResponseCodeEnum.SUCCESS.getInfo())
+                    .data(SettleOrderResponseDTO.builder()
+                            .userId(settleOrderEntity.getUserId())
+                            .teamId(settleOrderEntity.getTeamId())
+                            .activityId(settleOrderEntity.getActivityId())
+                            .outTradeNo(settleOrderEntity.getOutTradeNo())
+                            .outTradeNoPayTime(settleOrderEntity.getOutTradeNoPayTime())
+                            .isComplete(settleOrderEntity.getIsComplete())
+                            .build())
+                    .build();
+        } catch (AppException e) {
+            log.error("结算业务异常:{} 结算请求信息:{}", settleOrderRequestDTO.getUserId(), JSON.toJSONString(settleOrderRequestDTO), e.getInfo());
+            return Response.<SettleOrderResponseDTO>builder()
+                    .code(e.getCode())
+                    .info(e.getInfo())
+                    .build();
+        } catch (Exception e) {
+            log.error("结算业务异常:{} 结算请求信息:{}", settleOrderRequestDTO.getUserId(), JSON.toJSONString(settleOrderRequestDTO), e);
+            return Response.<SettleOrderResponseDTO>builder()
+                    .code(ResponseCodeEnum.UN_ERROR.getCode())
+                    .info(ResponseCodeEnum.UN_ERROR.getInfo())
+                    .build();
+        }
 
+
+
+    }
 }

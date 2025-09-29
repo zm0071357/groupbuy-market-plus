@@ -2,6 +2,7 @@ package groupbuy.market.plus.infrastructure.dao;
 
 import groupbuy.market.plus.infrastructure.dao.po.GroupBuyTeamOrder;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -55,4 +56,20 @@ public interface GroupBuyTeamOrderDao {
      * @return
      */
     List<String> getCompleteTeamOutTradeNoList(String teamId);
+
+    /**
+     * 查询用户的组队ID集合
+     * @param groupBuyTeamOrderReq
+     * @return
+     */
+    List<String> getUserTeamIdList(GroupBuyTeamOrder groupBuyTeamOrderReq);
+
+    /**
+     * 查询用户未参与的组队ID集合
+     *
+     * @param groupBuyTeamOrderReq
+     * @param limitCount
+     * @return
+     */
+    List<String> getRandomTeamIdList(@Param("groupBuyTeamOrderReq") GroupBuyTeamOrder groupBuyTeamOrderReq, @Param("limitCount") Integer limitCount);
 }

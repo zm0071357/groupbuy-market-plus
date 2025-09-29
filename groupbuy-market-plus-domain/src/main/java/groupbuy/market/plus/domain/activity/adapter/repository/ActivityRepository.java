@@ -1,8 +1,12 @@
 package groupbuy.market.plus.domain.activity.adapter.repository;
 
+import groupbuy.market.plus.domain.activity.model.entity.IndexTeamEntity;
 import groupbuy.market.plus.domain.activity.model.valobj.ActivityVO;
 import groupbuy.market.plus.domain.activity.model.valobj.SCSkuActivityVO;
 import groupbuy.market.plus.domain.activity.model.valobj.SkuVO;
+import groupbuy.market.plus.domain.activity.model.valobj.StatisticsVO;
+
+import java.util.List;
 
 public interface ActivityRepository {
 
@@ -41,4 +45,37 @@ public interface ActivityRepository {
      * @return
      */
     boolean cutRange(String userId);
+
+    /**
+     * 获取个人拼团组队
+     * @param activityId 活动ID
+     * @param userId 用户ID
+     * @param goodsId 商品ID
+     * @param source 来源
+     * @param channel 渠道
+     * @param userTeamCount 数量
+     * @return
+     */
+    List<IndexTeamEntity> getUserTeam(Long activityId, String userId, String goodsId, String source, String channel, Integer userTeamCount);
+
+    /**
+     * 获取随机拼团组队
+     * @param activityId 活动ID
+     * @param userId 用户ID
+     * @param goodsId 商品ID
+     * @param source 来源
+     * @param channel 渠道
+     * @param randomTeamCount 数量
+     * @return
+     */
+    List<IndexTeamEntity> getRandomTeam(Long activityId, String userId, String goodsId, String source, String channel, Integer randomTeamCount);
+
+    /**
+     * 查询统计信息
+     * @param activityId 活动ID
+     * @param goodsId 商品ID
+     * @return
+     */
+    StatisticsVO getStatistics(Long activityId, String goodsId);
+
 }

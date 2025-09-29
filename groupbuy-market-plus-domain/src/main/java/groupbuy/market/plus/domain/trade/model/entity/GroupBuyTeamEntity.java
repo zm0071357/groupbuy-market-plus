@@ -27,6 +27,11 @@ public class GroupBuyTeamEntity {
     private Long activityId;
 
     /**
+     * 商品ID
+     */
+    private String goodsId;
+
+    /**
      * 拼团开始时间
      */
     private Date startTime;

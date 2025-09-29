@@ -1,4 +1,4 @@
-package groupbuy.market.plus.domain.trade.model.entity;
+package groupbuy.market.plus.api.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -8,18 +8,38 @@ import lombok.NoArgsConstructor;
 import java.util.Date;
 
 /**
- * 结算校验实体
+ * 结算响应体
  */
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class CheckSettleEntity {
+public class SettleOrderResponseDTO {
 
     /**
      * 用户ID
      */
     private String userId;
+
+    /**
+     * 拼单组队ID
+     */
+    private String teamId;
+
+    /**
+     * 活动ID
+     */
+    private Long activityId;
+
+    /**
+     * 外部交易单号
+     */
+    private String outTradeNo;
+
+    /**
+     * 外部交易单号支付完成时间
+     */
+    private Date outTradeNoPayTime;
 
     /**
      * 来源
@@ -32,13 +52,8 @@ public class CheckSettleEntity {
     private String channel;
 
     /**
-     * 外部交易单号
+     * 拼团是否完成
      */
-    private String outTradeNo;
-
-    /**
-     * 外部交易单号支付完成时间
-     */
-    private Date outTradeNoPayTime;
+    private Boolean isComplete;
 
 }

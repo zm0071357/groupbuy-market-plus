@@ -6,6 +6,7 @@
         <id column="id" property="id"/>
         <result column="team_id" property="teamId"/>
         <result column="activity_id" property="activityId"/>
+        <result column="goods_id" property="goodsId"/>
         <result column="source" property="source"/>
         <result column="channel" property="channel"/>
         <result column="original_price" property="originalPrice"/>
@@ -24,11 +25,11 @@
 
     <insert id="insert" parameterType="groupbuy.market.plus.infrastructure.dao.po.GroupBuyTeam">
         insert into group_buy_team(
-            team_id, activity_id, source, channel, original_price,
+            team_id, activity_id, goods_id, source, channel, original_price,
             deduction_price, pay_price, target_count, complete_count, lock_count,
             status, start_time, end_time, notify_url, create_time, update_time
         ) values(
-                    #{teamId}, #{activityId}, #{source}, #{channel}, #{originalPrice},
+                    #{teamId}, #{activityId}, #{goodsId}, #{source}, #{channel}, #{originalPrice},
                     #{deductionPrice}, #{payPrice}, #{targetCount}, #{completeCount}, #{lockCount}, 0,
                     #{startTime}, #{endTime}, #{notifyUrl}, now(), now()
                 )
@@ -49,7 +50,7 @@
     </select>
 
     <select id="getTeamById" resultMap="dataMap" parameterType="java.lang.String">
-        select team_id, activity_id, target_count, complete_count, lock_count,
+        select team_id, activity_id, goods_id, target_count, complete_count, lock_count,
                status, start_time, end_time
         from group_buy_team
         where team_id = #{teamId}
@@ -68,5 +69,50 @@
         set status = 1, update_time= now()
         where team_id = #{teamId} and status = 0
     </update>
+
+    <select id="getTeamIdList" resultType="java.lang.String" parameterType="groupbuy.market.plus.infrastructure.dao.po.GroupBuyTeam">
+        select team_id
+        from group_buy_team
+        where activity_id = #{activityId} and goods_id = #{goodsId}
+    </select>
+
+    <select id="getAllTeamCompleteCount" resultType="java.lang.Integer" parameterType="java.util.List">
+        select count(id)
+        from group_buy_team
+        where status = 1 and team_id in
+        <foreach item="teamId" collection="teamIdList" open="(" separator="," close=")">
+            #{teamId}
+        </foreach>
+    </select>
+
+    <select id="getAllTeamUserCount" resultType="java.lang.Integer" parameterType="java.util.List">
+        select sum(lock_count)
+        from group_buy_team
+        where status = 1 and team_id in
+        <foreach item="teamId" collection="teamIdList" open="(" separator="," close=")">
+            #{teamId}
+        </foreach>
+    </select>
+
+    <select id="getUserTeam" resultMap="dataMap">
+        select team_id, target_count, complete_count, lock_count, start_time, end_time
+        from group_buy_team
+        where status = 0 and team_id in
+        <foreach item="teamId" collection="teamIdList" open="(" separator="," close=")">
+            #{teamId}
+        </foreach>
+        order by id desc
+        limit #{limitCount}
+    </select>
+
+    <select id="getRandomTeam" resultType="groupbuy.market.plus.infrastructure.dao.po.GroupBuyTeam">
+        select team_id, target_count, complete_count, lock_count, start_time, end_time
+        from group_buy_team
+        where status = 0 and team_id in
+        <foreach item="teamId" collection="teamIdList" open="(" separator="," close=")">
+            #{teamId}
+        </foreach>
+    </select>
+
 
 </mapper>

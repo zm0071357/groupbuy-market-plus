@@ -113,6 +113,7 @@ public class TradeRepositoryImpl implements TradeRepository {
             groupBuyTeamDao.insert(GroupBuyTeam.builder()
                     .teamId(teamId)
                     .activityId(groupBuyTeamEntity.getActivityId())
+                    .goodsId(groupBuyTeamEntity.getGoodsId())
                     .source(orderDetailEntity.getSource())
                     .channel(orderDetailEntity.getChannel())
                     .originalPrice(orderDetailEntity.getOriginalPrice())

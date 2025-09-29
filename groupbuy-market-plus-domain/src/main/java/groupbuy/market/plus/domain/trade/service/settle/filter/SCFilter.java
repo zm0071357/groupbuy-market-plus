@@ -26,8 +26,8 @@ public class SCFilter implements LogicHandler<CheckSettleEntity, SettleOrderLink
     public CheckSettleResEntity apply(CheckSettleEntity checkSettleEntity, SettleOrderLinkFactory.DynamicContext dynamicContext) throws Exception {
         log.info("进入结算责任链 - SC黑名单过滤节点");
         // 校验SC黑名单
-        log.info("结算责任链 - SC黑名单过滤节点，SC黑名单校验，source：{}，channel：{}", checkSettleEntity.getResource(), checkSettleEntity.getChannel());
-        if (tradeRepository.isBlack(checkSettleEntity.getResource(), checkSettleEntity.getChannel())) {
+        log.info("结算责任链 - SC黑名单过滤节点，SC黑名单校验，source：{}，channel：{}", checkSettleEntity.getSource(), checkSettleEntity.getChannel());
+        if (tradeRepository.isBlack(checkSettleEntity.getSource(), checkSettleEntity.getChannel())) {
             throw new AppException(ResponseCodeEnum.E0017.getCode(), ResponseCodeEnum.E0017.getInfo());
         }
         return next(checkSettleEntity, dynamicContext);
