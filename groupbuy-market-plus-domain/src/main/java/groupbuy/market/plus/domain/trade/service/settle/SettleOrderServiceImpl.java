@@ -50,6 +50,7 @@ public class SettleOrderServiceImpl implements SettleOrderService{
                         .status(checkSettleResEntity.getStatus().getCode())
                         .startTime(checkSettleResEntity.getStartTime())
                         .endTime(checkSettleResEntity.getEndTime())
+                        .notifyUrl(checkSettleResEntity.getNotifyUrl())
                         .build())
                 .orderPaySuccessEntity(orderPaySuccessEntity)
                 .build();

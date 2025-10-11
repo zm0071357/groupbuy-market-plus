@@ -18,7 +18,7 @@ public class NotifyJob {
     /**
      * 定时任务 - 执行回调通知拼团完成
      */
-    //@Scheduled(cron = "0/10 * * * * ?")
+    @Scheduled(cron = "0/10 * * * * ?")
     public void exec() {
         try {
             log.info("定时任务 - 执行回调通知开始");

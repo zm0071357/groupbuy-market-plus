@@ -56,4 +56,9 @@ public class CheckSettleResEntity {
      * 拼团结束时间
      */
     private Date endTime;
+
+    /**
+     * 回调地址
+     */
+    private String notifyUrl;
 }

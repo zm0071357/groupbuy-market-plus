@@ -40,7 +40,8 @@ redis:
   sdk:
     config:
       host:
-      port: 16379
+      port:
+      password:
       pool-size: 10
       min-idle-size: 5
       idle-timeout: 30000
@@ -49,7 +50,6 @@ redis:
       retry-interval: 1000
       ping-interval: 60000
       keep-alive: true
-
 
 # 日志
 logging:

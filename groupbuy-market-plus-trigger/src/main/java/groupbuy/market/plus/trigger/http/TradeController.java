@@ -60,6 +60,8 @@ public class TradeController implements TradeService {
                         .info(ResponseCodeEnum.SUCCESS.getInfo())
                         .data(LockOrderResponseDTO.builder()
                                 .orderId(lockOrderEntity.getOrderId())
+                                .originalPrice(lockOrderEntity.getOriginalPrice())
+                                .deductionPrice(lockOrderEntity.getDeductionPrice())
                                 .payPrice(lockOrderEntity.getPayPrice())
                                 .isHeader(lockOrderEntity.getIsHeader() ? 1 : 0)
                                 .tradeOrderStatus(lockOrderEntity.getOrderStatusEnum().getCode())
@@ -124,6 +126,8 @@ public class TradeController implements TradeService {
                     .info(ResponseCodeEnum.SUCCESS.getInfo())
                     .data(LockOrderResponseDTO.builder()
                             .orderId(lockOrderEntity.getOrderId())
+                            .originalPrice(lockOrderEntity.getOriginalPrice())
+                            .deductionPrice(lockOrderEntity.getDeductionPrice())
                             .payPrice(lockOrderEntity.getPayPrice())
                             .isHeader(lockOrderEntity.getIsHeader() ? 1 : 0)
                             .tradeOrderStatus(lockOrderEntity.getOrderStatusEnum().getCode())
@@ -177,7 +181,7 @@ public class TradeController implements TradeService {
                             .build())
                     .build();
         } catch (AppException e) {
-            log.error("结算业务异常:{} 结算请求信息:{}", settleOrderRequestDTO.getUserId(), JSON.toJSONString(settleOrderRequestDTO), e.getInfo());
+            log.error("结算业务异常:{} 结算请求信息:{} 错误信息：{}", settleOrderRequestDTO.getUserId(), JSON.toJSONString(settleOrderRequestDTO), e.getInfo());
             return Response.<SettleOrderResponseDTO>builder()
                     .code(e.getCode())
                     .info(e.getInfo())

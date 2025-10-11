@@ -43,7 +43,7 @@ public class TagNode extends AbstractGroupBuyMarketSupport<MarketProductEntity, 
         FutureTask<SkuVO> skuVOFutureTask = new FutureTask<>(getSkuVOThreadTask);
         threadPoolExecutor.execute(skuVOFutureTask);
 
-        // 异步查询拼团商品
+        // 异步查询拼团活动
         GetActivityVOThreadTask getActivityVOThreadTask = new GetActivityVOThreadTask(marketProductEntity.getGoodsId(), marketProductEntity.getSource(), marketProductEntity.getChannel(), activityRepository);
         FutureTask<ActivityVO> activityVOFutureTask = new FutureTask<>(getActivityVOThreadTask);
         threadPoolExecutor.execute(activityVOFutureTask);
@@ -52,7 +52,7 @@ public class TagNode extends AbstractGroupBuyMarketSupport<MarketProductEntity, 
         dynamicContext.setSkuVO(skuVOFutureTask.get(timeout, TimeUnit.MINUTES));
         dynamicContext.setActivityVO(activityVOFutureTask.get(timeout, TimeUnit.MINUTES));
 
-        log.info("用户ID：{}，异步线程加载数据「GroupBuyActivityDiscountVO、SkuVO」完成", marketProductEntity.getUserId());
+        log.info("用户ID：{}，异步线程加载数据「拼团活动、拼团商品」完成", marketProductEntity.getUserId());
     }
 
     @Override

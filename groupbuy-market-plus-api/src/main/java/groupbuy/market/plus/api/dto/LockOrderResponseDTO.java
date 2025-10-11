@@ -22,6 +22,16 @@ public class LockOrderResponseDTO {
     private String orderId;
 
     /**
+     * 原始价格
+     */
+    private BigDecimal originalPrice;
+
+    /**
+     * 折扣价格
+     */
+    private BigDecimal deductionPrice;
+
+    /**
      * 支付价格
      */
     private BigDecimal payPrice;

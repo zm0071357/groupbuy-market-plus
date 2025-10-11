@@ -171,6 +171,8 @@ public class TradeRepositoryImpl implements TradeRepository {
                 .teamId(teamId)
                 .orderId(orderId)
                 .isHeader(checkLockResEntity.getIsHeader())
+                .originalPrice(orderDetailEntity.getOriginalPrice())
+                .deductionPrice(orderDetailEntity.getDeductionPrice())
                 .payPrice(payPrice)
                 .orderStatusEnum(OrderStatusEnum.CREATE)
                 .build();
@@ -186,7 +188,7 @@ public class TradeRepositoryImpl implements TradeRepository {
         // 团长有额外优惠
         if (isHeader) {
             BigDecimal endPrice = payPrice.multiply(GroupBuyConstants.HeaderDiscount);
-            if (endPrice.compareTo(BigDecimal.ZERO) < 0) {
+            if (endPrice.compareTo(GroupBuyConstants.MinPrice) < 0) {
                 return GroupBuyConstants.MinPrice;
             }
             return endPrice;
@@ -207,6 +209,8 @@ public class TradeRepositoryImpl implements TradeRepository {
                 .teamId(groupBuyTeamOrder.getTeamId())
                 .orderId(groupBuyTeamOrder.getOrderId())
                 .isHeader(groupBuyTeamOrder.getIsHeader() == 1)
+                .originalPrice(groupBuyTeamOrder.getOriginalPrice())
+                .deductionPrice(groupBuyTeamOrder.getDeductionPrice())
                 .payPrice(groupBuyTeamOrder.getPayPrice())
                 .orderStatusEnum(OrderStatusEnum.valueOf(groupBuyTeamOrder.getStatus()))
                 .build();
