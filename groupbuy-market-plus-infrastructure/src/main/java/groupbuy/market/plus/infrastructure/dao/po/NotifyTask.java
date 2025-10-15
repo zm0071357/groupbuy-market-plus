@@ -32,7 +32,12 @@ public class NotifyTask {
     private String teamId;
 
     /**
-     * 回调接口
+     * 回调类型
+     */
+    private String notifyType;
+
+    /**
+     * 回调地址 - HTTP
      */
     private String notifyUrl;
 

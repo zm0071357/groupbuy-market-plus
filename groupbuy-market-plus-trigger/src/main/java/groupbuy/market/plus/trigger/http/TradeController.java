@@ -11,6 +11,8 @@ import groupbuy.market.plus.domain.activity.model.entity.MarketProductEntity;
 import groupbuy.market.plus.domain.activity.model.entity.TrialBalanceEntity;
 import groupbuy.market.plus.domain.activity.service.IndexGroupBuyMarketService;
 import groupbuy.market.plus.domain.trade.model.entity.*;
+import groupbuy.market.plus.domain.trade.model.valobj.NotifyConfigVO;
+import groupbuy.market.plus.domain.trade.model.valobj.NotifyTypeEnum;
 import groupbuy.market.plus.domain.trade.model.valobj.TeamProgressVO;
 import groupbuy.market.plus.domain.trade.service.lock.LockOrderService;
 import groupbuy.market.plus.domain.trade.service.settle.SettleOrderService;
@@ -44,7 +46,8 @@ public class TradeController implements TradeService {
             // 参数校验
             if (StringUtils.isBlank(lockOrderRequestDTO.getUserId()) || StringUtils.isBlank(lockOrderRequestDTO.getGoodsId()) ||
                     StringUtils.isBlank(lockOrderRequestDTO.getChannel()) || StringUtils.isBlank(lockOrderRequestDTO.getSource()) ||
-                    StringUtils.isBlank(lockOrderRequestDTO.getOutTradeNo()) || lockOrderRequestDTO.getActivityId() == null) {
+                    StringUtils.isBlank(lockOrderRequestDTO.getOutTradeNo()) || lockOrderRequestDTO.getNotifyConfig() == null ||
+                    lockOrderRequestDTO.getActivityId() == null) {
                 return Response.<LockOrderResponseDTO>builder()
                         .code(ResponseCodeEnum.ILLEGAL_PARAMETER.getCode())
                         .info(ResponseCodeEnum.ILLEGAL_PARAMETER.getInfo())
@@ -107,7 +110,11 @@ public class TradeController implements TradeService {
                             .endTime(trialBalanceEntity.getActivityVO().getEndTime())
                             .validTime(trialBalanceEntity.getActivityVO().getValidTime())
                             .targetCount(trialBalanceEntity.getActivityVO().getTarget())
-                            .notifyUrl(lockOrderRequestDTO.getNotifyUrl())
+                            .notifyConfigVO(NotifyConfigVO.builder()
+                                    .notifyTypeEnum(NotifyTypeEnum.getByType(lockOrderRequestDTO.getNotifyConfig().getNotifyType()))
+                                    .notifyUrl(lockOrderRequestDTO.getNotifyConfig().getNotifyUrl())
+                                    .notifyMQ(lockOrderRequestDTO.getNotifyConfig().getNotifyMQ())
+                                    .build())
                             .build(),
                     OrderDetailEntity.builder()
                             .outTradeNo(lockOrderRequestDTO.getOutTradeNo())

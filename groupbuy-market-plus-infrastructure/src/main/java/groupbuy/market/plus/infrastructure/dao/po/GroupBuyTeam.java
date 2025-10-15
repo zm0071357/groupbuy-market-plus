@@ -93,6 +93,11 @@ public class GroupBuyTeam {
     private Date endTime;
 
     /**
+     * 回调类型
+     */
+    private String notifyType;
+
+    /**
      * 回调地址
      */
     private String notifyUrl;

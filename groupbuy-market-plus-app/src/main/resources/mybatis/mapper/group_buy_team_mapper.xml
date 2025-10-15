@@ -18,6 +18,7 @@
         <result column="status" property="status"/>
         <result column="start_time" property="startTime"/>
         <result column="end_time" property="endTime"/>
+        <result column="notify_type" property="notifyType"/>
         <result column="notify_url" property="notifyUrl"/>
         <result column="create_time" property="createTime"/>
         <result column="update_time" property="updateTime"/>
@@ -27,11 +28,11 @@
         insert into group_buy_team(
             team_id, activity_id, goods_id, source, channel, original_price,
             deduction_price, pay_price, target_count, complete_count, lock_count,
-            status, start_time, end_time, notify_url, create_time, update_time
+            status, start_time, end_time, notify_type, notify_url, create_time, update_time
         ) values(
                     #{teamId}, #{activityId}, #{goodsId}, #{source}, #{channel}, #{originalPrice},
                     #{deductionPrice}, #{payPrice}, #{targetCount}, #{completeCount}, #{lockCount}, 0,
-                    #{startTime}, #{endTime}, #{notifyUrl}, now(), now()
+                    #{startTime}, #{endTime}, #{notifyType}, #{notifyUrl}, now(), now()
                 )
     </insert>
 
@@ -51,7 +52,7 @@
 
     <select id="getTeamById" resultMap="dataMap" parameterType="java.lang.String">
         select team_id, activity_id, goods_id, target_count, complete_count, lock_count,
-               status, start_time, end_time
+               status, notify_type, notify_url, start_time, end_time
         from group_buy_team
         where team_id = #{teamId}
     </select>

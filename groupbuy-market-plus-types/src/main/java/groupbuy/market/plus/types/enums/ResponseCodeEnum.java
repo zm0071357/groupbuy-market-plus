@@ -38,6 +38,7 @@ public enum ResponseCodeEnum {
     E0016("E0016", "支付时间不在拼团有效时间内"),
     E0017("E0017", "SC黑名单"),
     E0018("E0018", "不存在的拼团组队状态"),
+    E0019("E0019", "不存在的回调类型"),
     ;
     private String code;
     private String info;

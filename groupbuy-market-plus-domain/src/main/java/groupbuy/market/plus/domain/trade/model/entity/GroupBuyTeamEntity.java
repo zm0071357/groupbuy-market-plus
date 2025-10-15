@@ -1,5 +1,6 @@
 package groupbuy.market.plus.domain.trade.model.entity;
 
+import groupbuy.market.plus.domain.trade.model.valobj.NotifyConfigVO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -67,8 +68,7 @@ public class GroupBuyTeamEntity {
     private Integer status;
 
     /**
-     * 回调地址
+     * 回调设置
      */
-    private String notifyUrl;
-
+    private NotifyConfigVO notifyConfigVO;
 }

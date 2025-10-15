@@ -12,8 +12,8 @@ thread:
         block-queue-size: 5000
         policy: CallerRunsPolicy
 
-# 数据库配置；启动时配置数据库资源信息
 spring:
+  # 数据库配置；启动时配置数据库资源信息
   datasource:
     username:
     password:
@@ -29,6 +29,29 @@ spring:
     connection-timeout: 30000 #数据库连接超时时间,默认30秒，即30000
     connection-test-query: SELECT 1
   type: com.zaxxer.hikari.HikariDataSource
+  # RabbitMQ 配置
+  rabbitmq:
+    addresses:
+    port:
+    username:
+    password:
+    listener:
+      simple:
+        prefetch: 10 # 每次投递n个消息，消费完在投递n个
+    template:
+      delivery-mode: persistent # 确保全局默认设置为持久化（可选）
+    # 自定义消息配置
+    config:
+      # 生产者
+      producer:
+        # 绑定交换机
+        exchange: groupbuy_market_plus_exchange
+        # 消息主题配置 - 可能有多个主题需要配置，在这里做区分
+        topic_team_success:
+          # 消息主题
+          routing_key: topic.team_success
+          # 消费队列
+          queue: groupbuy_market_plus_topic_team_success_queue
 
 # MyBatis 配置
 mybatis:

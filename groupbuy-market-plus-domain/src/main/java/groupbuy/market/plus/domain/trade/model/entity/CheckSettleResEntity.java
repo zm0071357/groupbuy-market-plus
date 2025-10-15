@@ -1,5 +1,6 @@
 package groupbuy.market.plus.domain.trade.model.entity;
 
+import groupbuy.market.plus.domain.trade.model.valobj.NotifyConfigVO;
 import groupbuy.market.plus.domain.trade.model.valobj.TeamStatusEnum;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -58,7 +59,7 @@ public class CheckSettleResEntity {
     private Date endTime;
 
     /**
-     * 回调地址
+     * 回调设置
      */
-    private String notifyUrl;
+    private NotifyConfigVO notifyConfigVO;
 }

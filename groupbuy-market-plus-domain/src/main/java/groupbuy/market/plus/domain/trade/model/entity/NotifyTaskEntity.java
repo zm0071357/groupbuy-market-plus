@@ -1,5 +1,6 @@
 package groupbuy.market.plus.domain.trade.model.entity;
 
+import groupbuy.market.plus.domain.trade.model.valobj.NotifyTypeEnum;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,9 +21,19 @@ public class NotifyTaskEntity {
     private String teamId;
 
     /**
-     * 回调地址
+     * 回调类型
+     */
+    private NotifyTypeEnum notifyTypeEnum;
+
+    /**
+     * 回调地址 - HTTP
      */
     private String notifyUrl;
+
+    /**
+     * 回调主题 - MQ
+     */
+    private String notifyMQ;
 
     /**
      * 回调次数

@@ -5,9 +5,7 @@ import groupbuy.market.plus.domain.trade.adapter.repository.TradeRepository;
 import groupbuy.market.plus.domain.trade.model.aggregate.LockOrderAggregate;
 import groupbuy.market.plus.domain.trade.model.aggregate.SettleOrderAggregate;
 import groupbuy.market.plus.domain.trade.model.entity.*;
-import groupbuy.market.plus.domain.trade.model.valobj.ActivityStatusEnum;
-import groupbuy.market.plus.domain.trade.model.valobj.OrderStatusEnum;
-import groupbuy.market.plus.domain.trade.model.valobj.TeamProgressVO;
+import groupbuy.market.plus.domain.trade.model.valobj.*;
 import groupbuy.market.plus.infrastructure.dao.ActivityDao;
 import groupbuy.market.plus.infrastructure.dao.GroupBuyTeamDao;
 import groupbuy.market.plus.infrastructure.dao.GroupBuyTeamOrderDao;
@@ -24,6 +22,7 @@ import groupbuy.market.plus.types.exception.AppException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -50,6 +49,9 @@ public class TradeRepositoryImpl implements TradeRepository {
 
     @Resource
     private DCCServiceImpl dccServiceImpl;
+
+    @Value("${spring.rabbitmq.config.producer.topic_team_success.routing_key}")
+    private String teamSuccessTopic;
 
     @Override
     public ActivityEntity getActivityById(Long activityId) {
@@ -124,7 +126,8 @@ public class TradeRepositoryImpl implements TradeRepository {
                     .lockCount(1)
                     .startTime(currentTime)
                     .endTime(calender.getTime())
-                    .notifyUrl(groupBuyTeamEntity.getNotifyUrl())
+                    .notifyType(groupBuyTeamEntity.getNotifyConfigVO().getNotifyTypeEnum().getSign())
+                    .notifyUrl(groupBuyTeamEntity.getNotifyConfigVO().getNotifyUrl())
                     .build());
         } else {
             // 团员 - 更新锁单量
@@ -264,6 +267,11 @@ public class TradeRepositoryImpl implements TradeRepository {
                 .completeCount(groupBuyTeam.getCompleteCount())
                 .lockCount(groupBuyTeam.getLockCount())
                 .status(groupBuyTeam.getStatus())
+                .notifyConfigVO(NotifyConfigVO.builder()
+                        .notifyTypeEnum(NotifyTypeEnum.getBySign(groupBuyTeam.getNotifyType()))
+                        .notifyUrl(groupBuyTeam.getNotifyUrl())
+                        .notifyMQ(teamSuccessTopic)
+                        .build())
                 .build();
     }
 
@@ -296,8 +304,8 @@ public class TradeRepositoryImpl implements TradeRepository {
             throw new AppException(ResponseCodeEnum.UPDATE_ZERO.getCode(), ResponseCodeEnum.UPDATE_ZERO.getInfo());
         }
 
-        // 最后一笔 - 拼团成功
         boolean isComplete = false;     // 拼团是否完成
+        // 最后一笔 - 拼团成功
         if (groupBuyTeamEntity.getTargetCount() - groupBuyTeamEntity.getCompleteCount() == 1) {
             log.info("拼团目标完成，组队ID：{}", groupBuyTeamEntity.getTeamId());
             // 更新拼团组队为完成
@@ -307,10 +315,12 @@ public class TradeRepositoryImpl implements TradeRepository {
             }
             // 回调任务
             List<String> outTradeNoList = groupBuyTeamOrderDao.getCompleteTeamOutTradeNoList(groupBuyTeamEntity.getTeamId());
+            NotifyTypeEnum notifyTypeEnum = groupBuyTeamEntity.getNotifyConfigVO().getNotifyTypeEnum();
             NotifyTask notifyTask = NotifyTask.builder()
                     .activityId(groupBuyTeamEntity.getActivityId())
                     .teamId(groupBuyTeamEntity.getTeamId())
-                    .notifyUrl(groupBuyTeamEntity.getNotifyUrl())
+                    .notifyType(notifyTypeEnum.getSign())
+                    .notifyUrl(notifyTypeEnum.equals(NotifyTypeEnum.HTTP) ? groupBuyTeamEntity.getNotifyConfigVO().getNotifyUrl() : null)
                     .notifyCount(0)
                     .notifyStatus(0)
                     .parameterJson(JSON.toJSONString(new HashMap<String, Object>(){{
@@ -347,7 +357,9 @@ public class TradeRepositoryImpl implements TradeRepository {
         for (NotifyTask notifyTask : notifyTaskList) {
             notifyTaskEntityList.add(NotifyTaskEntity.builder()
                     .teamId(notifyTask.getTeamId())
+                    .notifyTypeEnum(NotifyTypeEnum.getBySign(notifyTask.getNotifyType()))
                     .notifyUrl(notifyTask.getNotifyUrl())
+                    .notifyMQ(teamSuccessTopic)
                     .notifyCount(notifyTask.getNotifyCount())
                     .parameterJson(notifyTask.getParameterJson())
                     .build());
@@ -364,7 +376,9 @@ public class TradeRepositoryImpl implements TradeRepository {
         return new ArrayList<>(){{
             add(NotifyTaskEntity.builder()
                     .teamId(notifyTask.getTeamId())
+                    .notifyTypeEnum(NotifyTypeEnum.getBySign(notifyTask.getNotifyType()))
                     .notifyUrl(notifyTask.getNotifyUrl())
+                    .notifyMQ(teamSuccessTopic)
                     .notifyCount(notifyTask.getNotifyCount())
                     .parameterJson(notifyTask.getParameterJson())
                     .build());

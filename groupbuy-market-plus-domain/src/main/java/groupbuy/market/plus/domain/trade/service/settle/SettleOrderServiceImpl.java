@@ -1,5 +1,6 @@
 package groupbuy.market.plus.domain.trade.service.settle;
 
+import com.alibaba.fastjson.JSON;
 import groupbuy.market.plus.domain.trade.adapter.port.TradePort;
 import groupbuy.market.plus.domain.trade.adapter.repository.TradeRepository;
 import groupbuy.market.plus.domain.trade.model.aggregate.SettleOrderAggregate;
@@ -7,6 +8,7 @@ import groupbuy.market.plus.domain.trade.model.entity.*;
 import groupbuy.market.plus.domain.trade.model.valobj.NofifyStatusEnum;
 import groupbuy.market.plus.domain.trade.service.settle.factory.SettleOrderLinkFactory;
 import groupbuy.market.plus.types.design.framework.link.multition.chain.BusinessLinkedList;
+import groupbuy.market.plus.types.exception.AppException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -14,6 +16,7 @@ import javax.annotation.Resource;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ThreadPoolExecutor;
 
 @Slf4j
 @Service
@@ -27,6 +30,9 @@ public class SettleOrderServiceImpl implements SettleOrderService{
 
     @Resource
     private BusinessLinkedList<CheckSettleEntity, SettleOrderLinkFactory.DynamicContext, CheckSettleResEntity> settleOrderLink;
+
+    @Resource
+    private ThreadPoolExecutor threadPoolExecutor;
 
     @Override
     public SettleOrderEntity settleOrder(OrderPaySuccessEntity orderPaySuccessEntity) throws Exception {
@@ -50,7 +56,7 @@ public class SettleOrderServiceImpl implements SettleOrderService{
                         .status(checkSettleResEntity.getStatus().getCode())
                         .startTime(checkSettleResEntity.getStartTime())
                         .endTime(checkSettleResEntity.getEndTime())
-                        .notifyUrl(checkSettleResEntity.getNotifyUrl())
+                        .notifyConfigVO(checkSettleResEntity.getNotifyConfigVO())
                         .build())
                 .orderPaySuccessEntity(orderPaySuccessEntity)
                 .build();
@@ -59,8 +65,18 @@ public class SettleOrderServiceImpl implements SettleOrderService{
 
         // 拼团完成 - 进行回调
         if (settleOrderEntity.getIsComplete()) {
-            log.info("拼团完成，可进行回调，组队ID：{}", settleOrderEntity.getTeamId());
-            execNotifyJob(settleOrderEntity.getTeamId());
+            log.info("拼团完成，异步执行回调任务，组队ID：{}", settleOrderEntity.getTeamId());
+            // 异步执行回调任务
+            threadPoolExecutor.execute(() -> {
+                Map<String, Integer> notifyResultMap = null;
+                try {
+                    notifyResultMap = execNotifyJob(settleOrderEntity.getTeamId());
+                    log.info("回调拼团完成通知完成：{}", JSON.toJSONString(notifyResultMap));
+                } catch (Exception e) {
+                    log.error("回调拼团完成通知失败：{}", JSON.toJSONString(notifyResultMap), e);
+                    throw new AppException(e.getMessage());
+                }
+            });
         }
         return settleOrderEntity;
     }
