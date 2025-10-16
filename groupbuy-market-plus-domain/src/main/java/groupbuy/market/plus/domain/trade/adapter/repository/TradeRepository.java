@@ -117,4 +117,20 @@ public interface TradeRepository {
      * @return
      */
     int updateNotifyTaskFail(String teamId);
+
+    /**
+     * 抢占库存
+     * @param target 目标量
+     * @param validTime 拼团有效时间
+     * @param teamStockOccupyKey 抢占Key
+     * @param teamStockRecoverKey 恢复Key
+     * @return
+     */
+    boolean occupyTeamStock(Integer target, Integer validTime, String teamStockOccupyKey, String teamStockRecoverKey);
+
+    /**
+     * 锁单失败时恢复可用位置
+     * @param teamStockRecoverKey 恢复Key
+     */
+    Long recoverTeamStock(String teamStockRecoverKey);
 }

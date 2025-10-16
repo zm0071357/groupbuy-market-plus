@@ -39,6 +39,7 @@ public enum ResponseCodeEnum {
     E0017("E0017", "SC黑名单"),
     E0018("E0018", "不存在的拼团组队状态"),
     E0019("E0019", "不存在的回调类型"),
+    E0020("E0020", "抢占可用位置失败"),
     ;
     private String code;
     private String info;

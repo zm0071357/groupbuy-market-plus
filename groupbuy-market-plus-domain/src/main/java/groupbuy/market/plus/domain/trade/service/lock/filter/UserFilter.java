@@ -40,8 +40,6 @@ public class UserFilter implements LogicHandler<CheckLockEntity, LockOrderLinkFa
                 throw new AppException(ResponseCodeEnum.E0009.getCode(), ResponseCodeEnum.E0009.getInfo());
             }
         }
-        return CheckLockResEntity.builder()
-                .isHeader(StringUtils.isBlank(checkLockEntity.getTeamId()))
-                .build();
+        return next(checkLockEntity, dynamicContext);
     }
 }

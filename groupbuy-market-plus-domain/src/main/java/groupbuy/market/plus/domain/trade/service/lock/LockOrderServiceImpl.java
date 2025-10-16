@@ -36,7 +36,15 @@ public class LockOrderServiceImpl implements LockOrderService{
                 .orderDetailEntity(orderDetailEntity)
                 .checkLockResEntity(checkLockResEntity)
                 .build();
-        return tradeRepository.lockOrder(orderAggregate);
+        try {
+            // 尝试锁单
+            return tradeRepository.lockOrder(orderAggregate);
+        } catch (Exception e) {
+            // 锁单失败时恢复可用位置
+            Long recoverTeamStockCount = tradeRepository.recoverTeamStock(checkLockResEntity.getTeamStockRecoverKey());
+            log.info("锁单失败 - 恢复可用位置，恢复Key：{}，当前恢复量：{}", checkLockResEntity.getTeamStockRecoverKey(), recoverTeamStockCount);
+            throw e;
+        }
     }
 
     @Override

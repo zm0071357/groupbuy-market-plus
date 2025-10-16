@@ -19,4 +19,8 @@ public class GroupBuyConstants {
 
     public static final BigDecimal MinPrice = BigDecimal.valueOf(0.01);
 
+    public static final String Lock = "groupbuy_market_plus_notify_job_lock";
+
+    public static final String TeamStockKey = "groupbuy_market_plus_stock_key_";
+
 }

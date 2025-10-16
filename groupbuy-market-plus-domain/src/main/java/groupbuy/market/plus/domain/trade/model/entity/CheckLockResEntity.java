@@ -19,4 +19,9 @@ public class CheckLockResEntity {
      */
     private Boolean isHeader;
 
+    /**
+     * 恢复Key - 用于锁单失败恢复可用位置
+     */
+    private String teamStockRecoverKey;
+
 }

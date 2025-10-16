@@ -22,6 +22,8 @@ import groupbuy.market.plus.types.exception.AppException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.redisson.api.RAtomicLong;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
@@ -30,6 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -52,6 +55,9 @@ public class TradeRepositoryImpl implements TradeRepository {
 
     @Value("${spring.rabbitmq.config.producer.topic_team_success.routing_key}")
     private String teamSuccessTopic;
+
+    @Resource
+    private RedissonClient redissonClient;
 
     @Override
     public ActivityEntity getActivityById(Long activityId) {
@@ -191,6 +197,7 @@ public class TradeRepositoryImpl implements TradeRepository {
         // 团长有额外优惠
         if (isHeader) {
             BigDecimal endPrice = payPrice.multiply(GroupBuyConstants.HeaderDiscount);
+            // 最少支付0.01
             if (endPrice.compareTo(GroupBuyConstants.MinPrice) < 0) {
                 return GroupBuyConstants.MinPrice;
             }
@@ -398,6 +405,38 @@ public class TradeRepositoryImpl implements TradeRepository {
     @Override
     public int updateNotifyTaskFail(String teamId) {
         return notifyTaskDao.updateNotifyTaskFail(teamId);
+    }
+
+    @Override
+    public boolean occupyTeamStock(Integer target, Integer validTime, String teamStockOccupyKey, String teamStockRecoverKey) {
+        // 获取恢复量 - 没有恢复量时，get()方法会返回0
+        // 恢复量：当拼团锁单最后失败，失败了需要把这个位置给恢复，其他用户可以抢占这个恢复位置，原来抢占失败的位置视为已经占有
+        long teamStockRecoverCount = redissonClient.getAtomicLong(teamStockRecoverKey).get();
+        // 抢占量+1，再加上团长原先就占有的一个位置即为目前的总抢占量
+        long teamStockOccupyCount = redissonClient.getAtomicLong(teamStockOccupyKey).incrementAndGet() + 1;
+        // 抢占量大于恢复量+目标量 - 位置已经不够了，返回失败
+        if (teamStockOccupyCount > teamStockRecoverCount + target) {
+            // 重置抢占量为目标量 - 位置已经不够，那抢占量最低就是目标量
+            redissonClient.getAtomicLong(teamStockOccupyKey).set(target);
+            return false;
+        }
+        // 给每个产生的值加锁兜底，虽然incr操作是原子的，基本不会产生一样的值
+        // 但在实际生产中，遇到过集群的运维配置问题，以及业务运营配置数据问题，导致incr得到的值相同
+        String lockKey = teamStockOccupyKey + Constants.UNDERSCORE + teamStockOccupyCount;
+        boolean lock = redissonClient.getBucket(lockKey).trySet("lock", validTime + 60, TimeUnit.MINUTES);
+        if (!lock) {
+            log.info("拼团抢占可用位置加锁失败：{}", lockKey);
+        }
+        return lock;
+    }
+
+    @Override
+    public Long recoverTeamStock(String teamStockRecoverKey) {
+        // teamID为空 - 团长锁单失败，不需要恢复
+        if (StringUtils.isBlank(teamStockRecoverKey)) {
+            return 0L;
+        }
+        return redissonClient.getAtomicLong(teamStockRecoverKey).incrementAndGet();
     }
 
 }
