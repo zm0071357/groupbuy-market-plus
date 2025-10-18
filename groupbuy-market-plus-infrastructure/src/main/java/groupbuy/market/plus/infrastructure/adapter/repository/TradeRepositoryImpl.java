@@ -3,6 +3,7 @@ package groupbuy.market.plus.infrastructure.adapter.repository;
 import com.alibaba.fastjson.JSON;
 import groupbuy.market.plus.domain.trade.adapter.repository.TradeRepository;
 import groupbuy.market.plus.domain.trade.model.aggregate.LockOrderAggregate;
+import groupbuy.market.plus.domain.trade.model.aggregate.RefundThreadTaskAggregate;
 import groupbuy.market.plus.domain.trade.model.aggregate.SettleOrderAggregate;
 import groupbuy.market.plus.domain.trade.model.entity.*;
 import groupbuy.market.plus.domain.trade.model.valobj.*;
@@ -22,7 +23,6 @@ import groupbuy.market.plus.types.exception.AppException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.redisson.api.RAtomicLong;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
@@ -273,7 +273,7 @@ public class TradeRepositoryImpl implements TradeRepository {
                 .targetCount(groupBuyTeam.getTargetCount())
                 .completeCount(groupBuyTeam.getCompleteCount())
                 .lockCount(groupBuyTeam.getLockCount())
-                .status(groupBuyTeam.getStatus())
+                .teamStatusEnum(TeamStatusEnum.valueOf(groupBuyTeam.getStatus()))
                 .notifyConfigVO(NotifyConfigVO.builder()
                         .notifyTypeEnum(NotifyTypeEnum.getBySign(groupBuyTeam.getNotifyType()))
                         .notifyUrl(groupBuyTeam.getNotifyUrl())
@@ -437,6 +437,49 @@ public class TradeRepositoryImpl implements TradeRepository {
             return 0L;
         }
         return redissonClient.getAtomicLong(teamStockRecoverKey).incrementAndGet();
+    }
+
+    @Override
+    public RefundThreadTaskAggregate getRefundThreadTaskResAggregate(String userId, String outTradeNo) {
+        GroupBuyTeamOrder groupBuyTeamOrderReq = new GroupBuyTeamOrder();
+        groupBuyTeamOrderReq.setUserId(userId);
+        groupBuyTeamOrderReq.setOutTradeNo(outTradeNo);
+        GroupBuyTeamOrder groupBuyTeamOrder = groupBuyTeamOrderDao.getPreRefundOrder(groupBuyTeamOrderReq);
+        if (groupBuyTeamOrder == null) {
+            return null;
+        }
+        GroupBuyTeam groupBuyTeam = null;
+        if (StringUtils.isNotBlank(groupBuyTeamOrder.getTeamId())) {
+            groupBuyTeam = groupBuyTeamDao.getTeamById(groupBuyTeamOrder.getTeamId());
+        }
+        return RefundThreadTaskAggregate.builder()
+                .preRefundOrderEntity(PreRefundOrderEntity.builder()
+                        .userId(groupBuyTeamOrder.getUserId())
+                        .teamId(groupBuyTeamOrder.getTeamId())
+                        .orderId(groupBuyTeamOrder.getOrderId())
+                        .isHeader(groupBuyTeamOrder.getIsHeader() == 1)
+                        .orderStatusEnum(OrderStatusEnum.valueOf(groupBuyTeamOrder.getStatus()))
+                        .build())
+                .groupBuyTeamEntity(groupBuyTeam == null ? null : GroupBuyTeamEntity.builder()
+                        .teamId(groupBuyTeam.getTeamId())
+                        .activityId(groupBuyTeam.getActivityId())
+                        .teamStatusEnum(TeamStatusEnum.valueOf(groupBuyTeam.getStatus()))
+                        .build())
+                .build();
+    }
+
+    @Override
+    public String getNewHeaderUser(String teamId) {
+        // 获取新团长ID
+        String newHeaderUserId = groupBuyTeamOrderDao.getNewHeaderUserId(teamId);
+        // 更新为新团长
+        if (StringUtils.isNotBlank(newHeaderUserId)) {
+            Integer updateCount = groupBuyTeamOrderDao.updateUserIsHeader(newHeaderUserId);
+            if (updateCount != 1) {
+                throw new AppException(ResponseCodeEnum.UPDATE_ZERO.getCode(), ResponseCodeEnum.UPDATE_ZERO.getInfo());
+            }
+        }
+        return newHeaderUserId;
     }
 
 }

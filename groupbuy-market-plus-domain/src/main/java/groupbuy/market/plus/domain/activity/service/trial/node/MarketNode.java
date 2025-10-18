@@ -8,8 +8,6 @@ import groupbuy.market.plus.domain.activity.model.valobj.SkuVO;
 import groupbuy.market.plus.domain.activity.service.AbstractGroupBuyMarketSupport;
 import groupbuy.market.plus.domain.activity.service.discount.DisCountService;
 import groupbuy.market.plus.domain.activity.service.trial.factory.DefaultActivityStrategyFactory;
-import groupbuy.market.plus.domain.activity.service.trial.thread.GetActivityVOThreadTask;
-import groupbuy.market.plus.domain.activity.service.trial.thread.GetSkuVOThreadTask;
 import groupbuy.market.plus.types.design.framework.tree.StrategyHandler;
 import groupbuy.market.plus.types.enums.ResponseCodeEnum;
 import groupbuy.market.plus.types.exception.AppException;
@@ -20,7 +18,6 @@ import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.*;
 
 /**
  * 试算节点
@@ -30,7 +27,7 @@ import java.util.concurrent.*;
 public class MarketNode extends AbstractGroupBuyMarketSupport<MarketProductEntity, DefaultActivityStrategyFactory.DynamicContext, TrialBalanceEntity> {
 
     @Resource
-    private EndNode endNode;
+    private TrialEndNode trialEndNode;
 
     @Resource
     private ErrorNode errorNode;
@@ -73,7 +70,7 @@ public class MarketNode extends AbstractGroupBuyMarketSupport<MarketProductEntit
                 dynamicContext.getPayPrice() == null) {
             return errorNode;
         }
-        return endNode;
+        return trialEndNode;
     }
 
 }

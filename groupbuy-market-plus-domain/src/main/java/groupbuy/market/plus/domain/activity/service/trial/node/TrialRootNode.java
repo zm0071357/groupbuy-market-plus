@@ -18,7 +18,7 @@ import javax.annotation.Resource;
  */
 @Slf4j
 @Service
-public class RootNode extends AbstractGroupBuyMarketSupport<MarketProductEntity, DefaultActivityStrategyFactory.DynamicContext, TrialBalanceEntity> {
+public class TrialRootNode extends AbstractGroupBuyMarketSupport<MarketProductEntity, DefaultActivityStrategyFactory.DynamicContext, TrialBalanceEntity> {
 
     @Resource
     private SwitchNode switchNode;

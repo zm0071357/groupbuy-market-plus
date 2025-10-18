@@ -53,7 +53,7 @@ public class SettleOrderServiceImpl implements SettleOrderService{
                         .targetCount(checkSettleResEntity.getTargetCount())
                         .completeCount(checkSettleResEntity.getCompleteCount())
                         .lockCount(checkSettleResEntity.getLockCount())
-                        .status(checkSettleResEntity.getStatus().getCode())
+                        .teamStatusEnum(checkSettleResEntity.getTeamStatusEnum())
                         .startTime(checkSettleResEntity.getStartTime())
                         .endTime(checkSettleResEntity.getEndTime())
                         .notifyConfigVO(checkSettleResEntity.getNotifyConfigVO())

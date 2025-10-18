@@ -28,7 +28,7 @@ public class TagNode extends AbstractGroupBuyMarketSupport<MarketProductEntity, 
     private MarketNode marketNode;
 
     @Resource
-    private EndNode endNode;
+    private TrialEndNode trialEndNode;
 
     @Resource
     private TagRepository tagRepository;
@@ -92,7 +92,7 @@ public class TagNode extends AbstractGroupBuyMarketSupport<MarketProductEntity, 
             return marketNode;
         }
         log.info("userId：{}，不满足条件，不可参与优惠试算", marketProductEntity.getUserId());
-        return endNode;
+        return trialEndNode;
     }
 
 }

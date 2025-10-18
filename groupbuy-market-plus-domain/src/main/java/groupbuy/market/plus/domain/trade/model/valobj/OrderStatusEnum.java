@@ -1,5 +1,7 @@
 package groupbuy.market.plus.domain.trade.model.valobj;
 
+import groupbuy.market.plus.types.enums.ResponseCodeEnum;
+import groupbuy.market.plus.types.exception.AppException;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,7 +16,7 @@ public enum OrderStatusEnum {
 
     CREATE(0, "初始创建"),
     COMPLETE(1, "支付完成"),
-    RETURN(2, "用户退单"),
+    REFUND(2, "用户退单"),
     CLOSE(3, "超时关单"),
     ;
 
@@ -28,9 +30,13 @@ public enum OrderStatusEnum {
             case 1:
                 return COMPLETE;
             case 2:
+                return REFUND;
+            case 3:
                 return CLOSE;
+            default:
+                throw new AppException(ResponseCodeEnum.E0022.getCode(), ResponseCodeEnum.E0022.getInfo());
         }
-        return CREATE;
+
     }
 
 }

@@ -4,7 +4,7 @@ import groupbuy.market.plus.domain.activity.model.entity.MarketProductEntity;
 import groupbuy.market.plus.domain.activity.model.entity.TrialBalanceEntity;
 import groupbuy.market.plus.domain.activity.model.valobj.ActivityVO;
 import groupbuy.market.plus.domain.activity.model.valobj.SkuVO;
-import groupbuy.market.plus.domain.activity.service.trial.node.RootNode;
+import groupbuy.market.plus.domain.activity.service.trial.node.TrialRootNode;
 import groupbuy.market.plus.types.design.framework.tree.StrategyHandler;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,10 +21,10 @@ import java.math.BigDecimal;
 @Service
 public class DefaultActivityStrategyFactory {
 
-    private final RootNode rootNode;
+    private final TrialRootNode trialRootNode;
 
-    public DefaultActivityStrategyFactory(RootNode rootNode) {
-        this.rootNode = rootNode;
+    public DefaultActivityStrategyFactory(TrialRootNode trialRootNode) {
+        this.trialRootNode = trialRootNode;
     }
 
     /**
@@ -32,7 +32,7 @@ public class DefaultActivityStrategyFactory {
      * @return
      */
     public StrategyHandler<MarketProductEntity, DynamicContext, TrialBalanceEntity> strategyHandler() {
-        return rootNode;
+        return trialRootNode;
     }
 
     /**

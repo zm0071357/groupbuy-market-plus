@@ -44,7 +44,7 @@ public class OrderTimeFilter implements LogicHandler<CheckSettleEntity, SettleOr
                 .targetCount(groupBuyTeamEntity.getTargetCount())
                 .completeCount(groupBuyTeamEntity.getCompleteCount())
                 .lockCount(groupBuyTeamEntity.getLockCount())
-                .status(TeamStatusEnum.valueOf(groupBuyTeamEntity.getStatus()))
+                .teamStatusEnum(groupBuyTeamEntity.getTeamStatusEnum())
                 .startTime(groupBuyTeamEntity.getStartTime())
                 .endTime(groupBuyTeamEntity.getEndTime())
                 .notifyConfigVO(groupBuyTeamEntity.getNotifyConfigVO())

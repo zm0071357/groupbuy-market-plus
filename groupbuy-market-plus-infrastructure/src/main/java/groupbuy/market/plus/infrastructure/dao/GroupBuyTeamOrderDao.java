@@ -66,10 +66,29 @@ public interface GroupBuyTeamOrderDao {
 
     /**
      * 查询用户未参与的组队ID集合
-     *
      * @param groupBuyTeamOrderReq
      * @param limitCount
      * @return
      */
     List<String> getRandomTeamIdList(@Param("groupBuyTeamOrderReq") GroupBuyTeamOrder groupBuyTeamOrderReq, @Param("limitCount") Integer limitCount);
+
+    /**
+     * 查询预退单订单
+     * @param groupBuyTeamOrderReq
+     * @return
+     */
+    GroupBuyTeamOrder getPreRefundOrder(GroupBuyTeamOrder groupBuyTeamOrderReq);
+
+    /**
+     * 获取新团长ID
+     * @param teamId 拼团组队ID
+     * @return
+     */
+    String getNewHeaderUserId(@Param("teamId") String teamId);
+
+    /**
+     * 更新用户为新团长
+     * @param newHeaderUserId 新团长用户ID
+     */
+    Integer updateUserIsHeader(@Param("userId") String newHeaderUserId);
 }

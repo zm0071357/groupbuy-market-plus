@@ -1,6 +1,7 @@
 package groupbuy.market.plus.domain.trade.model.entity;
 
 import groupbuy.market.plus.domain.trade.model.valobj.NotifyConfigVO;
+import groupbuy.market.plus.domain.trade.model.valobj.TeamStatusEnum;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -63,9 +64,9 @@ public class GroupBuyTeamEntity {
     private Integer lockCount;
 
     /**
-     * 订单状态
+     * 拼团状态枚举
      */
-    private Integer status;
+    private TeamStatusEnum teamStatusEnum;
 
     /**
      * 回调设置

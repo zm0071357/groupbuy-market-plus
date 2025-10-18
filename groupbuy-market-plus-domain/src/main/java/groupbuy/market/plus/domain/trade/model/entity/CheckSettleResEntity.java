@@ -46,7 +46,7 @@ public class CheckSettleResEntity {
     /**
      * 拼团组队状态（0-拼单中、1-完成、2-失败）
      */
-    private TeamStatusEnum status;
+    private TeamStatusEnum teamStatusEnum;
 
     /**
      * 拼团开始时间

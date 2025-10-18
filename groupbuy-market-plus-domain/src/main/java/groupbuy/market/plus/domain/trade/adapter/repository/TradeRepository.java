@@ -1,6 +1,7 @@
 package groupbuy.market.plus.domain.trade.adapter.repository;
 
 import groupbuy.market.plus.domain.trade.model.aggregate.LockOrderAggregate;
+import groupbuy.market.plus.domain.trade.model.aggregate.RefundThreadTaskAggregate;
 import groupbuy.market.plus.domain.trade.model.aggregate.SettleOrderAggregate;
 import groupbuy.market.plus.domain.trade.model.entity.*;
 import groupbuy.market.plus.domain.trade.model.valobj.TeamProgressVO;
@@ -133,4 +134,19 @@ public interface TradeRepository {
      * @param teamStockRecoverKey 恢复Key
      */
     Long recoverTeamStock(String teamStockRecoverKey);
+
+    /**
+     * 获取退单所需数据聚合
+     * @param userId 用户ID
+     * @param outTradeNo 外部交易单号
+     * @return
+     */
+    RefundThreadTaskAggregate getRefundThreadTaskResAggregate(String userId, String outTradeNo);
+
+    /**
+     * 选出新团长
+     * @param teamId 拼团组队ID
+     * @return
+     */
+    String getNewHeaderUser(String teamId);
 }

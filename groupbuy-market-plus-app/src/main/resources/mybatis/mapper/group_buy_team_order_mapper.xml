@@ -93,5 +93,25 @@
         limit #{limitCount}
     </select>
 
+    <select id="getPreRefundOrder" resultMap="dataMap" parameterType="groupbuy.market.plus.infrastructure.dao.po.GroupBuyTeamOrder">
+        select user_id, team_id, order_id, activity_id, start_time, end_time,
+               goods_id, original_price, deduction_price, pay_price, status, is_header
+        from group_buy_team_order
+        where user_id = #{userId} and out_trade_no = #{outTradeNo}
+    </select>
+
+    <select id="getNewHeaderUserId" resultType="java.lang.String">
+        select user_id
+        from group_buy_team_order
+        where team_id = #{teamId} and status in (0,1) and is_header = 0
+        order by create_time asc
+        limit 1
+    </select>
+
+    <update id="updateUserIsHeader">
+        update group_buy_team_order
+        set is_header = 1, update_time = now()
+        where user_id = #{userId}
+    </update>
 
 </mapper>
