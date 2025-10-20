@@ -68,14 +68,35 @@ public class LockOrderRequestDTO {
          * 回调主题 - MQ
          */
         private String notifyMQ;
+
+        /**
+         * 退单回调地址 - HTTP
+         */
+        private String refundNotifyUrl;
+
+        /**
+         * 退单回调主题 - MQ
+         */
+        private String refundNotifyMQ;
+
+        /**
+         * 团长退单补偿回调地址 - HTTP
+         */
+        private String headerRefundNotifyUrl;
+
+        /**
+         * 团长退单补偿回调地址 - MQ
+         */
+        private String headerRefundNotifyMQ;
     }
 
-
     // 兼容配置
-    public void setNotifyUrl(String url) {
+    public void setHTTPNotify(String notifyUrl, String refundNotifyUrl, String headerRefundNotifyUrl) {
         NotifyConfig notifyConfig = new NotifyConfig();
         notifyConfig.setNotifyType(1);
-        notifyConfig.setNotifyUrl(url);
+        notifyConfig.setNotifyUrl(notifyUrl);
+        notifyConfig.setRefundNotifyUrl(refundNotifyUrl);
+        notifyConfig.setHeaderRefundNotifyUrl(headerRefundNotifyUrl);
         this.notifyConfig = notifyConfig;
     }
 

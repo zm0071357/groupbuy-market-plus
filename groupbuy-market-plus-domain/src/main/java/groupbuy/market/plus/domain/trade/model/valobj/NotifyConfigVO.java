@@ -25,8 +25,28 @@ public class NotifyConfigVO {
     private String notifyUrl;
 
     /**
+     * 退单回调地址 - HTTP
+     */
+    private String refundNotifyUrl;
+
+    /**
      * 回调主题 - MQ
      */
     private String notifyMQ;
+
+    /**
+     * 退单回调主题 - MQ
+     */
+    private String refundNotifyMQ;
+
+    /**
+     * 团长退单补偿回调地址 - HTTP
+     */
+    private String headerRefundNotifyUrl;
+
+    /**
+     * 团长退单补偿回调地址 - MQ
+     */
+    private String headerRefundNotifyMQ;
 
 }

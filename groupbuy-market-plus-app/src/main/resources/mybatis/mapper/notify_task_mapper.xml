@@ -6,8 +6,11 @@
         <id column="id" property="id"/>
         <result column="activity_id" property="activityId"/>
         <result column="team_id" property="teamId"/>
+        <result column="task_id" property="taskId"/>
+        <result column="task_type" property="taskType"/>
         <result column="notify_type" property="notifyType"/>
         <result column="notify_url" property="notifyUrl"/>
+        <result column="notify_mq" property="notifyUrl"/>
         <result column="notify_count" property="notifyCount"/>
         <result column="notify_status" property="notifyStatus"/>
         <result column="parameter_json" property="parameterJson"/>
@@ -16,22 +19,24 @@
     </resultMap>
 
     <insert id="insert" parameterType="groupbuy.market.plus.infrastructure.dao.po.NotifyTask">
-        insert into notify_task(activity_id, team_id, notify_type, notify_url, notify_count, notify_status, parameter_json,
-                                create_time, update_time)
+        insert into notify_task(activity_id, team_id, task_id, task_type, notify_type, notify_url, notify_mq,
+                                notify_count, notify_status, parameter_json, create_time, update_time)
         values(
-               #{activityId}, #{teamId}, #{notifyType}, #{notifyUrl}, #{notifyCount},
-               #{notifyStatus}, #{parameterJson}, now(), now()
+               #{activityId}, #{teamId}, #{taskId}, #{taskType}, #{notifyType}, #{notifyUrl}, #{notifyMQ},
+               #{notifyCount}, #{notifyStatus}, #{parameterJson}, now(), now()
                )
     </insert>
 
     <select id="getUnNotifyTaskList" resultMap="dataMap">
-        select activity_id, team_id, notify_type, notify_url, notify_count, notify_status, parameter_json
+        select activity_id, team_id, task_id, task_type, notify_type, notify_url, notify_mq,
+               notify_count, notify_status, parameter_json
         from notify_task
         where notify_status in (0, 2)
     </select>
 
     <select id="getUnNotifyTaskByTeamId" resultMap="dataMap">
-        select activity_id, team_id, notify_type, notify_url, notify_count, notify_status, parameter_json
+        select activity_id, team_id, task_id, task_type, notify_type, notify_url, notify_mq,
+               notify_count, notify_status, parameter_json
         from notify_task
         where team_id = #{teamId} and notify_status in (0, 2)
     </select>

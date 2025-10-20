@@ -78,7 +78,7 @@ public class GroupBuyTeam {
     private Integer lockCount;
 
     /**
-     * 状态（0-拼单中、1-完成、2-失败）
+     * 状态（0-拼单中、1-完成、2-失败、3-完成 - 存在退单）
      */
     private Integer status;
 
@@ -98,9 +98,34 @@ public class GroupBuyTeam {
     private String notifyType;
 
     /**
-     * 回调地址
+     * 回调地址 - HTTP
      */
     private String notifyUrl;
+
+    /**
+     * 退单回调地址 - HTTP
+     */
+    private String refundNotifyUrl;
+
+    /**
+     * 回调主题 - MQ
+     */
+    private String notifyMQ;
+
+    /**
+     * 退单回调主题 - MQ
+     */
+    private String refundNotifyMQ;
+
+    /**
+     * 团长退单补偿回调地址 - HTTP
+     */
+    private String headerRefundNotifyUrl;
+
+    /**
+     * 团长退单补偿回调主题 - MQ
+     */
+    private String headerRefundNotifyMQ;
 
     /**
      * 创建时间

@@ -46,7 +46,7 @@ public class RefundOrderNode extends AbstractRefundOrderSupport<PreRefundEntity,
         // 新团长回调
         if (StringUtils.isNotBlank(dynamicContext.getNewLeaderUserId())) {
             log.info("退单服务 - 退单执行节点，新团长回调，新团长用户ID：{}", dynamicContext.getNewLeaderUserId());
-            refundService.newHeaderNotify(dynamicContext.getNewLeaderUserId());
+            refundService.newHeaderNotify(dynamicContext.getNewLeaderUserId(), preRefundOrderEntity.getOrderId(), groupBuyTeamEntity);
         }
         return router(preRefundEntity, dynamicContext);
     }
@@ -55,4 +55,5 @@ public class RefundOrderNode extends AbstractRefundOrderSupport<PreRefundEntity,
     public StrategyHandler<PreRefundEntity, DefaultRefundStrategyFactory.DynamicContext, RefundResEntity> get(PreRefundEntity requestParameter, DefaultRefundStrategyFactory.DynamicContext dynamicContext) {
         return refundEndNode;
     }
+
 }

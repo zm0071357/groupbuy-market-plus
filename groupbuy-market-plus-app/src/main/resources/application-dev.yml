@@ -53,6 +53,14 @@ spring:
           # 消费队列
           queue: groupbuy_market_plus_topic_team_success_queue
 
+        topic_order_refund:
+          routing_key: topic.order_refund
+          queue: groupbuy_market_plus_topic_order_refund_queue
+
+        topic_header_refund:
+          routing_key: topic.header_refund
+          queue: groupbuy_market_plus_topic_header_refund_queue
+
 # MyBatis 配置
 mybatis:
   mapper-locations: classpath:/mybatis/mapper/*.xml

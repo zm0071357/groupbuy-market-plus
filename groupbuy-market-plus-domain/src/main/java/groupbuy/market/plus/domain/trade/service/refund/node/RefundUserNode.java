@@ -33,11 +33,11 @@ public class RefundUserNode extends AbstractRefundOrderSupport<PreRefundEntity, 
             // 组队未完成 - 选出新团长
             if (groupBuyTeamEntity.getTeamStatusEnum().equals(TeamStatusEnum.PROGRESS)) {
                 String newHeaderUserId = tradeRepository.getNewHeaderUser(groupBuyTeamEntity.getTeamId());
-                log.info("退单服务 - 退单成员节点，组队未完成，选出新团长ID：{}", newHeaderUserId);
+                // 写入动态上下文
                 dynamicContext.setNewLeaderUserId(newHeaderUserId);
-                // TODO：团队进度-1
+                log.info("退单服务 - 退单成员节点，拼团组队未完成，选出新团长，新团长ID：{}", newHeaderUserId);
             } else {
-                log.info("退单服务 - 退单成员节点，当前拼团组队已完成，用户ID：{}", preRefundEntity.getUserId());
+                log.info("退单服务 - 退单成员节点，拼团组队已完成，无需选出新团长，用户ID：{}", preRefundEntity.getUserId());
             }
         } else {
             log.info("退单服务 - 退单成员节点，团员进行退单，用户ID：{}", preRefundEntity.getUserId());

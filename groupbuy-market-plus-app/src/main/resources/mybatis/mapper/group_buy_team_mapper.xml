@@ -20,6 +20,9 @@
         <result column="end_time" property="endTime"/>
         <result column="notify_type" property="notifyType"/>
         <result column="notify_url" property="notifyUrl"/>
+        <result column="refund_notify_url" property="refundNotifyUrl"/>
+        <result column="notify_mq" property="notifyMQ"/>
+        <result column="refund_notify_mq" property="refundNotifyMQ"/>
         <result column="create_time" property="createTime"/>
         <result column="update_time" property="updateTime"/>
     </resultMap>
@@ -28,11 +31,12 @@
         insert into group_buy_team(
             team_id, activity_id, goods_id, source, channel, original_price,
             deduction_price, pay_price, target_count, complete_count, lock_count,
-            status, start_time, end_time, notify_type, notify_url, create_time, update_time
+            status, start_time, end_time, notify_type, notify_url, refund_notify_url,
+            notify_mq, refund_notify_mq, create_time, update_time
         ) values(
-                    #{teamId}, #{activityId}, #{goodsId}, #{source}, #{channel}, #{originalPrice},
-                    #{deductionPrice}, #{payPrice}, #{targetCount}, #{completeCount}, #{lockCount}, 0,
-                    #{startTime}, #{endTime}, #{notifyType}, #{notifyUrl}, now(), now()
+                    #{teamId}, #{activityId}, #{goodsId}, #{source}, #{channel}, #{originalPrice}, #{deductionPrice}, #{payPrice},
+                    #{targetCount}, #{completeCount}, #{lockCount}, 0, #{startTime}, #{endTime}, #{notifyType}, #{notifyUrl},
+                    #{refundNotifyUrl}, #{notifyMQ}, #{refundNotifyMQ}, now(), now()
                 )
     </insert>
 
@@ -52,7 +56,7 @@
 
     <select id="getTeamById" resultMap="dataMap" parameterType="java.lang.String">
         select team_id, activity_id, goods_id, target_count, complete_count, lock_count,
-               status, notify_type, notify_url, start_time, end_time
+               status, notify_type, notify_url, refund_notify_url, start_time, end_time
         from group_buy_team
         where team_id = #{teamId}
     </select>
@@ -115,5 +119,28 @@
         </foreach>
     </select>
 
+    <update id="updateTeamByTeamInCompleteUnPaidRefund">
+        update group_buy_team
+        set lock_count = lock_count + #{lockCount},
+            update_time= now()
+        where team_id = #{teamId} and status = 0
+    </update>
+
+    <update id="updateTeamByTeamInCompletePaidRefund">
+        update group_buy_team
+        set lock_count = lock_count + #{lockCount},
+            complete_count = complete_count + #{completeCount},
+            update_time= now()
+        where team_id = #{teamId} and status = 0
+    </update>
+
+    <update id="updateTeamByTeamCompletePaidRefund">
+        update group_buy_team
+        set lock_count = lock_count + #{lockCount},
+            complete_count = complete_count + #{completeCount},
+            status = #{status},
+            update_time= now()
+        where team_id = #{teamId} and status = 0
+    </update>
 
 </mapper>

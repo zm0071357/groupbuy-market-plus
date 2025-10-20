@@ -16,10 +16,10 @@ import java.util.Arrays;
 @NoArgsConstructor
 public enum RefundTypeEnum {
 
-    TEAM_COMPLETE_PAID_REFUND(1, "teamCompletePaidRefund", "拼团组队完成 - 已支付") {
+    TEAM_INCOMPLETE_UNPAID_REFUND(1, "teamInCompleteUnPaidRefund", "拼团组队未完成 - 未支付"){
         @Override
         public boolean matches(OrderStatusEnum orderStatusEnum, TeamStatusEnum teamStatusEnum) {
-            return orderStatusEnum.equals(OrderStatusEnum.COMPLETE) && teamStatusEnum.equals(TeamStatusEnum.COMPLETE);
+            return orderStatusEnum.equals(OrderStatusEnum.CREATE) && teamStatusEnum.equals(TeamStatusEnum.PROGRESS) ;
         }
     },
 
@@ -30,10 +30,10 @@ public enum RefundTypeEnum {
         }
     },
 
-    TEAM_INCOMPLETE_UNPAID_REFUND(3, "teamInCompleteUnPaidRefund", "拼团组队未完成 - 未支付"){
+    TEAM_COMPLETE_PAID_REFUND(3, "teamCompletePaidRefund", "拼团组队完成 - 已支付") {
         @Override
         public boolean matches(OrderStatusEnum orderStatusEnum, TeamStatusEnum teamStatusEnum) {
-            return orderStatusEnum.equals(OrderStatusEnum.CREATE) && teamStatusEnum.equals(TeamStatusEnum.PROGRESS) ;
+            return orderStatusEnum.equals(OrderStatusEnum.COMPLETE) && teamStatusEnum.equals(TeamStatusEnum.COMPLETE);
         }
     },
     ;
@@ -59,11 +59,11 @@ public enum RefundTypeEnum {
     public static RefundTypeEnum valueOf(Integer type) {
         switch (type) {
             case 1:
-                return TEAM_COMPLETE_PAID_REFUND;
+                return TEAM_INCOMPLETE_UNPAID_REFUND;
             case 2:
                 return TEAM_INCOMPLETE_PAID_REFUND;
             case 3:
-                return TEAM_INCOMPLETE_UNPAID_REFUND;
+                return TEAM_COMPLETE_PAID_REFUND;
         }
         throw new AppException(ResponseCodeEnum.E0021.getCode(), ResponseCodeEnum.E0021.getInfo());
     }

@@ -14,20 +14,19 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public enum NotifyTypeEnum {
 
-    HTTP(1, "HTTP"),
-    MQ(2, "MQ"),
+    HTTP(1,"HTTP"),
+    MQ(2,"MQ"),
     ;
-
-    private Integer type;
-    private String sign;
+    private Integer notifyCode;
+    private String type;
 
     /**
      * 根据类型获取枚举
-     * @param type 类型
+     * @param notifyCode
      * @return
      */
-    public static NotifyTypeEnum getByType(Integer type) {
-        switch (type) {
+    public static NotifyTypeEnum getByNotifyCode(Integer notifyCode) {
+        switch (notifyCode) {
             case 1:
                 return HTTP;
             case 2:
@@ -38,12 +37,12 @@ public enum NotifyTypeEnum {
     }
 
     /**
-     * 根据标记获取枚举
-     * @param sign 标记
+     * 根据类型获取枚举
+     * @param type 类型
      * @return
      */
-    public static NotifyTypeEnum getBySign(String sign) {
-        switch (sign) {
+    public static NotifyTypeEnum getByType(String type) {
+        switch (type) {
             case "HTTP":
                 return HTTP;
             case "MQ":

@@ -13,17 +13,4 @@ public interface SettleOrderService {
      * @return
      */
     SettleOrderEntity settleOrder(OrderPaySuccessEntity orderPaySuccessEntity) throws Exception;
-
-    /**
-     * 执行定时任务 - 回调通知拼团完成
-     * @return
-     */
-    Map<String, Integer> execNotifyJob() throws Exception;
-
-    /**
-     * 指定组队ID执行回调通知拼团完成
-     * @param teamId 组队ID
-     * @return
-     */
-    Map<String, Integer> execNotifyJob(String teamId) throws Exception;
 }

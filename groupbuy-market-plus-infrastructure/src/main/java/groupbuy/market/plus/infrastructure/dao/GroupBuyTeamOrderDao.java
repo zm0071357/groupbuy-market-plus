@@ -91,4 +91,11 @@ public interface GroupBuyTeamOrderDao {
      * @param newHeaderUserId 新团长用户ID
      */
     Integer updateUserIsHeader(@Param("userId") String newHeaderUserId);
+
+    /**
+     * 更新订单状态为退单
+     * @param groupBuyTeamOrderReq
+     * @return
+     */
+    Integer updateOrderStatusRefund(GroupBuyTeamOrder groupBuyTeamOrderReq);
 }

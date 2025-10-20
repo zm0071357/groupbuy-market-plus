@@ -16,6 +16,11 @@ import lombok.NoArgsConstructor;
 public class NotifyTaskEntity {
 
     /**
+     * 任务ID
+     */
+    private String taskId;
+
+    /**
      * 组队ID
      */
     private String teamId;

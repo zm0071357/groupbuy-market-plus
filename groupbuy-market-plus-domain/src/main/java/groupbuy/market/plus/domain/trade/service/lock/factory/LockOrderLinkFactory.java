@@ -49,7 +49,7 @@ public class LockOrderLinkFactory {
          * @return
          */
         public String getTeamStockOccupyKey(String teamId) {
-            return GroupBuyConstants.TeamStockKey + activityEntity.getActivityId() + "_" + teamId + "_occupy";
+            return LockOrderLinkFactory.getTeamStockOccupyKey(activityEntity.getActivityId(), teamId);
         }
 
         /**
@@ -58,8 +58,30 @@ public class LockOrderLinkFactory {
          * @return
          */
         public String getTeamStockRecoverKey(String teamId) {
-            return GroupBuyConstants.TeamStockKey + activityEntity.getActivityId() + "_" + teamId + "_revovery";
+            return LockOrderLinkFactory.getTeamStockRecoverKey(activityEntity.getActivityId(), teamId);
         }
 
     }
+
+    /**
+     * 获取抢占key
+     * @param activityId 活动ID
+     * @param teamId 拼团组队ID
+     * @return
+     */
+    public static String getTeamStockOccupyKey(Long activityId, String teamId) {
+        return GroupBuyConstants.TeamStockKey + activityId + "_" + teamId + "_occupy";
+    }
+
+
+    /**
+     * 获取恢复Key
+     * @param activityId 活动ID
+     * @param teamId 拼团组队ID
+     * @return
+     */
+    public static String getTeamStockRecoverKey(Long activityId, String teamId) {
+        return GroupBuyConstants.TeamStockKey + activityId + "_" + teamId + "_recovery";
+    }
+
 }

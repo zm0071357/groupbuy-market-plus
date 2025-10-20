@@ -114,4 +114,11 @@
         where user_id = #{userId}
     </update>
 
+    <update id="updateOrderStatusRefund">
+        update group_buy_team_order
+        set status = 2, update_time = now()
+        where
+            user_id = #{userId} and order_id = #{orderId}
+    </update>
+
 </mapper>

@@ -86,4 +86,28 @@ public interface GroupBuyTeamDao {
      * @return
      */
     List<GroupBuyTeam> getRandomTeam(List<String> teamIdList);
+
+    /**
+     * 更新拼团组队 - 锁单量-1
+     * 退单 - 拼团组队未完成 - 未支付
+     * @param groupBuyTeamReq
+     * @return
+     */
+    Integer updateTeamByTeamInCompleteUnPaidRefund(GroupBuyTeam groupBuyTeamReq);
+
+    /**
+     * 更新拼团组队 - 锁单量-1，完成量-1
+     * 退单 - 拼团组队未完成 - 已支付
+     * @param groupBuyTeamReq
+     * @return
+     */
+    Integer updateTeamByTeamInCompletePaidRefund(GroupBuyTeam groupBuyTeamReq);
+
+    /**
+     * 更新拼团组队 - 锁单量-1，完成量-1，拼团状态
+     * 退单 - 拼团组队完成 - 已支付
+     * @param groupBuyTeamReq
+     * @return
+     */
+    Integer updateTeamByTeamCompletePaidRefund(GroupBuyTeam groupBuyTeamReq);
 }

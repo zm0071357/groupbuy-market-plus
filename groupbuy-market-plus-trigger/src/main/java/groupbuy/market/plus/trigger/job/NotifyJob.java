@@ -1,6 +1,6 @@
 package groupbuy.market.plus.trigger.job;
 
-import groupbuy.market.plus.domain.trade.service.settle.SettleOrderService;
+import groupbuy.market.plus.domain.trade.service.task.TaskService;
 import groupbuy.market.plus.types.common.GroupBuyConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit;
 public class NotifyJob {
 
     @Resource
-    private SettleOrderService settleOrderService;
+    private TaskService taskService;
 
     @Resource
     private RedissonClient redissonClient;
@@ -37,7 +37,7 @@ public class NotifyJob {
                 return;
             }
             log.info("获取锁成功：{}，定时任务 - 执行回调通知开始", GroupBuyConstants.Lock);
-            Map<String, Integer> result = settleOrderService.execNotifyJob();
+            Map<String, Integer> result = taskService.execNotifyJob();
             log.info("定时任务 - 执行回调通知拼团完成 result:{}", result);
         } catch (Exception e) {
             log.error("定时任务 - 执行回调通知拼团完成 失败", e);

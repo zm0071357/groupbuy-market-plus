@@ -22,6 +22,11 @@ public class NotifyTask {
     private Long id;
 
     /**
+     * 任务ID
+     */
+    private String taskId;
+
+    /**
      * 活动ID
      */
     private Long activityId;
@@ -32,6 +37,11 @@ public class NotifyTask {
     private String teamId;
 
     /**
+     * 回调任务类型
+     */
+    private Integer taskType;
+
+    /**
      * 回调类型
      */
     private String notifyType;
@@ -40,6 +50,11 @@ public class NotifyTask {
      * 回调地址 - HTTP
      */
     private String notifyUrl;
+
+    /**
+     * 回调主题 - MQ
+     */
+    private String notifyMQ;
 
     /**
      * 回调次数

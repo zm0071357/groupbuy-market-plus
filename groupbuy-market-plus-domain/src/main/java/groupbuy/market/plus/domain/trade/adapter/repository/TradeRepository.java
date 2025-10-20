@@ -1,6 +1,7 @@
 package groupbuy.market.plus.domain.trade.adapter.repository;
 
 import groupbuy.market.plus.domain.trade.model.aggregate.LockOrderAggregate;
+import groupbuy.market.plus.domain.trade.model.aggregate.RefundOrderAggregate;
 import groupbuy.market.plus.domain.trade.model.aggregate.RefundThreadTaskAggregate;
 import groupbuy.market.plus.domain.trade.model.aggregate.SettleOrderAggregate;
 import groupbuy.market.plus.domain.trade.model.entity.*;
@@ -83,7 +84,7 @@ public interface TradeRepository {
      * @param settleOrderAggregate
      * @return
      */
-    SettleOrderEntity settleOrder(SettleOrderAggregate settleOrderAggregate);
+    NotifyTaskEntity settleOrder(SettleOrderAggregate settleOrderAggregate);
 
     /**
      * 获取未执行的回调任务列表
@@ -149,4 +150,34 @@ public interface TradeRepository {
      * @return
      */
     String getNewHeaderUser(String teamId);
+
+    /**
+     * 退单 - 拼团组队未完成 - 未支付
+     * @param teamInCompleteUnPaidRefundAggregate 退单聚合
+     * @return
+     */
+    NotifyTaskEntity teamInCompleteUnPaidRefund(RefundOrderAggregate teamInCompleteUnPaidRefundAggregate);
+
+    /**
+     * 退单 - 拼团组队未完成 - 已支付
+     * @param teamInCompletePaidRefundAggregate 退单聚合
+     * @return
+     */
+    NotifyTaskEntity teamInCompletePaidRefund(RefundOrderAggregate teamInCompletePaidRefundAggregate);
+
+    /**
+     * 退单 - 拼团组队完成 - 已支付
+     * @param teamCompletePaidRefundAggregate 退单聚合
+     * @return
+     */
+    NotifyTaskEntity teamCompletePaidRefund(RefundOrderAggregate teamCompletePaidRefundAggregate);
+
+    /**
+     * 新团长回调
+     * @param newLeaderUserId 新团长ID
+     * @param orderId 订单ID
+     * @param groupBuyTeamEntity 拼团组队信息
+     * @return
+     */
+    NotifyTaskEntity newHeaderNotify(String newLeaderUserId, String orderId, GroupBuyTeamEntity groupBuyTeamEntity);
 }
