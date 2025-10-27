@@ -1,18 +1,15 @@
-package groupbuy.market.plus.domain.trade.model.valobj;
+package groupbuy.market.plus.api.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 /**
- * 拼团组队进度值对象
+ * 拼团进度响应体
  */
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class TeamProgressVO {
+public class TeamProgressResponseDTO {
 
     /**
      * 拼团状态

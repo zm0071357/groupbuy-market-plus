@@ -44,22 +44,39 @@ spring:
     config:
       # 生产者
       producer:
-        # 绑定交换机
+        # 交换机
         exchange: groupbuy_market_plus_exchange
         # 消息主题配置 - 可能有多个主题需要配置，在这里做区分
+        # 拼团完成回调
         topic_team_success:
           # 消息主题
           routing_key: topic.team_success
           # 消费队列
           queue: groupbuy_market_plus_topic_team_success_queue
 
+        # 退单回调
         topic_order_refund:
           routing_key: topic.order_refund
           queue: groupbuy_market_plus_topic_order_refund_queue
 
+        # 团长退单补偿回调
         topic_header_refund:
           routing_key: topic.header_refund
           queue: groupbuy_market_plus_topic_header_refund_queue
+
+      # 消费者
+      consumer:
+        # 退单回调
+        topic_order_refund:
+          exchange: groupbuy_market_plus_exchange
+          routing_key: topic.order_refund
+          queue: groupbuy_market_plus_topic_order_refund_queue
+
+        # 订单退款成功回调
+        topic_order_refund_success:
+          exchange: chat_platform_plus_exchange
+          routing_key: topic.order_refund_success
+          queue: chat_platform_plus_order_refund_success_queue
 
 # MyBatis 配置
 mybatis:

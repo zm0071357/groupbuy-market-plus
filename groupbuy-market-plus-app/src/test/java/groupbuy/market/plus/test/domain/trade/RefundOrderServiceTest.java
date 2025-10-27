@@ -28,6 +28,8 @@ public class RefundOrderServiceTest {
         PreRefundEntity preRefundEntity = new PreRefundEntity();
         preRefundEntity.setUserId("134137257");
         preRefundEntity.setOutTradeNo("QDLL640829482850");
+        preRefundEntity.setSource("s01");
+        preRefundEntity.setChannel("c01");
         refundOrderService.refundOrder(preRefundEntity);
     }
 

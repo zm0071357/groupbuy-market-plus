@@ -42,6 +42,7 @@ public class RefundOrderNode extends AbstractRefundOrderSupport<PreRefundEntity,
                         .teamId(groupBuyTeamEntity.getTeamId())
                         .activityId(groupBuyTeamEntity.getActivityId())
                         .orderId(preRefundOrderEntity.getOrderId())
+                        .outTradeNo(preRefundEntity.getOutTradeNo())
                 .build());
         // 新团长回调
         if (StringUtils.isNotBlank(dynamicContext.getNewLeaderUserId())) {

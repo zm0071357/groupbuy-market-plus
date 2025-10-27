@@ -103,6 +103,16 @@ public class GroupBuyTeamOrder {
     private Date outTradeNoPayTime;
 
     /**
+     * 退款外部交易单号
+     */
+    private String outRefundNo;
+
+    /**
+     * 退款完成时间
+     */
+    private Date outRefundNoCompleteTime;
+
+    /**
      * 业务唯一ID
      */
     private String bizId;

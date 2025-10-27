@@ -27,18 +27,11 @@
                )
     </insert>
 
-    <select id="getUnNotifyTaskList" resultMap="dataMap">
+    <select id="getUnNotifyTeamSuccessTaskList" resultMap="dataMap">
         select activity_id, team_id, task_id, task_type, notify_type, notify_url, notify_mq,
                notify_count, notify_status, parameter_json
         from notify_task
-        where notify_status in (0, 2)
-    </select>
-
-    <select id="getUnNotifyTaskByTeamId" resultMap="dataMap">
-        select activity_id, team_id, task_id, task_type, notify_type, notify_url, notify_mq,
-               notify_count, notify_status, parameter_json
-        from notify_task
-        where team_id = #{teamId} and notify_status in (0, 2)
+        where notify_status in (0, 2) and task_type = 1
     </select>
 
     <update id="updateNotifyTaskSuccess" parameterType="java.lang.String">
@@ -58,4 +51,19 @@
         set notify_count = notify_count + 1, notify_status = 3, update_time = now()
         where team_id = #{teamId}
     </update>
+
+    <select id="getUnNotifyOrderRefundTaskList" resultMap="dataMap">
+        select activity_id, team_id, task_id, task_type, notify_type, notify_url, notify_mq,
+               notify_count, notify_status, parameter_json
+        from notify_task
+        where notify_status in (0, 2) and task_type in (2, 3, 4)
+    </select>
+
+    <select id="getUnNotifyHeaderRefundTaskList" resultMap="dataMap">
+        select activity_id, team_id, task_id, task_type, notify_type, notify_url, notify_mq,
+               notify_count, notify_status, parameter_json
+        from notify_task
+        where notify_status in (0, 2) and task_type = 5
+    </select>
+
 </mapper>

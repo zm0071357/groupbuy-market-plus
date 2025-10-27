@@ -7,20 +7,25 @@ import java.util.Map;
 public interface TaskService {
 
     /**
-     * 执行定时任务 - 回调通知拼团完成
+     * 执行定时任务 - 拼团完成回调通知
      * @return
      */
-    Map<String, Integer> execNotifyJob() throws Exception;
+    Map<String, Integer> execTeamSuccessNotifyJob() throws Exception;
 
     /**
-     * 指定组队ID执行回调通知拼团完成
-     * @param teamId 组队ID
+     * 执行定时任务 - 退单回调通知
      * @return
      */
-    Map<String, Integer> execNotifyJob(String teamId) throws Exception;
+    Map<String, Integer> execOrderRefundNotifyJob() throws Exception;
 
     /**
-     * 指定回调任务执行回调通知拼团完成
+     * 执行定时任务 - 团长退单补偿通知
+     * @return
+     */
+    Map<String, Integer> execHeaderRefundNotifyJob() throws Exception;
+
+    /**
+     * 指定回调任务执行回调通知
      * @param notifyTaskEntity
      * @return
      */

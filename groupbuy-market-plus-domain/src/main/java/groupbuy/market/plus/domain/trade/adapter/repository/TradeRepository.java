@@ -7,6 +7,7 @@ import groupbuy.market.plus.domain.trade.model.aggregate.SettleOrderAggregate;
 import groupbuy.market.plus.domain.trade.model.entity.*;
 import groupbuy.market.plus.domain.trade.model.valobj.TeamProgressVO;
 
+import java.util.Date;
 import java.util.List;
 
 public interface TradeRepository {
@@ -87,17 +88,10 @@ public interface TradeRepository {
     NotifyTaskEntity settleOrder(SettleOrderAggregate settleOrderAggregate);
 
     /**
-     * 获取未执行的回调任务列表
+     * 获取未完成的拼团完成回调通知任务集合
      * @return
      */
-    List<NotifyTaskEntity> getUnNotifyTask();
-
-    /**
-     * 根据组队ID获取回调任务
-     * @param teamId 组队ID
-     * @return
-     */
-    List<NotifyTaskEntity> getUnNotifyTask(String teamId);
+    List<NotifyTaskEntity> getUnNotifyTeamSuccessTask();
 
     /**
      * 更新回调任务状态为完成
@@ -138,11 +132,10 @@ public interface TradeRepository {
 
     /**
      * 获取退单所需数据聚合
-     * @param userId 用户ID
-     * @param outTradeNo 外部交易单号
+     * @param preRefundEntity
      * @return
      */
-    RefundThreadTaskAggregate getRefundThreadTaskResAggregate(String userId, String outTradeNo);
+    RefundThreadTaskAggregate getRefundThreadTaskResAggregate(PreRefundEntity preRefundEntity);
 
     /**
      * 选出新团长
@@ -180,4 +173,39 @@ public interface TradeRepository {
      * @return
      */
     NotifyTaskEntity newHeaderNotify(String newLeaderUserId, String orderId, GroupBuyTeamEntity groupBuyTeamEntity);
+
+    /**
+     * 获取超时的拼团ID集合
+     * @return
+     */
+    List<String> getTimeoutTeamIdList();
+
+    /**
+     * 获取超时的拼团订单集合
+     * @param timeoutTeamIdList 超时的拼团ID集合
+     * @return
+     */
+    List<PreRefundEntity> getTimeoutOrderList(List<String> timeoutTeamIdList);
+
+    /**
+     * 获取未完成的退单回调通知任务集合
+     * @return
+     */
+    List<NotifyTaskEntity> getUnNotifyOrderRefundTask();
+
+    /**
+     * 获取未完成的团长退单补偿回调通知任务集合
+     * @return
+     */
+    List<NotifyTaskEntity> getUnNotifyHeaderRefundTask();
+
+    /**
+     * 更新订单的退款外部单号和退款完成时间
+     * @param userId 用户ID
+     * @param outTradeNo 外部交易单号
+     * @param outRefundNo 退款外部交易单号
+     * @param outRefundNoCompleteTime 退款完成时间
+     */
+    void updateRefundNoAndRefundTime(String userId, String outTradeNo, String outRefundNo, Date outRefundNoCompleteTime);
+
 }

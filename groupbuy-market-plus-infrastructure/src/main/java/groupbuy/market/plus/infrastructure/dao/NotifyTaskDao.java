@@ -15,17 +15,10 @@ public interface NotifyTaskDao {
     void insert(NotifyTask notifyTask);
 
     /**
-     * 获取未执行回调任务集合
+     * 获取未完成的拼团完成回调通知任务集合
      * @return
      */
-    List<NotifyTask> getUnNotifyTaskList();
-
-    /**
-     * 根据组队ID获取未执行回调任务
-     * @param teamId 组队ID
-     * @return
-     */
-    NotifyTask getUnNotifyTaskByTeamId(String teamId);
+    List<NotifyTask> getUnNotifyTeamSuccessTaskList();
 
     /**
      * 更新回调任务状态为完成
@@ -47,4 +40,16 @@ public interface NotifyTaskDao {
      * @return
      */
     int updateNotifyTaskFail(String teamId);
+
+    /**
+     * 获取未完成的退单回调通知任务集合
+     * @return
+     */
+    List<NotifyTask> getUnNotifyOrderRefundTaskList();
+
+    /**
+     * 获取未完成的团长退单补偿回调通知任务集合
+     * @return
+     */
+    List<NotifyTask> getUnNotifyHeaderRefundTaskList();
 }

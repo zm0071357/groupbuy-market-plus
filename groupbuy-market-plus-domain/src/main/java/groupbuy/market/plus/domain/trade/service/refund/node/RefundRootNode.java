@@ -27,7 +27,8 @@ public class RefundRootNode extends AbstractRefundOrderSupport<PreRefundEntity, 
     protected RefundResEntity doApply(PreRefundEntity preRefundEntity, DefaultRefundStrategyFactory.DynamicContext dynamicContext) throws Exception {
         log.info("退单服务 - 根节点，用户ID：{}，外部交易单号：{}", preRefundEntity.getUserId(), preRefundEntity.getOutTradeNo());
         // 参数校验
-        if (StringUtils.isBlank(preRefundEntity.getUserId()) || StringUtils.isBlank(preRefundEntity.getOutTradeNo())) {
+        if (StringUtils.isBlank(preRefundEntity.getUserId()) || StringUtils.isBlank(preRefundEntity.getOutTradeNo()) ||
+                StringUtils.isBlank(preRefundEntity.getSource()) || StringUtils.isBlank(preRefundEntity.getChannel())) {
             throw new AppException(ResponseCodeEnum.ILLEGAL_PARAMETER.getCode(), ResponseCodeEnum.ILLEGAL_PARAMETER.getInfo());
         }
         return router(preRefundEntity, dynamicContext);

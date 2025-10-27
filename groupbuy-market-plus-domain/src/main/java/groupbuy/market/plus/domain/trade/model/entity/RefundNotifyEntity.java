@@ -1,19 +1,20 @@
 package groupbuy.market.plus.domain.trade.model.entity;
 
-import groupbuy.market.plus.domain.trade.model.valobj.RefundTypeEnum;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Date;
+
 /**
- * 退单校验实体
+ * 退单回调实体
  */
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class PreRefundEntity {
+public class RefundNotifyEntity {
 
     /**
      * 用户ID
@@ -21,18 +22,18 @@ public class PreRefundEntity {
     private String userId;
 
     /**
-     * 外部交易单号
+     * 支付订单ID - 外部交易单号
      */
     private String outTradeNo;
 
     /**
-     * 来源
+     * 退单订单ID - 退款外部交易单号
      */
-    private String source;
+    private String outRefundNo;
 
     /**
-     * 渠道
+     * 退款完成时间
      */
-    private String channel;
+    private Date outRefundNoCompleteTime;
 
 }

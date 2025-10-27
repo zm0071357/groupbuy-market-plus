@@ -98,4 +98,19 @@ public interface GroupBuyTeamOrderDao {
      * @return
      */
     Integer updateOrderStatusRefund(GroupBuyTeamOrder groupBuyTeamOrderReq);
+
+    /**
+     * 获取超时的拼团订单集合
+     * @param timeoutTeamIdList 超时的拼团组队ID集合
+     * @return
+     */
+    List<GroupBuyTeamOrder> getTimeoutOrderList(@Param("timeoutTeamIdList") List<String> timeoutTeamIdList);
+
+    /**
+     * 更新订单的退款外部单号和退款完成时间
+     * @param groupBuyTeamOrderReq
+     * @return
+     */
+    Integer updateRefundNoAndRefundTime(GroupBuyTeamOrder groupBuyTeamOrderReq);
+
 }

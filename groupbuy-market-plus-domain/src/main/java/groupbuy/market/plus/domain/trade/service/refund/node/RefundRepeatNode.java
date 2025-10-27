@@ -37,7 +37,7 @@ public class RefundRepeatNode extends AbstractRefundOrderSupport<PreRefundEntity
     @Override
     protected void multiThread(PreRefundEntity preRefundEntity, DefaultRefundStrategyFactory.DynamicContext dynamicContext) throws Exception {
         // 异步查询退单所需数据聚合
-        GetAggregateThreadTask getAggregateThreadTask = new GetAggregateThreadTask(preRefundEntity.getUserId(), preRefundEntity.getOutTradeNo(), tradeRepository);
+        GetAggregateThreadTask getAggregateThreadTask = new GetAggregateThreadTask(preRefundEntity, tradeRepository);
         FutureTask<RefundThreadTaskAggregate> refundThreadTaskResAggregateFutureTask = new FutureTask<>(getAggregateThreadTask);
         threadPoolExecutor.execute(refundThreadTaskResAggregateFutureTask);
         RefundThreadTaskAggregate refundThreadTaskAggregate = refundThreadTaskResAggregateFutureTask.get(timeout, TimeUnit.MINUTES);

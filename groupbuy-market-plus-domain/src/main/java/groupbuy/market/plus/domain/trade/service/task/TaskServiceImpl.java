@@ -21,16 +21,23 @@ public class TaskServiceImpl implements TaskService {
     private TradePort tradePort;
 
     @Override
-    public Map<String, Integer> execNotifyJob() throws Exception {
-        // 查询未执行回调任务集合
-        List<NotifyTaskEntity> notifyTaskEntityList = tradeRepository.getUnNotifyTask();
+    public Map<String, Integer> execTeamSuccessNotifyJob() throws Exception {
+        // 查询拼团完成回调通知任务集合
+        List<NotifyTaskEntity> notifyTaskEntityList = tradeRepository.getUnNotifyTeamSuccessTask();
         return start(notifyTaskEntityList);
     }
 
     @Override
-    public Map<String, Integer> execNotifyJob(String teamId) throws Exception {
-        // 查询未执行回调任务
-        List<NotifyTaskEntity> notifyTaskEntityList = tradeRepository.getUnNotifyTask(teamId);
+    public Map<String, Integer> execOrderRefundNotifyJob() throws Exception {
+        // 查询退单回调通知任务集合
+        List<NotifyTaskEntity> notifyTaskEntityList = tradeRepository.getUnNotifyOrderRefundTask();
+        return start(notifyTaskEntityList);
+    }
+
+    @Override
+    public Map<String, Integer> execHeaderRefundNotifyJob() throws Exception {
+        // 查询团长退单补偿回调通知任务集合
+        List<NotifyTaskEntity> notifyTaskEntityList = tradeRepository.getUnNotifyHeaderRefundTask();
         return start(notifyTaskEntityList);
     }
 

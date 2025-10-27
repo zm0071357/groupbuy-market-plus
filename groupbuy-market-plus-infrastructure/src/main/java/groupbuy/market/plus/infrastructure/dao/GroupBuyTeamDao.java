@@ -110,4 +110,10 @@ public interface GroupBuyTeamDao {
      * @return
      */
     Integer updateTeamByTeamCompletePaidRefund(GroupBuyTeam groupBuyTeamReq);
+
+    /**
+     * 获取超时的拼团ID集合
+     * @return
+     */
+    List<String> getTimeoutTeamIdList();
 }

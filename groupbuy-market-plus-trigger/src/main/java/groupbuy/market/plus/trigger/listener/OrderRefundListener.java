@@ -25,19 +25,19 @@ public class OrderRefundListener {
 
     @RabbitListener(
             bindings = @QueueBinding(
-                    value = @Queue(value = "${spring.rabbitmq.config.producer.topic_order_refund.queue}"),
-                    exchange = @Exchange(value = "${spring.rabbitmq.config.producer.exchange}", type = ExchangeTypes.TOPIC),
-                    key = "${spring.rabbitmq.config.producer.topic_order_refund.routing_key}"
+                    value = @Queue(value = "${spring.rabbitmq.config.consumer.topic_order_refund.queue}"),
+                    exchange = @Exchange(value = "${spring.rabbitmq.config.consumer.topic_order_refund.exchange}", type = ExchangeTypes.TOPIC),
+                    key = "${spring.rabbitmq.config.consumer.topic_order_refund.routing_key}"
             )
     )
     public void listener(String message) {
-        log.info("监听订单退单队列 - 接收到消息：{}，进行处理", message);
+        log.info("拼团营销服务 - 监听订单退单队列 - 接收到消息：{}，进行处理", message);
         OrderRefundMessage orderRefundMessage = JSON.parseObject(message, OrderRefundMessage.class);
         try {
             // 恢复锁单量
             refundOrderService.recoverTeamLockStock(orderRefundMessage);
         } catch (Exception e) {
-            log.info("监听订单退单队列 - 消息处理失败：{}", message, e);
+            log.info("拼团营销服务 - 监听订单退单队列 - 消息处理失败：{}", message, e);
             // 抛异常，MQ会重试
             throw new RuntimeException(e);
         }

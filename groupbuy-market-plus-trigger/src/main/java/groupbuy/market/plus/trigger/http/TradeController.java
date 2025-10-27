@@ -2,10 +2,7 @@ package groupbuy.market.plus.trigger.http;
 
 import com.alibaba.fastjson.JSON;
 import groupbuy.market.plus.api.TradeService;
-import groupbuy.market.plus.api.dto.LockOrderRequestDTO;
-import groupbuy.market.plus.api.dto.LockOrderResponseDTO;
-import groupbuy.market.plus.api.dto.SettleOrderRequestDTO;
-import groupbuy.market.plus.api.dto.SettleOrderResponseDTO;
+import groupbuy.market.plus.api.dto.*;
 import groupbuy.market.plus.api.response.Response;
 import groupbuy.market.plus.domain.activity.model.entity.MarketProductEntity;
 import groupbuy.market.plus.domain.activity.model.entity.TrialBalanceEntity;
@@ -15,6 +12,7 @@ import groupbuy.market.plus.domain.trade.model.valobj.NotifyConfigVO;
 import groupbuy.market.plus.domain.trade.model.valobj.NotifyTypeEnum;
 import groupbuy.market.plus.domain.trade.model.valobj.TeamProgressVO;
 import groupbuy.market.plus.domain.trade.service.lock.LockOrderService;
+import groupbuy.market.plus.domain.trade.service.refund.RefundOrderService;
 import groupbuy.market.plus.domain.trade.service.settle.SettleOrderService;
 import groupbuy.market.plus.types.enums.ResponseCodeEnum;
 import groupbuy.market.plus.types.exception.AppException;
@@ -35,6 +33,9 @@ public class TradeController implements TradeService {
 
     @Resource
     private SettleOrderService settleOrderService;
+
+    @Resource
+    private RefundOrderService refundOrderService;
 
     @Resource
     private IndexGroupBuyMarketService indexGroupBuyMarketService;
@@ -113,7 +114,6 @@ public class TradeController implements TradeService {
                             .notifyConfigVO(NotifyConfigVO.builder()
                                     .notifyTypeEnum(NotifyTypeEnum.getByNotifyCode(lockOrderRequestDTO.getNotifyConfig().getNotifyType()))
                                     .notifyUrl(lockOrderRequestDTO.getNotifyConfig().getNotifyUrl())
-                                    .refundNotifyUrl(lockOrderRequestDTO.getNotifyConfig().getRefundNotifyUrl())
                                     .notifyMQ(lockOrderRequestDTO.getNotifyConfig().getNotifyMQ())
                                     .refundNotifyMQ(lockOrderRequestDTO.getNotifyConfig().getRefundNotifyMQ())
                                     .headerRefundNotifyUrl(lockOrderRequestDTO.getNotifyConfig().getHeaderRefundNotifyUrl())
@@ -192,20 +192,101 @@ public class TradeController implements TradeService {
                             .build())
                     .build();
         } catch (AppException e) {
-            log.error("结算业务异常:{} 结算请求信息:{} 错误信息：{}", settleOrderRequestDTO.getUserId(), JSON.toJSONString(settleOrderRequestDTO), e.getInfo());
+            log.error("结算业务异常：{} 结算请求信息：{} 错误信息：{}", settleOrderRequestDTO.getUserId(), JSON.toJSONString(settleOrderRequestDTO), e.getInfo());
             return Response.<SettleOrderResponseDTO>builder()
                     .code(e.getCode())
                     .info(e.getInfo())
                     .build();
         } catch (Exception e) {
-            log.error("结算业务异常:{} 结算请求信息:{}", settleOrderRequestDTO.getUserId(), JSON.toJSONString(settleOrderRequestDTO), e);
+            log.error("结算业务异常：{} 结算请求信息：{}", settleOrderRequestDTO.getUserId(), JSON.toJSONString(settleOrderRequestDTO), e);
             return Response.<SettleOrderResponseDTO>builder()
                     .code(ResponseCodeEnum.UN_ERROR.getCode())
                     .info(ResponseCodeEnum.UN_ERROR.getInfo())
                     .build();
         }
-
-
-
     }
+
+    @PostMapping("/refund_order")
+    @Override
+    public Response<RefundOrderResponseDTO> refundOrder(@RequestBody RefundOrderRequestDTO refundOrderRequestDTO) {
+        try {
+            // 参数校验
+            if (StringUtils.isBlank(refundOrderRequestDTO.getUserId()) || StringUtils.isBlank(refundOrderRequestDTO.getOutTradeNo()) ||
+                    StringUtils.isBlank(refundOrderRequestDTO.getSource()) || StringUtils.isBlank(refundOrderRequestDTO.getChannel())) {
+                return Response.<RefundOrderResponseDTO>builder()
+                        .code(ResponseCodeEnum.ILLEGAL_PARAMETER.getCode())
+                        .info(ResponseCodeEnum.ILLEGAL_PARAMETER.getInfo())
+                        .build();
+            }
+            RefundResEntity refundResEntity = refundOrderService.refundOrder(PreRefundEntity.builder()
+                            .userId(refundOrderRequestDTO.getUserId())
+                            .outTradeNo(refundOrderRequestDTO.getOutTradeNo())
+                            .source(refundOrderRequestDTO.getSource())
+                            .channel(refundOrderRequestDTO.getChannel())
+                            .build());
+            return Response.<RefundOrderResponseDTO>builder()
+                    .code(ResponseCodeEnum.SUCCESS.getCode())
+                    .data(RefundOrderResponseDTO.builder()
+                            .userId(refundResEntity.getUserId())
+                            .orderId(refundResEntity.getOrderId())
+                            .outTradeNo(refundOrderRequestDTO.getOutTradeNo())
+                            .teamId(refundResEntity.getTeamId())
+                            .refundCode(refundResEntity.getRefundStatusEnum().getCode())
+                            .refundInfo(refundResEntity.getRefundStatusEnum().getInfo())
+                            .build())
+                    .info(ResponseCodeEnum.SUCCESS.getInfo())
+                    .build();
+        } catch (AppException e) {
+            log.error("退单业务异常：{} 退单请求信息：{} 错误信息：{}", refundOrderRequestDTO.getUserId(), JSON.toJSONString(refundOrderRequestDTO), e.getInfo());
+            return Response.<RefundOrderResponseDTO>builder()
+                    .code(e.getCode())
+                    .info(e.getInfo())
+                    .build();
+        } catch (Exception e) {
+            log.error("退单业务异常：{} 退单请求信息：{}", refundOrderRequestDTO.getUserId(), JSON.toJSONString(refundOrderRequestDTO), e);
+            return Response.<RefundOrderResponseDTO>builder()
+                    .code(ResponseCodeEnum.UN_ERROR.getCode())
+                    .info(ResponseCodeEnum.UN_ERROR.getInfo())
+                    .build();
+        }
+    }
+
+    @PostMapping("/team_progress/{teamId}")
+    @Override
+    public Response<TeamProgressResponseDTO> getTeamProgress(@PathVariable("teamId") String teamId) {
+        try {
+            // 参数校验
+            if (StringUtils.isBlank(teamId)) {
+                return Response.<TeamProgressResponseDTO>builder()
+                        .code(ResponseCodeEnum.ILLEGAL_PARAMETER.getCode())
+                        .info(ResponseCodeEnum.ILLEGAL_PARAMETER.getInfo())
+                        .build();
+            }
+            // 获取拼团组队进度
+            TeamProgressVO teamProgressVO = refundOrderService.getTeamProgress(teamId);
+            return Response.<TeamProgressResponseDTO>builder()
+                    .code(ResponseCodeEnum.SUCCESS.getCode())
+                    .data(TeamProgressResponseDTO.builder()
+                            .status(teamProgressVO.getStatus())
+                            .targetCount(teamProgressVO.getTargetCount())
+                            .completeCount(teamProgressVO.getCompleteCount())
+                            .lockCount(teamProgressVO.getLockCount())
+                            .build())
+                    .info(ResponseCodeEnum.SUCCESS.getInfo())
+                    .build();
+        } catch (AppException e) {
+            log.error("查询拼团组队进度异常，拼团组队ID：{} 错误信息：{}", teamId, e.getInfo());
+            return Response.<TeamProgressResponseDTO>builder()
+                    .code(e.getCode())
+                    .info(e.getInfo())
+                    .build();
+        } catch (Exception e) {
+            log.error("查询拼团组队进度异常，拼团组队ID：{}", teamId, e);
+            return Response.<TeamProgressResponseDTO>builder()
+                    .code(ResponseCodeEnum.UN_ERROR.getCode())
+                    .info(ResponseCodeEnum.UN_ERROR.getInfo())
+                    .build();
+        }
+    }
+
 }

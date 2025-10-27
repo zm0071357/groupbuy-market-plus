@@ -34,6 +34,7 @@ import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 @Slf4j
 @Service
@@ -141,9 +142,10 @@ public class TradeRepositoryImpl implements TradeRepository {
                     .endTime(calender.getTime())
                     .notifyType(groupBuyTeamEntity.getNotifyConfigVO().getNotifyTypeEnum().getType())
                     .notifyUrl(groupBuyTeamEntity.getNotifyConfigVO().getNotifyTypeEnum().equals(NotifyTypeEnum.HTTP) ? groupBuyTeamEntity.getNotifyConfigVO().getNotifyUrl() : null)
-                    .refundNotifyUrl(groupBuyTeamEntity.getNotifyConfigVO().getNotifyTypeEnum().equals(NotifyTypeEnum.HTTP) ? groupBuyTeamEntity.getNotifyConfigVO().getNotifyUrl() : null)
                     .notifyMQ(groupBuyTeamEntity.getNotifyConfigVO().getNotifyTypeEnum().equals(NotifyTypeEnum.MQ) ? teamSuccessTopic : null)
                     .refundNotifyMQ(groupBuyTeamEntity.getNotifyConfigVO().getNotifyTypeEnum().equals(NotifyTypeEnum.MQ) ? orderRefundTopic : null)
+                    .headerRefundNotifyUrl(groupBuyTeamEntity.getNotifyConfigVO().getNotifyTypeEnum().equals(NotifyTypeEnum.HTTP) ? groupBuyTeamEntity.getNotifyConfigVO().getHeaderRefundNotifyUrl() : null)
+                    .headerRefundNotifyMQ(groupBuyTeamEntity.getNotifyConfigVO().getNotifyTypeEnum().equals(NotifyTypeEnum.MQ) ? headerRefundTopic : null)
                     .build());
         } else {
             // 团员 - 更新锁单量
@@ -237,12 +239,13 @@ public class TradeRepositoryImpl implements TradeRepository {
     }
 
     @Override
-    public TeamProgressVO getTeamProgress(String teamId) {
+    public TeamProgressVO getTeamProgress(String teamId)  {
         GroupBuyTeam groupBuyTeam = groupBuyTeamDao.getTeamProgress(teamId);
         if (groupBuyTeam == null) {
             return null;
         }
         return TeamProgressVO.builder()
+                .status(groupBuyTeam.getStatus())
                 .targetCount(groupBuyTeam.getTargetCount())
                 .completeCount(groupBuyTeam.getCompleteCount())
                 .lockCount(groupBuyTeam.getLockCount())
@@ -366,44 +369,6 @@ public class TradeRepositoryImpl implements TradeRepository {
     }
 
     @Override
-    public List<NotifyTaskEntity> getUnNotifyTask() {
-        List<NotifyTask> notifyTaskList = notifyTaskDao.getUnNotifyTaskList();
-        if (notifyTaskList == null || notifyTaskList.isEmpty()) {
-            return null;
-        }
-        List<NotifyTaskEntity> notifyTaskEntityList = new ArrayList<>();
-        for (NotifyTask notifyTask : notifyTaskList) {
-            notifyTaskEntityList.add(NotifyTaskEntity.builder()
-                    .teamId(notifyTask.getTeamId())
-                    .notifyTypeEnum(NotifyTypeEnum.getByType(notifyTask.getNotifyType()))
-                    .notifyUrl(notifyTask.getNotifyUrl())
-                    .notifyMQ(teamSuccessTopic)
-                    .notifyCount(notifyTask.getNotifyCount())
-                    .parameterJson(notifyTask.getParameterJson())
-                    .build());
-        }
-        return notifyTaskEntityList;
-    }
-
-    @Override
-    public List<NotifyTaskEntity> getUnNotifyTask(String teamId) {
-        NotifyTask notifyTask = notifyTaskDao.getUnNotifyTaskByTeamId(teamId);
-        if (notifyTask == null) {
-            return null;
-        }
-        return new ArrayList<>(){{
-            add(NotifyTaskEntity.builder()
-                    .teamId(notifyTask.getTeamId())
-                    .notifyTypeEnum(NotifyTypeEnum.getByType(notifyTask.getNotifyType()))
-                    .notifyUrl(notifyTask.getNotifyUrl())
-                    .notifyMQ(teamSuccessTopic)
-                    .notifyCount(notifyTask.getNotifyCount())
-                    .parameterJson(notifyTask.getParameterJson())
-                    .build());
-        }};
-    }
-
-    @Override
     public int updateNotifyTaskSuccess(String teamId) {
         return notifyTaskDao.updateNotifyTaskSuccess(teamId);
     }
@@ -451,10 +416,12 @@ public class TradeRepositoryImpl implements TradeRepository {
     }
 
     @Override
-    public RefundThreadTaskAggregate getRefundThreadTaskResAggregate(String userId, String outTradeNo) {
+    public RefundThreadTaskAggregate getRefundThreadTaskResAggregate(PreRefundEntity preRefundEntity) {
         GroupBuyTeamOrder groupBuyTeamOrderReq = new GroupBuyTeamOrder();
-        groupBuyTeamOrderReq.setUserId(userId);
-        groupBuyTeamOrderReq.setOutTradeNo(outTradeNo);
+        groupBuyTeamOrderReq.setUserId(preRefundEntity.getUserId());
+        groupBuyTeamOrderReq.setOutTradeNo(preRefundEntity.getOutTradeNo());
+        groupBuyTeamOrderReq.setSource(preRefundEntity.getSource());
+        groupBuyTeamOrderReq.setChannel(preRefundEntity.getChannel());
         GroupBuyTeamOrder groupBuyTeamOrder = groupBuyTeamOrderDao.getPreRefundOrder(groupBuyTeamOrderReq);
         if (groupBuyTeamOrder == null) {
             return null;
@@ -477,7 +444,6 @@ public class TradeRepositoryImpl implements TradeRepository {
                         .teamStatusEnum(TeamStatusEnum.valueOf(groupBuyTeam.getStatus()))
                         .notifyConfigVO(NotifyConfigVO.builder()
                                 .notifyTypeEnum(NotifyTypeEnum.getByType(groupBuyTeam.getNotifyType()))
-                                .refundNotifyUrl(groupBuyTeam.getRefundNotifyUrl())
                                 .refundNotifyMQ(groupBuyTeam.getRefundNotifyMQ())
                                 .headerRefundNotifyUrl(groupBuyTeam.getHeaderRefundNotifyUrl())
                                 .headerRefundNotifyMQ(groupBuyTeam.getHeaderRefundNotifyMQ())
@@ -541,6 +507,7 @@ public class TradeRepositoryImpl implements TradeRepository {
                     put("userId", refundOrderEntity.getUserId());
                     put("teamId", refundOrderEntity.getTeamId());
                     put("orderId", refundOrderEntity.getOrderId());
+                    put("outTradeNo", refundOrderEntity.getOutTradeNo());
                     put("activityId", refundOrderEntity.getActivityId());
                 }}))
                 .build();
@@ -598,6 +565,7 @@ public class TradeRepositoryImpl implements TradeRepository {
                     put("userId", refundOrderEntity.getUserId());
                     put("teamId", refundOrderEntity.getTeamId());
                     put("orderId", refundOrderEntity.getOrderId());
+                    put("outTradeNo", refundOrderEntity.getOutTradeNo());
                     put("activityId", refundOrderEntity.getActivityId());
                 }}))
                 .build();
@@ -657,6 +625,7 @@ public class TradeRepositoryImpl implements TradeRepository {
                     put("userId", refundOrderEntity.getUserId());
                     put("teamId", refundOrderEntity.getTeamId());
                     put("orderId", refundOrderEntity.getOrderId());
+                    put("outTradeNo", refundOrderEntity.getOutTradeNo());
                     put("activityId", refundOrderEntity.getActivityId());
                 }}))
                 .build();
@@ -692,8 +661,6 @@ public class TradeRepositoryImpl implements TradeRepository {
                     put("type", NotifyTaskTypeEnum.NEW_HEADER.getType());
                     put("userId", newLeaderUserId);
                     put("teamId", groupBuyTeamEntity.getTeamId());
-                    put("orderId", orderId);
-                    put("activityId", groupBuyTeamEntity.getActivityId());
                     put("teamStatus", groupBuyTeamEntity.getTeamStatusEnum().getStatus());
                 }}))
                 .build();
@@ -708,6 +675,79 @@ public class TradeRepositoryImpl implements TradeRepository {
                 .notifyCount(notifyTask.getNotifyCount())
                 .parameterJson(notifyTask.getParameterJson())
                 .build();
+    }
+
+    @Override
+    public List<String> getTimeoutTeamIdList() {
+        return groupBuyTeamDao.getTimeoutTeamIdList();
+    }
+
+    @Override
+    public List<PreRefundEntity> getTimeoutOrderList(List<String> timeoutTeamIdList) {
+        List<PreRefundEntity> preRefundEntityList = new ArrayList<>();
+        List<GroupBuyTeamOrder> groupBuyTeamOrderList = groupBuyTeamOrderDao.getTimeoutOrderList(timeoutTeamIdList);
+        for (GroupBuyTeamOrder groupBuyTeamOrder : groupBuyTeamOrderList) {
+            preRefundEntityList.add(PreRefundEntity.builder()
+                            .userId(groupBuyTeamOrder.getUserId())
+                            .outTradeNo(groupBuyTeamOrder.getOutTradeNo())
+                            .source(groupBuyTeamOrder.getSource())
+                            .channel(groupBuyTeamOrder.getChannel())
+                    .build());
+        }
+        return preRefundEntityList;
+    }
+
+    @Override
+    public List<NotifyTaskEntity> getUnNotifyTeamSuccessTask() {
+        return getTaskList(notifyTaskDao::getUnNotifyTeamSuccessTaskList, teamSuccessTopic);
+    }
+
+    @Override
+    public List<NotifyTaskEntity> getUnNotifyOrderRefundTask() {
+        return getTaskList(notifyTaskDao::getUnNotifyOrderRefundTaskList, orderRefundTopic);
+    }
+
+    @Override
+    public List<NotifyTaskEntity> getUnNotifyHeaderRefundTask() {
+        return getTaskList(notifyTaskDao::getUnNotifyHeaderRefundTaskList, headerRefundTopic);
+    }
+
+    /**
+     * 通用获取未回调任务集合
+     * @param taskSupplier 函数式接口 - 获取任务列表
+     * @param topic 主题
+     * @return
+     */
+    public List<NotifyTaskEntity> getTaskList(Supplier<List<NotifyTask>> taskSupplier, String topic) {
+        List<NotifyTask> notifyTaskList = taskSupplier.get();
+        if (notifyTaskList == null || notifyTaskList.isEmpty()) {
+            return null;
+        }
+        List<NotifyTaskEntity> notifyTaskEntityList = new ArrayList<>();
+        for (NotifyTask notifyTask : notifyTaskList) {
+            notifyTaskEntityList.add(NotifyTaskEntity.builder()
+                    .teamId(notifyTask.getTeamId())
+                    .notifyTypeEnum(NotifyTypeEnum.getByType(notifyTask.getNotifyType()))
+                    .notifyUrl(notifyTask.getNotifyUrl())
+                    .notifyMQ(topic)
+                    .notifyCount(notifyTask.getNotifyCount())
+                    .parameterJson(notifyTask.getParameterJson())
+                    .build());
+        }
+        return notifyTaskEntityList;
+    }
+
+    @Override
+    public void updateRefundNoAndRefundTime(String userId, String outTradeNo, String outRefundNo, Date outRefundNoCompleteTime) {
+        GroupBuyTeamOrder groupBuyTeamOrderReq = new GroupBuyTeamOrder();
+        groupBuyTeamOrderReq.setUserId(userId);
+        groupBuyTeamOrderReq.setOutTradeNo(outTradeNo);
+        groupBuyTeamOrderReq.setOutRefundNo(outRefundNo);
+        groupBuyTeamOrderReq.setOutRefundNoCompleteTime(outRefundNoCompleteTime);
+        Integer updateCount = groupBuyTeamOrderDao.updateRefundNoAndRefundTime(groupBuyTeamOrderReq);
+        if (updateCount != 1) {
+            throw new AppException(ResponseCodeEnum.UPDATE_ZERO.getCode(), ResponseCodeEnum.UPDATE_ZERO.getInfo());
+        }
     }
 
 }

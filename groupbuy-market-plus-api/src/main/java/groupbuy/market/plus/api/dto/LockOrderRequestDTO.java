@@ -60,19 +60,14 @@ public class LockOrderRequestDTO {
         private Integer notifyType;
 
         /**
-         * 回调地址 - HTTP
+         * 成团回调地址 - HTTP
          */
         private String notifyUrl;
 
         /**
-         * 回调主题 - MQ
+         * 成团回调主题 - MQ
          */
         private String notifyMQ;
-
-        /**
-         * 退单回调地址 - HTTP
-         */
-        private String refundNotifyUrl;
 
         /**
          * 退单回调主题 - MQ
@@ -91,11 +86,10 @@ public class LockOrderRequestDTO {
     }
 
     // 兼容配置
-    public void setHTTPNotify(String notifyUrl, String refundNotifyUrl, String headerRefundNotifyUrl) {
+    public void setHTTPNotify(String notifyUrl, String headerRefundNotifyUrl) {
         NotifyConfig notifyConfig = new NotifyConfig();
         notifyConfig.setNotifyType(1);
         notifyConfig.setNotifyUrl(notifyUrl);
-        notifyConfig.setRefundNotifyUrl(refundNotifyUrl);
         notifyConfig.setHeaderRefundNotifyUrl(headerRefundNotifyUrl);
         this.notifyConfig = notifyConfig;
     }

@@ -20,17 +20,12 @@ public class NotifyConfigVO {
     private NotifyTypeEnum notifyTypeEnum;
 
     /**
-     * 回调地址 - HTTP
+     * 成团回调地址 - HTTP
      */
     private String notifyUrl;
 
     /**
-     * 退单回调地址 - HTTP
-     */
-    private String refundNotifyUrl;
-
-    /**
-     * 回调主题 - MQ
+     * 成团回调主题 - MQ
      */
     private String notifyMQ;
 
