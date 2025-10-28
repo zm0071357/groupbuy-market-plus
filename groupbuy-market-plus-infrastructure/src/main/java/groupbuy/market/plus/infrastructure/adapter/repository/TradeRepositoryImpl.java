@@ -8,14 +8,8 @@ import groupbuy.market.plus.domain.trade.model.aggregate.RefundThreadTaskAggrega
 import groupbuy.market.plus.domain.trade.model.aggregate.SettleOrderAggregate;
 import groupbuy.market.plus.domain.trade.model.entity.*;
 import groupbuy.market.plus.domain.trade.model.valobj.*;
-import groupbuy.market.plus.infrastructure.dao.ActivityDao;
-import groupbuy.market.plus.infrastructure.dao.GroupBuyTeamDao;
-import groupbuy.market.plus.infrastructure.dao.GroupBuyTeamOrderDao;
-import groupbuy.market.plus.infrastructure.dao.NotifyTaskDao;
-import groupbuy.market.plus.infrastructure.dao.po.Activity;
-import groupbuy.market.plus.infrastructure.dao.po.GroupBuyTeam;
-import groupbuy.market.plus.infrastructure.dao.po.GroupBuyTeamOrder;
-import groupbuy.market.plus.infrastructure.dao.po.NotifyTask;
+import groupbuy.market.plus.infrastructure.dao.*;
+import groupbuy.market.plus.infrastructure.dao.po.*;
 import groupbuy.market.plus.infrastructure.dcc.DCCServiceImpl;
 import groupbuy.market.plus.types.common.Constants;
 import groupbuy.market.plus.types.common.GroupBuyConstants;
@@ -32,6 +26,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -51,6 +47,9 @@ public class TradeRepositoryImpl implements TradeRepository {
 
     @Resource
     private NotifyTaskDao notifyTaskDao;
+
+    @Resource
+    private InviteDao inviteDao;
 
     @Resource
     private DCCServiceImpl dccServiceImpl;
@@ -170,6 +169,7 @@ public class TradeRepositoryImpl implements TradeRepository {
                     .userId(userEntity.getUserId())
                     .teamId(teamId)
                     .orderId(orderId)
+                    .inviteUserId(checkLockResEntity.getInviteUserId())
                     .activityId(groupBuyTeamEntity.getActivityId())
                     .startTime(groupBuyTeamEntity.getStartTime())
                     .endTime(groupBuyTeamEntity.getEndTime())
@@ -335,7 +335,15 @@ public class TradeRepositoryImpl implements TradeRepository {
                 throw new AppException(ResponseCodeEnum.UPDATE_ZERO.getCode(), ResponseCodeEnum.UPDATE_ZERO.getInfo());
             }
             // 回调任务
-            List<String> outTradeNoList = groupBuyTeamOrderDao.getCompleteTeamOutTradeNoList(groupBuyTeamEntity.getTeamId());
+            List<GroupBuyTeamOrder> groupBuyTeamOrderList = groupBuyTeamOrderDao.getCompleteTeamOutTradeNoList(groupBuyTeamEntity.getTeamId());
+            List<String> outTradeNoList = new ArrayList<>();
+            List<String> inviteUserIdList = new ArrayList<>();
+            for (GroupBuyTeamOrder groupBuyTeamOrder : groupBuyTeamOrderList) {
+                outTradeNoList.add(groupBuyTeamOrder.getOutTradeNo());
+                if (StringUtils.isNotBlank(groupBuyTeamOrder.getInviteUserId())) {
+                    inviteUserIdList.add(groupBuyTeamOrder.getInviteUserId());
+                }
+            }
             NotifyTypeEnum notifyTypeEnum = groupBuyTeamEntity.getNotifyConfigVO().getNotifyTypeEnum();
             String taskId = groupBuyTeamEntity.getTeamId() + Constants.UNDERSCORE + NotifyTaskTypeEnum.SETTLE.getType();
             NotifyTask notifyTask = NotifyTask.builder()
@@ -351,6 +359,7 @@ public class TradeRepositoryImpl implements TradeRepository {
                     .parameterJson(JSON.toJSONString(new HashMap<String, Object>(){{
                         put("teamId", groupBuyTeamEntity.getTeamId());
                         put("outTradeNoList", outTradeNoList);
+                        put("inviteUserIdList", inviteUserIdList);
                     }}))
                     .build();
             notifyTaskDao.insert(notifyTask);
@@ -748,6 +757,90 @@ public class TradeRepositoryImpl implements TradeRepository {
         if (updateCount != 1) {
             throw new AppException(ResponseCodeEnum.UPDATE_ZERO.getCode(), ResponseCodeEnum.UPDATE_ZERO.getInfo());
         }
+    }
+
+    @Override
+    public InviteEntity invite(String userId, String teamId) {
+        Invite inviteReq = new Invite();
+        inviteReq.setInviteUserId(userId);
+        inviteReq.setTeamId(teamId);
+        Invite invite = inviteDao.getInviteByUserIdWithTeamId(inviteReq);
+        if (invite != null) {
+            return InviteEntity.builder()
+                    .inviteUserId(userId)
+                    .teamId(teamId)
+                    .inviteId(invite.getInviteId())
+                    .startTime(invite.getStartTime())
+                    .endTime(invite.getEndTime())
+                    .build();
+        }
+
+        GroupBuyTeam groupBuyTeam = groupBuyTeamDao.getTeamById(teamId);
+        String inviteId = getInviteId(userId, teamId);
+        Date startTime = new Date();
+        inviteDao.insert(Invite.builder()
+                        .inviteUserId(userId)
+                        .teamId(teamId)
+                        .inviteId(inviteId)
+                        .inviteSuccessCount(0)
+                        .startTime(startTime)
+                        .endTime(groupBuyTeam.getEndTime())
+                        .status(InviteStatusEnum.AVAILABLE.getStatus())
+                .build());
+        return InviteEntity.builder()
+                .inviteUserId(userId)
+                .teamId(teamId)
+                .inviteId(inviteId)
+                .startTime(startTime)
+                .endTime(groupBuyTeam.getEndTime())
+                .build();
+    }
+
+    /**
+     * 生成唯一邀请码
+     * @param userId 用户ID
+     * @param teamId 拼团组队ID
+     * @return
+     */
+    private String getInviteId(String userId, String teamId) {
+        try {
+            String input = userId + teamId + UUID.randomUUID();
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] hashBytes = md.digest(input.getBytes());
+            String base64 = Base64.getUrlEncoder().withoutPadding().encodeToString(hashBytes);
+            return base64.substring(0, 7); // 取前7个字符
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("生成唯一邀请码异常", e);
+        }
+    }
+
+    @Override
+    public Integer checkUserInTeam(String inviteUserId, String teamId) {
+        GroupBuyTeamOrder groupBuyTeamOrderReq = new GroupBuyTeamOrder();
+        groupBuyTeamOrderReq.setUserId(inviteUserId);
+        groupBuyTeamOrderReq.setTeamId(teamId);
+        return groupBuyTeamOrderDao.checkUserInTeam(groupBuyTeamOrderReq);
+    }
+
+    @Override
+    public InviteEntity getInvite(String inviteId) {
+        Invite invite = inviteDao.getInviteByInviteId(inviteId);
+        if (invite == null) {
+            return null;
+        }
+        return InviteEntity.builder()
+                .inviteUserId(invite.getInviteUserId())
+                .teamId(invite.getTeamId())
+                .inviteId(inviteId)
+                .startTime(invite.getStartTime())
+                .endTime(invite.getEndTime())
+                .inviteStatusEnum(InviteStatusEnum.valueOf(invite.getStatus()))
+                .build();
+    }
+
+    @Override
+    public void inviteExpire(List<String> timeoutTeamIdList) {
+        inviteDao.inviteExpire(timeoutTeamIdList);
     }
 
 }

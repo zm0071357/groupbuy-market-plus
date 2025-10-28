@@ -38,6 +38,11 @@ public class GroupBuyTeamOrder {
     private String orderId;
 
     /**
+     * 邀请人ID
+     */
+    private String inviteUserId;
+
+    /**
      * 活动ID
      */
     private Long activityId;

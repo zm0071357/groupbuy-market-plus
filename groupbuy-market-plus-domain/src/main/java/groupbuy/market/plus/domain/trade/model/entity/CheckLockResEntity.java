@@ -24,4 +24,9 @@ public class CheckLockResEntity {
      */
     private String teamStockRecoverKey;
 
+    /**
+     * 邀请人ID
+     */
+    private String inviteUserId;
+
 }

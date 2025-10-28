@@ -3,7 +3,9 @@ package groupbuy.market.plus.domain.trade.service.lock.factory;
 import groupbuy.market.plus.domain.trade.model.entity.ActivityEntity;
 import groupbuy.market.plus.domain.trade.model.entity.CheckLockEntity;
 import groupbuy.market.plus.domain.trade.model.entity.CheckLockResEntity;
+import groupbuy.market.plus.domain.trade.model.entity.InviteEntity;
 import groupbuy.market.plus.domain.trade.service.lock.filter.ActivityFilter;
+import groupbuy.market.plus.domain.trade.service.lock.filter.InviteFilter;
 import groupbuy.market.plus.domain.trade.service.lock.filter.TeamStockFilter;
 import groupbuy.market.plus.domain.trade.service.lock.filter.UserFilter;
 import groupbuy.market.plus.types.common.GroupBuyConstants;
@@ -23,9 +25,9 @@ import org.springframework.stereotype.Service;
 public class LockOrderLinkFactory {
 
     @Bean("lockOrderLink")
-    public BusinessLinkedList<CheckLockEntity, DynamicContext, CheckLockResEntity> lockOrderLink(ActivityFilter activityFilter, UserFilter userFilter, TeamStockFilter teamStockFilter) {
+    public BusinessLinkedList<CheckLockEntity, DynamicContext, CheckLockResEntity> lockOrderLink(ActivityFilter activityFilter, UserFilter userFilter, InviteFilter inviteFilter, TeamStockFilter teamStockFilter) {
         // 组装链
-        LinkArmory<CheckLockEntity, DynamicContext, CheckLockResEntity> linkArmory = new LinkArmory<>("锁单责任链", activityFilter, userFilter, teamStockFilter);
+        LinkArmory<CheckLockEntity, DynamicContext, CheckLockResEntity> linkArmory = new LinkArmory<>("锁单责任链", activityFilter, userFilter, inviteFilter, teamStockFilter);
         return linkArmory.getLogicLink();
     }
 
@@ -42,6 +44,11 @@ public class LockOrderLinkFactory {
          * 活动实体
          */
         private ActivityEntity activityEntity;
+
+        /**
+         * 邀请返利实体
+         */
+        private InviteEntity inviteEntity;
 
         /**
          * 获取抢占key

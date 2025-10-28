@@ -1,5 +1,6 @@
 package groupbuy.market.plus.trigger.job;
 
+import groupbuy.market.plus.domain.trade.service.invite.InviteService;
 import groupbuy.market.plus.domain.trade.service.refund.RefundOrderService;
 import groupbuy.market.plus.types.common.GroupBuyConstants;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +19,9 @@ public class TeamTimeOutRefundJob {
 
     @Resource
     private RefundOrderService refundOrderService;
+
+    @Resource
+    private InviteService inviteService;
 
     @Resource
     private RedissonClient redissonClient;
@@ -39,6 +43,8 @@ public class TeamTimeOutRefundJob {
             log.info("获取锁成功：{}，定时任务 - 执行拼团超时失败进行退单任务开始", GroupBuyConstants.TeamTimeoutRefundJobLock);
             // 拼团超时失败进行退单
             Map<String, Integer> resultMap = refundOrderService.teamTimeoutRefund();
+            // 将邀请返利标记为不可用
+            inviteService.inviteExpire();
             log.info("定时任务 - 执行拼团超时进行退单任务完成，result：{}", resultMap);
         } catch (Exception e) {
             log.error("定时任务 - 执行拼团超时进行退单任务失败", e);

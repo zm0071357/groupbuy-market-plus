@@ -208,4 +208,32 @@ public interface TradeRepository {
      */
     void updateRefundNoAndRefundTime(String userId, String outTradeNo, String outRefundNo, Date outRefundNoCompleteTime);
 
+    /**
+     * 生成唯一邀请码
+     * @param userId 邀请人ID
+     * @param teamId 拼团组队ID
+     * @return
+     */
+    InviteEntity invite(String userId, String teamId);
+
+    /**
+     * 检查邀请人是否在拼团组队中
+     * @param inviteUserId 邀请人ID
+     * @param teamId 拼团组队ID
+     * @return
+     */
+    Integer checkUserInTeam(String inviteUserId, String teamId);
+
+    /**
+     * 获取邀请返利
+     * @param inviteId 邀请码信息
+     * @return
+     */
+    InviteEntity getInvite(String inviteId);
+
+    /**
+     * 邀请返利失效
+     * @param timeoutTeamIdList 超时的拼团ID集合
+     */
+    void inviteExpire(List<String> timeoutTeamIdList);
 }

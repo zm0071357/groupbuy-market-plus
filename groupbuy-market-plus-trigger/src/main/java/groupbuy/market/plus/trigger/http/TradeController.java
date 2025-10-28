@@ -11,6 +11,7 @@ import groupbuy.market.plus.domain.trade.model.entity.*;
 import groupbuy.market.plus.domain.trade.model.valobj.NotifyConfigVO;
 import groupbuy.market.plus.domain.trade.model.valobj.NotifyTypeEnum;
 import groupbuy.market.plus.domain.trade.model.valobj.TeamProgressVO;
+import groupbuy.market.plus.domain.trade.service.invite.InviteService;
 import groupbuy.market.plus.domain.trade.service.lock.LockOrderService;
 import groupbuy.market.plus.domain.trade.service.refund.RefundOrderService;
 import groupbuy.market.plus.domain.trade.service.settle.SettleOrderService;
@@ -36,6 +37,9 @@ public class TradeController implements TradeService {
 
     @Resource
     private RefundOrderService refundOrderService;
+
+    @Resource
+    private InviteService inviteService;
 
     @Resource
     private IndexGroupBuyMarketService indexGroupBuyMarketService;
@@ -102,7 +106,10 @@ public class TradeController implements TradeService {
 
             // 锁单
             lockOrderEntity = lockOrderService.lockOrder(
-                    UserEntity.builder().userId(lockOrderRequestDTO.getUserId()).build(),
+                    UserEntity.builder()
+                            .userId(lockOrderRequestDTO.getUserId())
+                            .inviteId(lockOrderRequestDTO.getInviteId())
+                            .build(),
                     GroupBuyTeamEntity.builder()
                             .teamId(lockOrderRequestDTO.getTeamId())
                             .activityId(lockOrderRequestDTO.getActivityId())
@@ -283,6 +290,45 @@ public class TradeController implements TradeService {
         } catch (Exception e) {
             log.error("查询拼团组队进度异常，拼团组队ID：{}", teamId, e);
             return Response.<TeamProgressResponseDTO>builder()
+                    .code(ResponseCodeEnum.UN_ERROR.getCode())
+                    .info(ResponseCodeEnum.UN_ERROR.getInfo())
+                    .build();
+        }
+    }
+
+    @PostMapping("/invite")
+    @Override
+    public Response<InviteResponseDTO> invite(@RequestBody InviteRequestDTO inviteRequestDTO) {
+        try {
+            // 参数校验
+            if (StringUtils.isBlank(inviteRequestDTO.getUserId()) || StringUtils.isBlank(inviteRequestDTO.getTeamId())) {
+                return Response.<InviteResponseDTO>builder()
+                        .code(ResponseCodeEnum.ILLEGAL_PARAMETER.getCode())
+                        .info(ResponseCodeEnum.ILLEGAL_PARAMETER.getInfo())
+                        .build();
+            }
+            // 生成唯一邀请码
+            InviteEntity inviteEntity = inviteService.invite(inviteRequestDTO.getUserId(), inviteRequestDTO.getTeamId());
+            return Response.<InviteResponseDTO>builder()
+                    .code(ResponseCodeEnum.SUCCESS.getCode())
+                    .data(InviteResponseDTO.builder()
+                            .inviteUserId(inviteEntity.getInviteUserId())
+                            .teamId(inviteEntity.getTeamId())
+                            .inviteId(inviteEntity.getInviteId())
+                            .startTime(inviteEntity.getStartTime())
+                            .endTime(inviteEntity.getEndTime())
+                            .build())
+                    .info(ResponseCodeEnum.SUCCESS.getInfo())
+                    .build();
+        } catch (AppException e) {
+            log.error("生成邀请码异常，用户ID：{}，拼团组队ID：{}，错误信息：{}", inviteRequestDTO.getUserId(), inviteRequestDTO.getTeamId(), e.getInfo());
+            return Response.<InviteResponseDTO>builder()
+                    .code(e.getCode())
+                    .info(e.getInfo())
+                    .build();
+        } catch (Exception e) {
+            log.error("生成邀请码异常，用户ID：{}，拼团组队ID：{}", inviteRequestDTO.getUserId(), inviteRequestDTO.getTeamId(), e);
+            return Response.<InviteResponseDTO>builder()
                     .code(ResponseCodeEnum.UN_ERROR.getCode())
                     .info(ResponseCodeEnum.UN_ERROR.getInfo())
                     .build();

@@ -6,32 +6,22 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * 锁单校验实体
+ * 校验邀请实体
  */
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class CheckLockEntity {
+public class CheckInviteEntity {
 
     /**
-     * 活动ID
+     * 邀请人ID
      */
-    private Long activityId;
+    private String inviteUserId;
 
     /**
-     * 用户ID
-     */
-    private String userId;
-
-    /**
-     * 组队ID
+     * 拼团组队ID
      */
     private String teamId;
-
-    /**
-     * 邀请码
-     */
-    private String inviteId;
 
 }

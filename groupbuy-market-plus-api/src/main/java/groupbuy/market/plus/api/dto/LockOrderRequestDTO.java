@@ -42,6 +42,11 @@ public class LockOrderRequestDTO {
     private String channel;
 
     /**
+     * 邀请码
+     */
+    private String inviteId;
+
+    /**
      * 外部交易单号 - 后续对接蓝兔支付，由蓝兔支付生成的订单号
      */
     private String outTradeNo;

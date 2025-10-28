@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="groupbuy.market.plus.infrastructure.dao.InviteDao">
+
+    <resultMap id="dataMap" type="groupbuy.market.plus.infrastructure.dao.po.Invite">
+        <id column="id" property="id"/>
+        <result column="invite_user_id" property="inviteUserId"/>
+        <result column="team_id" property="teamId"/>
+        <result column="invite_id" property="inviteId"/>
+        <result column="invite_success_count" property="inviteSuccessCount"/>
+        <result column="start_time" property="startTime"/>
+        <result column="end_time" property="endTime"/>
+        <result column="status" property="status"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <select id="getInviteByUserIdWithTeamId" resultMap="dataMap" parameterType="groupbuy.market.plus.infrastructure.dao.po.Invite">
+        select invite_user_id, team_id, invite_id, invite_success_count,
+               start_time, end_time, status
+        from invite
+        where invite_user_id = #{inviteUserId} and
+              team_id = #{teamId} and
+              status = 0
+    </select>
+
+    <insert id="insert" parameterType="groupbuy.market.plus.infrastructure.dao.po.Invite">
+        insert into invite(
+            invite_user_id, team_id, invite_id, invite_success_count,
+            start_time, end_time, status, create_time, update_time
+        )
+        values (
+                    #{inviteUserId}, #{teamId}, #{inviteId}, #{inviteSuccessCount},
+                    #{startTime}, #{endTime}, #{status}, now(), now()
+               )
+    </insert>
+
+    <select id="getInviteByInviteId" resultMap="dataMap">
+        select invite_user_id, team_id, invite_id, invite_success_count,
+               start_time, end_time, status
+        from invite
+        where invite_id = #{inviteId}
+    </select>
+
+    <update id="inviteExpire">
+        update invite
+        set status = 1, update_time = now()
+        where team_id in
+        <foreach item="teamId" collection="timeoutTeamIdList" open="(" separator="," close=")">
+            #{teamId}
+        </foreach>
+    </update>
+
+</mapper>

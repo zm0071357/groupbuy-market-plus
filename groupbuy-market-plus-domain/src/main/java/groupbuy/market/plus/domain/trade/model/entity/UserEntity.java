@@ -19,4 +19,9 @@ public class UserEntity {
      */
     private String userId;
 
+    /**
+     * 邀请码
+     */
+    private String inviteId;
+
 }

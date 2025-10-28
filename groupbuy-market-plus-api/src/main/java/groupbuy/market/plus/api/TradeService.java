@@ -33,5 +33,11 @@ public interface TradeService {
      */
     Response<TeamProgressResponseDTO> getTeamProgress(String teamId);
 
+    /**
+     * 生成邀请码
+     * @param inviteRequestDTO
+     * @return
+     */
+    Response<InviteResponseDTO> invite(InviteRequestDTO inviteRequestDTO);
 
 }

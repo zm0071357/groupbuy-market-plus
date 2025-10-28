@@ -28,18 +28,19 @@ public class TeamStockFilter implements LogicHandler<CheckLockEntity, LockOrderL
     public CheckLockResEntity apply(CheckLockEntity checkLockEntity, LockOrderLinkFactory.DynamicContext dynamicContext) throws Exception {
         log.info("进入锁单责任链 - 拼团组队可用位置过滤节点");
         // 拼团组队ID为空 - 团长不需要限制
-        if (StringUtils.isBlank(checkLockEntity.getTeamId())) {
+        if (StringUtils.isBlank(checkLockEntity.getTeamId()) && dynamicContext.getInviteEntity() == null) {
             log.info("锁单责任链 - 拼团组队可用位置过滤节点，用户为团长，无需抢占可用位置：{}", checkLockEntity.getUserId());
             return CheckLockResEntity.builder()
                     .isHeader(true)
                     .build();
         }
+        String teamId = dynamicContext.getInviteEntity() == null ? checkLockEntity.getTeamId() : dynamicContext.getInviteEntity().getTeamId();
         // 抢占库存
         log.info("锁单责任链 - 拼团组队可用位置过滤节点，尝试抢占可用位置，用户ID：{}", checkLockEntity.getUserId());
         Integer target = dynamicContext.getActivityEntity().getTarget();    // 目标量
         Integer validTime = dynamicContext.getActivityEntity().getValidTime();      // 拼团有效时间
-        String teamStockOccupyKey = dynamicContext.getTeamStockOccupyKey(checkLockEntity.getTeamId());      // 抢占Key
-        String teamStockRecoverKey = dynamicContext.getTeamStockRecoverKey(checkLockEntity.getTeamId());        // 恢复Key
+        String teamStockOccupyKey = dynamicContext.getTeamStockOccupyKey(teamId);      // 抢占Key
+        String teamStockRecoverKey = dynamicContext.getTeamStockRecoverKey(teamId);        // 恢复Key
         boolean status = tradeRepository.occupyTeamStock(target, validTime, teamStockOccupyKey, teamStockRecoverKey);
         // 抢占失败
         if (!status) {
@@ -49,6 +50,7 @@ public class TeamStockFilter implements LogicHandler<CheckLockEntity, LockOrderL
         return CheckLockResEntity.builder()
                 .isHeader(false)
                 .teamStockRecoverKey(teamStockRecoverKey)
+                .inviteUserId(dynamicContext.getInviteEntity() == null ? null : dynamicContext.getInviteEntity().getInviteUserId())
                 .build();
     }
 }

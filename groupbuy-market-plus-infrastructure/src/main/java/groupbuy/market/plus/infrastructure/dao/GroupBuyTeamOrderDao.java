@@ -55,7 +55,7 @@ public interface GroupBuyTeamOrderDao {
      * @param teamId 组队ID
      * @return
      */
-    List<String> getCompleteTeamOutTradeNoList(String teamId);
+    List<GroupBuyTeamOrder> getCompleteTeamOutTradeNoList(String teamId);
 
     /**
      * 查询用户的组队ID集合
@@ -113,4 +113,10 @@ public interface GroupBuyTeamOrderDao {
      */
     Integer updateRefundNoAndRefundTime(GroupBuyTeamOrder groupBuyTeamOrderReq);
 
+    /**
+     * 检查邀请人是否在拼团组队中
+     * @param groupBuyTeamOrderReq
+     * @return
+     */
+    Integer checkUserInTeam(GroupBuyTeamOrder groupBuyTeamOrderReq);
 }

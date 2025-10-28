@@ -28,6 +28,7 @@ public class LockOrderServiceImpl implements LockOrderService{
                 .activityId(groupBuyTeamEntity.getActivityId())
                 .userId(userEntity.getUserId())
                 .teamId(groupBuyTeamEntity.getTeamId())
+                .inviteId(userEntity.getInviteId())
                 .build();
         CheckLockResEntity checkLockResEntity = lockOrderLink.apply(checkLockEntity, new LockOrderLinkFactory.DynamicContext());
         LockOrderAggregate orderAggregate = LockOrderAggregate.builder()
