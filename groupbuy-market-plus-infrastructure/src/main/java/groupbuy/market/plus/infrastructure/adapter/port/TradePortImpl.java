@@ -67,8 +67,14 @@ public class TradePortImpl implements TradePort {
             }
             // 未抢到锁 - 不执行返回空结果
             return NofifyStatusEnum.NULL.getStatus();
-        } catch (Exception e) {
+        } catch (InterruptedException e) {
+            // 仅在等待锁被中断时恢复中断标记
+            log.error("回调任务等待锁被中断，任务ID：{}", notifyTaskEntity.getTaskId(), e);
             Thread.currentThread().interrupt();
+            return NofifyStatusEnum.FAIL.getStatus();
+        } catch (Exception e) {
+            // 回调本身异常（如HTTP请求失败）不能设置中断标记，否则同批后续任务获取锁时会直接抛出中断异常
+            log.error("回调任务执行异常，任务ID：{}", notifyTaskEntity.getTaskId(), e);
             return NofifyStatusEnum.FAIL.getStatus();
         }
     }

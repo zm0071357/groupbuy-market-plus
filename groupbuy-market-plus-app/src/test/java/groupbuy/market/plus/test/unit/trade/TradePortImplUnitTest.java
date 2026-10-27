@@ -83,4 +83,32 @@ public class TradePortImplUnitTest {
         verify(notifyTaskServiceImpl).notify(task.getNotifyUrl(), task.getParameterJson());
     }
 
+    /**
+     * 回调本身抛异常时返回失败，且不能给当前线程设置中断标记
+     */
+    @Test
+    public void test_notifyException_notInterruptThread() throws Exception {
+        when(notifyTaskDao.getNotifyStatusByTaskId(task.getTaskId())).thenReturn(0);
+        when(notifyTaskServiceImpl.notify(task.getNotifyUrl(), task.getParameterJson())).thenThrow(new RuntimeException("connect timed out"));
+
+        String status = tradePort.groupBuyNotify(task);
+
+        Assert.assertEquals(NofifyStatusEnum.FAIL.getStatus(), status);
+        Assert.assertFalse("回调异常不应设置线程中断标记", Thread.interrupted());
+    }
+
+    /**
+     * 等待锁被中断时返回失败，并恢复中断标记
+     */
+    @Test
+    public void test_lockInterrupted_restoreInterrupt() throws Exception {
+        when(lock.tryLock(anyLong(), anyLong(), any(TimeUnit.class))).thenThrow(new InterruptedException());
+
+        String status = tradePort.groupBuyNotify(task);
+
+        Assert.assertEquals(NofifyStatusEnum.FAIL.getStatus(), status);
+        // Thread.interrupted() 会同时清除中断标记，避免影响后续测试
+        Assert.assertTrue("等待锁被中断时应恢复中断标记", Thread.interrupted());
+    }
+
 }
