@@ -71,7 +71,7 @@
     <update id="updateTeamStatusComplete" parameterType="java.lang.String">
         update group_buy_team
         set status = 1, update_time= now()
-        where team_id = #{teamId} and status = 0
+        where team_id = #{teamId} and status = 0 and complete_count = target_count
     </update>
 
     <select id="getTeamIdList" resultType="java.lang.String" parameterType="groupbuy.market.plus.infrastructure.dao.po.GroupBuyTeam">

@@ -45,9 +45,9 @@ public interface GroupBuyTeamDao {
     Integer updateTeamAddCompleteCount(String teamId);
 
     /**
-     * 更新拼团组队状态为完成
+     * 更新拼团组队状态为完成 - 仅当完成量达到目标量时更新成功
      * @param teamId 组队ID
-     * @return
+     * @return 更新行数，1表示本次结算使拼团完成
      */
     Integer updateTeamStatusComplete(String teamId);
 

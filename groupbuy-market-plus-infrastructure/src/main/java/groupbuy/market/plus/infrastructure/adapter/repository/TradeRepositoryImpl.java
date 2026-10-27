@@ -326,14 +326,12 @@ public class TradeRepositoryImpl implements TradeRepository {
 
         log.info("结算完成，用户ID：{}，外部交易单号：{}", userEntity.getUserId(), orderPaySuccessEntity.getOutTradeNo());
 
+        // 尝试更新拼团组队为完成 - 由数据库按最新完成量判断是否为最后一笔，
+        // 不使用事务外查询的完成量，避免并发结算时无人判定为最后一笔导致组队无法完成
+        Integer updateTeamStatusCount = groupBuyTeamDao.updateTeamStatusComplete(groupBuyTeamEntity.getTeamId());
         // 最后一笔 - 拼团成功
-        if (groupBuyTeamEntity.getTargetCount() - groupBuyTeamEntity.getCompleteCount() == 1) {
+        if (updateTeamStatusCount == 1) {
             log.info("拼团目标完成，组队ID：{}", groupBuyTeamEntity.getTeamId());
-            // 更新拼团组队为完成
-            Integer updateTeamStatusCount = groupBuyTeamDao.updateTeamStatusComplete(groupBuyTeamEntity.getTeamId());
-            if (updateTeamStatusCount != 1) {
-                throw new AppException(ResponseCodeEnum.UPDATE_ZERO.getCode(), ResponseCodeEnum.UPDATE_ZERO.getInfo());
-            }
             // 回调任务
             List<GroupBuyTeamOrder> groupBuyTeamOrderList = groupBuyTeamOrderDao.getCompleteTeamOutTradeNoList(groupBuyTeamEntity.getTeamId());
             List<String> outTradeNoList = new ArrayList<>();
