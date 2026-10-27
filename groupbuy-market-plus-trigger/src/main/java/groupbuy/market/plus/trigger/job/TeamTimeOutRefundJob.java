@@ -29,7 +29,7 @@ public class TeamTimeOutRefundJob {
     /**
      * 定时任务 - 拼团超时进行退单
      */
-    @Scheduled(cron = "* 0/15 * * * ? ")
+    @Scheduled(cron = "0 0/15 * * * ?")
     public void exec() {
         // 加锁 - 部署多个应用时可能会同时执行，需要加上分布式锁，谁先抢占到谁先执行
         RLock lock = redissonClient.getLock(GroupBuyConstants.TeamTimeoutRefundJobLock);
