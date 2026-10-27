@@ -378,18 +378,18 @@ public class TradeRepositoryImpl implements TradeRepository {
     }
 
     @Override
-    public int updateNotifyTaskSuccess(String teamId) {
-        return notifyTaskDao.updateNotifyTaskSuccess(teamId);
+    public int updateNotifyTaskSuccess(String taskId) {
+        return notifyTaskDao.updateNotifyTaskSuccess(taskId);
     }
 
     @Override
-    public int updateNotifyTaskRetry(String teamId) {
-        return notifyTaskDao.updateNotifyTaskRetry(teamId);
+    public int updateNotifyTaskRetry(String taskId) {
+        return notifyTaskDao.updateNotifyTaskRetry(taskId);
     }
 
     @Override
-    public int updateNotifyTaskFail(String teamId) {
-        return notifyTaskDao.updateNotifyTaskFail(teamId);
+    public int updateNotifyTaskFail(String taskId) {
+        return notifyTaskDao.updateNotifyTaskFail(taskId);
     }
 
     @Override

@@ -95,24 +95,24 @@ public interface TradeRepository {
 
     /**
      * 更新回调任务状态为完成
-     * @param teamId 组队ID
+     * @param taskId 回调任务ID
      * @return
      */
-    int updateNotifyTaskSuccess(String teamId);
+    int updateNotifyTaskSuccess(String taskId);
 
     /**
      * 更新回调任务状态为重试
-     * @param teamId 组队ID
+     * @param taskId 回调任务ID
      * @return
      */
-    int updateNotifyTaskRetry(String teamId);
+    int updateNotifyTaskRetry(String taskId);
 
     /**
      * 更新回调任务状态为失败
-     * @param teamId 组队ID
+     * @param taskId 回调任务ID
      * @return
      */
-    int updateNotifyTaskFail(String teamId);
+    int updateNotifyTaskFail(String taskId);
 
     /**
      * 抢占库存

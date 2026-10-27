@@ -4,6 +4,7 @@ import groupbuy.market.plus.domain.trade.adapter.port.TradePort;
 import groupbuy.market.plus.domain.trade.model.entity.NotifyTaskEntity;
 import groupbuy.market.plus.domain.trade.model.valobj.NofifyStatusEnum;
 import groupbuy.market.plus.domain.trade.model.valobj.NotifyTypeEnum;
+import groupbuy.market.plus.infrastructure.dao.NotifyTaskDao;
 import groupbuy.market.plus.infrastructure.event.EventPublisher;
 import groupbuy.market.plus.infrastructure.gateway.NotifyTaskServiceImpl;
 import lombok.extern.slf4j.Slf4j;
@@ -18,8 +19,16 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class TradePortImpl implements TradePort {
 
+    /**
+     * 回调任务状态 - 回调成功（notify_task.notify_status）
+     */
+    private static final Integer NOTIFY_STATUS_SUCCESS = 1;
+
     @Resource
     private RedissonClient redissonClient;
+
+    @Resource
+    private NotifyTaskDao notifyTaskDao;
 
     @Resource
     private NotifyTaskServiceImpl notifyTaskServiceImpl;
@@ -35,6 +44,12 @@ public class TradePortImpl implements TradePort {
             // 抢到锁 - 执行
             if (lock.tryLock(3, 0, TimeUnit.SECONDS)) {
                 try {
+                    // 二次校验 - 任务可能已被其他线程回调成功（如结算后的异步回调与定时补偿同时拿到该任务），避免重复回调
+                    Integer notifyStatus = notifyTaskDao.getNotifyStatusByTaskId(notifyTaskEntity.getTaskId());
+                    if (NOTIFY_STATUS_SUCCESS.equals(notifyStatus)) {
+                        log.info("回调任务已执行成功，跳过本次回调，任务ID：{}", notifyTaskEntity.getTaskId());
+                        return NofifyStatusEnum.NULL.getStatus();
+                    }
                     // 根据不同回调类型进行回调
                     if (notifyTaskEntity.getNotifyTypeEnum().equals(NotifyTypeEnum.HTTP)) {
                         log.info("开始执行回调任务，回调类型：HTTP，组队ID：{}", notifyTaskEntity.getTeamId());

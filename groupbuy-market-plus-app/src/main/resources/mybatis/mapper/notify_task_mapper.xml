@@ -37,20 +37,26 @@
     <update id="updateNotifyTaskSuccess" parameterType="java.lang.String">
         update notify_task
         set notify_count = notify_count + 1, notify_status = 1, update_time = now()
-        where team_id = #{teamId}
+        where task_id = #{taskId} and notify_status in (0, 2)
     </update>
 
     <update id="updateNotifyTaskRetry" parameterType="java.lang.String">
         update notify_task
         set notify_count = notify_count + 1, notify_status = 2, update_time = now()
-        where team_id = #{teamId}
+        where task_id = #{taskId} and notify_status in (0, 2)
     </update>
 
     <update id="updateNotifyTaskFail" parameterType="java.lang.String">
         update notify_task
         set notify_count = notify_count + 1, notify_status = 3, update_time = now()
-        where team_id = #{teamId}
+        where task_id = #{taskId} and notify_status in (0, 2)
     </update>
+
+    <select id="getNotifyStatusByTaskId" parameterType="java.lang.String" resultType="java.lang.Integer">
+        select notify_status
+        from notify_task
+        where task_id = #{taskId}
+    </select>
 
     <select id="getUnNotifyOrderRefundTaskList" resultMap="dataMap">
         select activity_id, team_id, task_id, task_type, notify_type, notify_url, notify_mq,

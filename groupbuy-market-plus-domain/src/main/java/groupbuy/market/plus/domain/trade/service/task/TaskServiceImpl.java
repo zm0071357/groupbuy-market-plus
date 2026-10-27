@@ -61,32 +61,32 @@ public class TaskServiceImpl implements TaskService {
             return null;
         }
         for (NotifyTaskEntity notifyTaskEntity : notifyTaskEntityList) {
-            log.info("开始执行回调任务，组队ID：{}", notifyTaskEntity.getTeamId());
+            log.info("开始执行回调任务，组队ID：{}，任务ID：{}", notifyTaskEntity.getTeamId(), notifyTaskEntity.getTaskId());
             // 执行
             String status = tradePort.groupBuyNotify(notifyTaskEntity);
             // 执行成功
             if (status.equals(NofifyStatusEnum.SUCCESS.getStatus())) {
                 // 更新数据库状态
-                int updateCount = tradeRepository.updateNotifyTaskSuccess(notifyTaskEntity.getTeamId());
+                int updateCount = tradeRepository.updateNotifyTaskSuccess(notifyTaskEntity.getTaskId());
                 if (updateCount == 1) {
                     successCount ++;
-                    log.info("回调任务执行成功，组队ID：{}", notifyTaskEntity.getTeamId());
+                    log.info("回调任务执行成功，组队ID：{}，任务ID：{}", notifyTaskEntity.getTeamId(), notifyTaskEntity.getTaskId());
                 }
             } else if (status.equals(NofifyStatusEnum.FAIL.getStatus())) {
                 // 执行失败
                 // 回调次数小于5次 - 更新为重试
                 if (notifyTaskEntity.getNotifyCount() < 5) {
-                    int updateCount = tradeRepository.updateNotifyTaskRetry(notifyTaskEntity.getTeamId());
+                    int updateCount = tradeRepository.updateNotifyTaskRetry(notifyTaskEntity.getTaskId());
                     if (updateCount == 1) {
                         retryCount ++;
-                        log.info("回调任务执行失败，可重试，组队ID：{}", notifyTaskEntity.getTeamId());
+                        log.info("回调任务执行失败，可重试，组队ID：{}，任务ID：{}", notifyTaskEntity.getTeamId(), notifyTaskEntity.getTaskId());
                     }
                 } else {
                     // 失败次数大于5次 - 更新为失败
-                    int updateCount = tradeRepository.updateNotifyTaskFail(notifyTaskEntity.getTeamId());
+                    int updateCount = tradeRepository.updateNotifyTaskFail(notifyTaskEntity.getTaskId());
                     if (updateCount == 1) {
                         failCount ++;
-                        log.info("回调任务执行失败，不可重试，组队ID：{}", notifyTaskEntity.getTeamId());
+                        log.info("回调任务执行失败，不可重试，组队ID：{}，任务ID：{}", notifyTaskEntity.getTeamId(), notifyTaskEntity.getTaskId());
                     }
                 }
             }

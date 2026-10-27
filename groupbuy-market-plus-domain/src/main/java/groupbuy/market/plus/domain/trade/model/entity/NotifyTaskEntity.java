@@ -51,11 +51,11 @@ public class NotifyTaskEntity {
     private String parameterJson;
 
     /**
-     * 加锁
+     * 加锁 - 按回调任务维度加锁，同一组队下的不同回调任务互不影响
      * @return
      */
     public String lockKey() {
-        return "notify_job_lock_key_" + this.teamId;
+        return "notify_job_lock_key_" + this.taskId;
     }
 
 }
