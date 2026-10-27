@@ -122,10 +122,11 @@
         where user_id = #{userId}
     </update>
 
+    <!-- 仅已创建(0)或已支付(1)的订单可退单，并发重复退单时只有一个请求能更新成功 -->
     <update id="updateOrderStatusRefund">
         update group_buy_team_order
         set status = 2, update_time = now()
-        where user_id = #{userId} and order_id = #{orderId}
+        where user_id = #{userId} and order_id = #{orderId} and status in (0, 1)
     </update>
 
     <select id="getTimeoutOrderList" resultMap="dataMap">

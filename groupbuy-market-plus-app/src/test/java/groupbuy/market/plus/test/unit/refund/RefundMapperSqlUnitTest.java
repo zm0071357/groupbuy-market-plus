@@ -1,6 +1,7 @@
 package groupbuy.market.plus.test.unit.refund;
 
 import groupbuy.market.plus.infrastructure.dao.po.GroupBuyTeam;
+import groupbuy.market.plus.infrastructure.dao.po.GroupBuyTeamOrder;
 import org.apache.ibatis.builder.xml.XMLMapperBuilder;
 import org.apache.ibatis.session.Configuration;
 import org.junit.Assert;
@@ -39,6 +40,16 @@ public class RefundMapperSqlUnitTest {
         int completeCountIndex = sql.indexOf("complete_count = complete_count + ?");
         Assert.assertTrue(sql, statusIndex >= 0);
         Assert.assertTrue(sql, statusIndex < completeCountIndex);
+    }
+
+    @Test
+    public void test_refundOrderSql_onlyCreateOrComplete() {
+        GroupBuyTeamOrder param = new GroupBuyTeamOrder();
+        param.setUserId("user01");
+        param.setOrderId("ORDER000000000001");
+        String sql = sql("groupbuy.market.plus.infrastructure.dao.GroupBuyTeamOrderDao.updateOrderStatusRefund", param);
+
+        Assert.assertTrue(sql, sql.contains("where user_id = ? and order_id = ? and status in (0, 1)"));
     }
 
     private void parse(String resource) throws Exception {
