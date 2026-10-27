@@ -3,7 +3,6 @@ package groupbuy.market.plus.domain.trade.model.aggregate;
 import groupbuy.market.plus.domain.trade.model.entity.RefundOrderEntity;
 import groupbuy.market.plus.domain.trade.model.valobj.OrderStatusEnum;
 import groupbuy.market.plus.domain.trade.model.valobj.TeamProgressVO;
-import groupbuy.market.plus.domain.trade.model.valobj.TeamStatusEnum;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -22,11 +21,6 @@ public class RefundOrderAggregate {
      * 退单订单
      */
     private RefundOrderEntity refundOrderEntity;
-
-    /**
-     * 拼团组队状态枚举
-     */
-    private TeamStatusEnum teamStatusEnum;
 
     /**
      * 拼团进度
@@ -70,17 +64,15 @@ public class RefundOrderAggregate {
      * @param refundOrderEntity
      * @param lockCount
      * @param completeCount
-     * @param teamStatusEnum
      * @return
      */
-    public static RefundOrderAggregate buildTeamCompletePaidRefundAggregate(RefundOrderEntity refundOrderEntity, Integer lockCount, Integer completeCount, TeamStatusEnum teamStatusEnum) {
+    public static RefundOrderAggregate buildTeamCompletePaidRefundAggregate(RefundOrderEntity refundOrderEntity, Integer lockCount, Integer completeCount) {
         return RefundOrderAggregate.builder()
                 .refundOrderEntity(refundOrderEntity)
                 .teamProgressVO(TeamProgressVO.builder()
                         .lockCount(lockCount)
                         .completeCount(completeCount)
                         .build())
-                .teamStatusEnum(teamStatusEnum)
                 .build();
     }
 }

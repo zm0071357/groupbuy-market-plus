@@ -58,6 +58,21 @@ public class RefundOrderRepositoryUnitTest {
         assertRefundOrderReq();
     }
 
+    @Test
+    public void test_teamCompletePaidRefund_useUserId() {
+        when(groupBuyTeamOrderDao.updateOrderStatusRefund(any(GroupBuyTeamOrder.class))).thenReturn(1);
+        when(groupBuyTeamDao.updateTeamByTeamCompletePaidRefund(any(GroupBuyTeam.class))).thenReturn(1);
+
+        tradeRepository.teamCompletePaidRefund(RefundOrderAggregate.buildTeamCompletePaidRefundAggregate(refundOrderEntity, -1, -1));
+
+        assertRefundOrderReq();
+        // 组队状态交由 SQL 判断，不再由调用方传入
+        ArgumentCaptor<GroupBuyTeam> teamCaptor = ArgumentCaptor.forClass(GroupBuyTeam.class);
+        verify(groupBuyTeamDao).updateTeamByTeamCompletePaidRefund(teamCaptor.capture());
+        Assert.assertNull(teamCaptor.getValue().getStatus());
+        Assert.assertEquals(Integer.valueOf(-1), teamCaptor.getValue().getCompleteCount());
+    }
+
     private void assertRefundOrderReq() {
         ArgumentCaptor<GroupBuyTeamOrder> captor = ArgumentCaptor.forClass(GroupBuyTeamOrder.class);
         verify(groupBuyTeamOrderDao).updateOrderStatusRefund(captor.capture());

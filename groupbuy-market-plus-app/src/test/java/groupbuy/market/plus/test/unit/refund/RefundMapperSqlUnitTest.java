@@ -1,0 +1,55 @@
+package groupbuy.market.plus.test.unit.refund;
+
+import groupbuy.market.plus.infrastructure.dao.po.GroupBuyTeam;
+import org.apache.ibatis.builder.xml.XMLMapperBuilder;
+import org.apache.ibatis.session.Configuration;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
+import java.io.InputStream;
+
+/**
+ * 退单相关 SQL 单元测试 - 不连接数据库，解析 MyBatis 映射文件后检查生成的 SQL
+ */
+public class RefundMapperSqlUnitTest {
+
+    private Configuration configuration;
+
+    @Before
+    public void setUp() throws Exception {
+        configuration = new Configuration();
+        parse("mybatis/mapper/group_buy_team_mapper.xml");
+        parse("mybatis/mapper/group_buy_team_order_mapper.xml");
+    }
+
+    @Test
+    public void test_completePaidRefund_teamSql() {
+        GroupBuyTeam param = new GroupBuyTeam();
+        param.setTeamId("TEAM12345678");
+        param.setLockCount(-1);
+        param.setCompleteCount(-1);
+        String sql = sql("groupbuy.market.plus.infrastructure.dao.GroupBuyTeamDao.updateTeamByTeamCompletePaidRefund", param);
+
+        // 仅完成或完成 - 存在退单的组队可更新
+        Assert.assertTrue(sql, sql.contains("status in (1, 3)"));
+        Assert.assertFalse(sql, sql.contains("status = 0"));
+        // 状态按扣减前完成量计算，且在 complete_count 赋值之前
+        int statusIndex = sql.indexOf("set status = case when complete_count + ? <= 0 then 2 else 3 end");
+        int completeCountIndex = sql.indexOf("complete_count = complete_count + ?");
+        Assert.assertTrue(sql, statusIndex >= 0);
+        Assert.assertTrue(sql, statusIndex < completeCountIndex);
+    }
+
+    private void parse(String resource) throws Exception {
+        try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream(resource)) {
+            Assert.assertNotNull("找不到映射文件：" + resource, inputStream);
+            new XMLMapperBuilder(inputStream, configuration, resource, configuration.getSqlFragments()).parse();
+        }
+    }
+
+    private String sql(String statementId, Object param) {
+        return configuration.getMappedStatement(statementId).getBoundSql(param).getSql().replaceAll("\\s+", " ");
+    }
+
+}

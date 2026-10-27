@@ -33,7 +33,9 @@ public enum RefundTypeEnum {
     TEAM_COMPLETE_PAID_REFUND(4, "teamCompletePaidRefund", "拼团组队完成 - 已支付") {
         @Override
         public boolean matches(OrderStatusEnum orderStatusEnum, TeamStatusEnum teamStatusEnum) {
-            return orderStatusEnum.equals(OrderStatusEnum.COMPLETE) && teamStatusEnum.equals(TeamStatusEnum.COMPLETE);
+            // 组队完成，或完成后已有其他成员退单（完成 - 存在退单），均按已成团退单处理
+            return orderStatusEnum.equals(OrderStatusEnum.COMPLETE) &&
+                    (teamStatusEnum.equals(TeamStatusEnum.COMPLETE) || teamStatusEnum.equals(TeamStatusEnum.COMPLETE_REFUND));
         }
     },
     ;

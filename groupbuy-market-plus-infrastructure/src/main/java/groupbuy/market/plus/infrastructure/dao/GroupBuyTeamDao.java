@@ -104,7 +104,7 @@ public interface GroupBuyTeamDao {
     Integer updateTeamByTeamInCompletePaidRefund(GroupBuyTeam groupBuyTeamReq);
 
     /**
-     * 更新拼团组队 - 锁单量-1，完成量-1，拼团状态
+     * 更新拼团组队 - 锁单量-1，完成量-1，拼团状态（全部退完为失败，否则为完成 - 存在退单）
      * 退单 - 拼团组队完成 - 已支付
      * @param groupBuyTeamReq
      * @return

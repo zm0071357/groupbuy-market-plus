@@ -617,20 +617,18 @@ public class TradeRepositoryImpl implements TradeRepository {
         // 更新订单状态为退单
         RefundOrderEntity refundOrderEntity = teamCompletePaidRefundAggregate.getRefundOrderEntity();
         TeamProgressVO teamProgressVO = teamCompletePaidRefundAggregate.getTeamProgressVO();
-        TeamStatusEnum teamStatusEnum = teamCompletePaidRefundAggregate.getTeamStatusEnum();
         GroupBuyTeamOrder groupBuyTeamOrderReq = new GroupBuyTeamOrder();
-        groupBuyTeamOrderReq.setUserId(refundOrderEntity.getOrderId());
+        groupBuyTeamOrderReq.setUserId(refundOrderEntity.getUserId());
         groupBuyTeamOrderReq.setOrderId(refundOrderEntity.getOrderId());
         Integer updateOrderCount = groupBuyTeamOrderDao.updateOrderStatusRefund(groupBuyTeamOrderReq);
         if (updateOrderCount != 1) {
             throw new AppException(ResponseCodeEnum.UPDATE_ZERO.getCode(), ResponseCodeEnum.UPDATE_ZERO.getInfo());
         }
 
-        // 更新拼团组队 - 锁单量-1，完成量-1，拼团组队状态
+        // 更新拼团组队 - 锁单量-1，完成量-1，拼团组队状态由数据库按扣减后的完成量判断（全部退完为失败，否则为完成 - 存在退单）
         GroupBuyTeam groupBuyTeamReq = new GroupBuyTeam();
         groupBuyTeamReq.setLockCount(teamProgressVO.getLockCount());
         groupBuyTeamReq.setCompleteCount(teamProgressVO.getCompleteCount());
-        groupBuyTeamReq.setStatus(teamStatusEnum.getStatus());
         groupBuyTeamReq.setTeamId(refundOrderEntity.getTeamId());
         Integer updateTeamCount = groupBuyTeamDao.updateTeamByTeamCompletePaidRefund(groupBuyTeamReq);
         if (updateTeamCount != 1) {

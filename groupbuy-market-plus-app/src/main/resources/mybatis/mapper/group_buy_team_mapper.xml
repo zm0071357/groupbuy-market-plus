@@ -133,13 +133,15 @@
         where team_id = #{teamId} and status = 0
     </update>
 
+    <!-- 已成团组队退单：status 放在 complete_count 之前赋值，使用扣减前的完成量计算，
+         扣减后为 0 则组队失败(2)，否则为完成 - 存在退单(3)；仅完成(1)或完成 - 存在退单(3)的组队可更新 -->
     <update id="updateTeamByTeamCompletePaidRefund">
         update group_buy_team
-        set lock_count = lock_count + #{lockCount},
+        set status = case when complete_count + #{completeCount} &lt;= 0 then 2 else 3 end,
+            lock_count = lock_count + #{lockCount},
             complete_count = complete_count + #{completeCount},
-            status = #{status},
             update_time= now()
-        where team_id = #{teamId} and status = 0
+        where team_id = #{teamId} and status in (1, 3)
     </update>
 
     <select id="getTimeoutTeamIdList" resultType="java.lang.String">
