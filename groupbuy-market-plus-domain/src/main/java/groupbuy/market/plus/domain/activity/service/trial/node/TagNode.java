@@ -49,8 +49,8 @@ public class TagNode extends AbstractGroupBuyMarketSupport<MarketProductEntity, 
         threadPoolExecutor.execute(activityVOFutureTask);
 
         // 写入上下文
-        dynamicContext.setSkuVO(skuVOFutureTask.get(timeout, TimeUnit.MINUTES));
-        dynamicContext.setActivityVO(activityVOFutureTask.get(timeout, TimeUnit.MINUTES));
+        dynamicContext.setSkuVO(skuVOFutureTask.get(timeout, TimeUnit.MILLISECONDS));
+        dynamicContext.setActivityVO(activityVOFutureTask.get(timeout, TimeUnit.MILLISECONDS));
 
         log.info("用户ID：{}，异步线程加载数据「拼团活动、拼团商品」完成", marketProductEntity.getUserId());
     }

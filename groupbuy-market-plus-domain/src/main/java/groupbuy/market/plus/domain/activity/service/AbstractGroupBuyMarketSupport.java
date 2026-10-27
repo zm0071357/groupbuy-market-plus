@@ -17,8 +17,8 @@ import java.util.concurrent.TimeoutException;
 public abstract class AbstractGroupBuyMarketSupport<MarketProductEntity, DynamicContext, TrialBalanceEntity>
         extends AbstractMultiThreadStrategyRouter<MarketProductEntity, DynamicContext, TrialBalanceEntity> {
 
-    // 超时时间
-    protected long timeout = 500;
+    // 异步加载数据的超时时间（毫秒）
+    protected long timeout = 3000;
 
     // 活动仓储定义在抽象类中 - 每个节点都能直接使用，不需要重复引入
     @Resource

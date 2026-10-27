@@ -13,8 +13,8 @@ import javax.annotation.Resource;
  */
 public abstract class AbstractRefundOrderSupport<CheckRefundEntity, DynamicContext, CheckRefundResEntity> extends AbstractMultiThreadStrategyRouter<CheckRefundEntity, DynamicContext, CheckRefundResEntity> {
 
-    // 超时时间
-    protected long timeout = 500;
+    // 异步加载数据的超时时间（毫秒）
+    protected long timeout = 3000;
 
     @Resource
     protected TradeRepository tradeRepository;

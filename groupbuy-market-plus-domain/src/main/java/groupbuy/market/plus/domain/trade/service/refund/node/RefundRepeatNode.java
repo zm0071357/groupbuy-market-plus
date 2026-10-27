@@ -40,7 +40,7 @@ public class RefundRepeatNode extends AbstractRefundOrderSupport<PreRefundEntity
         GetAggregateThreadTask getAggregateThreadTask = new GetAggregateThreadTask(preRefundEntity, tradeRepository);
         FutureTask<RefundThreadTaskAggregate> refundThreadTaskResAggregateFutureTask = new FutureTask<>(getAggregateThreadTask);
         threadPoolExecutor.execute(refundThreadTaskResAggregateFutureTask);
-        RefundThreadTaskAggregate refundThreadTaskAggregate = refundThreadTaskResAggregateFutureTask.get(timeout, TimeUnit.MINUTES);
+        RefundThreadTaskAggregate refundThreadTaskAggregate = refundThreadTaskResAggregateFutureTask.get(timeout, TimeUnit.MILLISECONDS);
 
         // 写入上下文
         dynamicContext.setPreRefundOrderEntity(refundThreadTaskAggregate.getPreRefundOrderEntity());
