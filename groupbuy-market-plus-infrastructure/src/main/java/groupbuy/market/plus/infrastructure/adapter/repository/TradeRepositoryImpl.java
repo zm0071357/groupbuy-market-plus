@@ -503,7 +503,7 @@ public class TradeRepositoryImpl implements TradeRepository {
         RefundOrderEntity refundOrderEntity = teamInCompleteUnPaidRefundAggregate.getRefundOrderEntity();
         TeamProgressVO teamProgressVO = teamInCompleteUnPaidRefundAggregate.getTeamProgressVO();
         GroupBuyTeamOrder groupBuyTeamOrderReq = new GroupBuyTeamOrder();
-        groupBuyTeamOrderReq.setUserId(refundOrderEntity.getOrderId());
+        groupBuyTeamOrderReq.setUserId(refundOrderEntity.getUserId());
         groupBuyTeamOrderReq.setOrderId(refundOrderEntity.getOrderId());
         Integer updateOrderCount = groupBuyTeamOrderDao.updateOrderStatusRefund(groupBuyTeamOrderReq);
         if (updateOrderCount != 1) {
