@@ -38,14 +38,11 @@ public class DCCServiceImpl {
      * @return
      */
     public boolean isCutRange(String userId) {
-        // 获取用户ID的哈希值
-        int hashCode = Math.abs(userId.hashCode());
-        // 取最后两位
-        int lastTwoDigits = hashCode % 100;
-        if (lastTwoDigits <= Integer.parseInt(cutRange)) {
-            return true;
-        }
-        return false;
+        // 用户ID哈希值对100取模，得到 [0, 99] 的分桶
+        // 使用 floorMod 而非 Math.abs：Math.abs(Integer.MIN_VALUE) 仍为负数
+        int bucket = Math.floorMod(userId.hashCode(), 100);
+        // 分桶小于切量比例即放行：0 全部拦截，100 全部放行，N 放行 N%
+        return bucket < Integer.parseInt(cutRange);
     }
 
     /**
