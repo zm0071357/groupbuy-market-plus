@@ -69,7 +69,15 @@ public class RefundOrderServiceImpl implements RefundOrderService {
         if (!preRefundEntityList.isEmpty()) {
             // 遍历订单集合进行退单
             for (PreRefundEntity preRefundEntity : preRefundEntityList) {
-                RefundResEntity refundResEntity = this.refundOrder(preRefundEntity);
+                // 单条退单失败不影响后续订单处理
+                RefundResEntity refundResEntity;
+                try {
+                    refundResEntity = this.refundOrder(preRefundEntity);
+                } catch (Exception e) {
+                    log.error("拼团超时退单失败，用户ID：{}，外部交易单号：{}", preRefundEntity.getUserId(), preRefundEntity.getOutTradeNo(), e);
+                    failCount ++;
+                    continue;
+                }
                 if (refundResEntity.getRefundStatusEnum().equals(RefundStatusEnum.SUCCESS)) {
                     successCount ++;
                 } else if (refundResEntity.getRefundStatusEnum().equals(RefundStatusEnum.REPEAT)) {
