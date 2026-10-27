@@ -1,0 +1,22 @@
+# Maven 编译产物
+target/
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Eclipse / VS Code
+.classpath
+.project
+.settings/
+.vscode/
+
+# 应用运行日志（logback 输出到 ./data/log）
+**/data/log/
+*.log
+
+# 系统文件
+.DS_Store
+Thumbs.db
