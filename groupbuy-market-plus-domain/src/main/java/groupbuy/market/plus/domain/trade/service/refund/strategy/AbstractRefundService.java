@@ -3,6 +3,7 @@ package groupbuy.market.plus.domain.trade.service.refund.strategy;
 import com.alibaba.fastjson.JSON;
 import groupbuy.market.plus.domain.trade.adapter.event.OrderRefundMessage;
 import groupbuy.market.plus.domain.trade.adapter.repository.TradeRepository;
+import groupbuy.market.plus.domain.trade.model.entity.ActivityEntity;
 import groupbuy.market.plus.domain.trade.model.entity.GroupBuyTeamEntity;
 import groupbuy.market.plus.domain.trade.model.entity.NotifyTaskEntity;
 import groupbuy.market.plus.domain.trade.service.lock.factory.LockOrderLinkFactory;
@@ -61,8 +62,16 @@ public abstract class AbstractRefundService implements RefundService {
         log.info("恢复拼团组队库存 - 退单类型：{}，用户ID：{}，活动ID：{}，拼团组队ID：{}", refundType, orderRefundMessage.getUserId(), orderRefundMessage.getActivityId(), orderRefundMessage.getTeamId());
         // 恢复库存key
         String recoveryTeamStockKey = LockOrderLinkFactory.getTeamStockRecoverKey(orderRefundMessage.getActivityId(), orderRefundMessage.getTeamId());
-        // 恢复库存
-        tradeRepository.recoverTeamStock(recoveryTeamStockKey);
+        // 拼团有效时间 - 用于防重标记的过期时间
+        ActivityEntity activityEntity = tradeRepository.getActivityById(orderRefundMessage.getActivityId());
+        Integer validTime = activityEntity == null ? null : activityEntity.getValidTime();
+        // 恢复库存 - 按订单幂等，MQ重复投递或回调重复发送时不会重复恢复
+        Long recoverCount = tradeRepository.recoverTeamStockOnce(recoveryTeamStockKey, orderRefundMessage.getOrderId(), validTime);
+        if (recoverCount == null) {
+            log.info("恢复拼团组队库存 - 订单已恢复过，跳过，订单ID：{}，恢复Key：{}", orderRefundMessage.getOrderId(), recoveryTeamStockKey);
+            return;
+        }
+        log.info("恢复拼团组队库存完成 - 订单ID：{}，恢复Key：{}，当前恢复量：{}", orderRefundMessage.getOrderId(), recoveryTeamStockKey, recoverCount);
     }
 
     @Override

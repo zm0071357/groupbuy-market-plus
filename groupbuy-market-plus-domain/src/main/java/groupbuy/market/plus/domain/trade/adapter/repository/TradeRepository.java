@@ -131,6 +131,15 @@ public interface TradeRepository {
     Long recoverTeamStock(String teamStockRecoverKey);
 
     /**
+     * 退单时恢复可用位置 - 按订单幂等，同一订单只恢复一次
+     * @param teamStockRecoverKey 恢复Key
+     * @param orderId 订单ID
+     * @param validTime 拼团有效时间（分钟），用于设置防重标记的过期时间
+     * @return 恢复后的恢复量，该订单已恢复过时返回null
+     */
+    Long recoverTeamStockOnce(String teamStockRecoverKey, String orderId, Integer validTime);
+
+    /**
      * 获取退单所需数据聚合
      * @param preRefundEntity
      * @return

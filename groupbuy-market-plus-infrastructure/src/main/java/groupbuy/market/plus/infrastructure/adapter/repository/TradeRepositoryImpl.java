@@ -18,7 +18,9 @@ import groupbuy.market.plus.types.exception.AppException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.redisson.api.RScript;
 import org.redisson.api.RedissonClient;
+import org.redisson.client.codec.StringCodec;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
@@ -420,6 +422,27 @@ public class TradeRepositoryImpl implements TradeRepository {
             return 0L;
         }
         return redissonClient.getAtomicLong(teamStockRecoverKey).incrementAndGet();
+    }
+
+    /**
+     * 按订单幂等恢复可用位置：防重标记写入成功才将恢复量+1，两步在同一 Lua 脚本中原子执行
+     * KEYS[1] 防重标记Key，KEYS[2] 恢复Key，ARGV[1] 防重标记过期时间（毫秒）
+     */
+    private static final String RECOVER_TEAM_STOCK_ONCE_SCRIPT =
+            "if redis.call('set', KEYS[1], '1', 'NX', 'PX', ARGV[1]) then " +
+            "    return redis.call('incr', KEYS[2]) " +
+            "end " +
+            "return -1";
+
+    @Override
+    public Long recoverTeamStockOnce(String teamStockRecoverKey, String orderId, Integer validTime) {
+        // 防重标记与抢占位置的加锁保持相同过期时间：拼团有效时间 + 60分钟
+        long expireMillis = TimeUnit.MINUTES.toMillis((validTime == null ? 0 : validTime) + 60);
+        String recoverOnceKey = teamStockRecoverKey + Constants.UNDERSCORE + orderId;
+        Long recoverCount = redissonClient.getScript(StringCodec.INSTANCE).eval(RScript.Mode.READ_WRITE,
+                RECOVER_TEAM_STOCK_ONCE_SCRIPT, RScript.ReturnType.INTEGER,
+                Arrays.asList(recoverOnceKey, teamStockRecoverKey), String.valueOf(expireMillis));
+        return recoverCount == null || recoverCount < 0 ? null : recoverCount;
     }
 
     @Override
