@@ -10,7 +10,7 @@
         <result column="task_type" property="taskType"/>
         <result column="notify_type" property="notifyType"/>
         <result column="notify_url" property="notifyUrl"/>
-        <result column="notify_mq" property="notifyUrl"/>
+        <result column="notify_mq" property="notifyMQ"/>
         <result column="notify_count" property="notifyCount"/>
         <result column="notify_status" property="notifyStatus"/>
         <result column="parameter_json" property="parameterJson"/>
