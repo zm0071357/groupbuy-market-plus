@@ -14,15 +14,15 @@ public class DCCServiceImpl {
     // 0 关闭
     // 1 开启
     @DCCValue(value = "downgradeSwitch:0")
-    private String downgradeSwitch;
+    private volatile String downgradeSwitch;
 
     // 切量开关
     @DCCValue(value = "cutRange:100")
-    private String cutRange;
+    private volatile String cutRange;
 
     // SC黑名单
     @DCCValue(value = "scBlack:s02,c02")
-    private String scBlack;
+    private volatile String scBlack;
 
     /**
      * 降级开关是否开启

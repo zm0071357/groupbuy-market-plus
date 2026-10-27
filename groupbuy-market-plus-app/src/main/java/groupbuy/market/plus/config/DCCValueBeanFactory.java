@@ -49,7 +49,12 @@ public class DCCValueBeanFactory implements BeanPostProcessor {
         RTopic topic = redissonClient.getTopic(TOPIC);
         topic.addListener(String.class, (charSequence, s) -> {
             try {
-                String[] split = s.split(Constants.SPLIT);
+                // 只按第一个分隔符切分，配置值本身可能包含逗号（如 SC 黑名单 "s02,c02"）
+                String[] split = s.split(Constants.SPLIT, 2);
+                if (split.length != 2) {
+                    log.error("DCC 配置消息格式错误，应为 key,value：{}", s);
+                    return;
+                }
                 String key = split[0];      // 配置键名，如 "downgradeSwitch"
                 String value = split[1];    // 配置值，如 "1"
 
