@@ -17,7 +17,7 @@ import javax.annotation.Resource;
 import java.util.Date;
 
 /**
- * 邀请码过滤节点 - 邀请码是否可用、是否过期
+ * 邀请码过滤节点 - 邀请码是否可用、是否过期，邀请码对应的组队与请求组队是否一致
  */
 @Slf4j
 @Service
@@ -39,6 +39,12 @@ public class InviteFilter implements LogicHandler<CheckLockEntity, LockOrderLink
             if (inviteEntity.getInviteStatusEnum().equals(InviteStatusEnum.UNAVAILABLE) || inviteEntity.getEndTime().before(new Date())) {
                 throw new AppException(ResponseCodeEnum.E0026.getCode(), ResponseCodeEnum.E0026.getInfo());
             }
+            // 请求指定了组队时，必须与邀请码对应的组队一致
+            if (StringUtils.isNotBlank(checkLockEntity.getTeamId()) && !checkLockEntity.getTeamId().equals(inviteEntity.getTeamId())) {
+                throw new AppException(ResponseCodeEnum.E0028.getCode(), ResponseCodeEnum.E0028.getInfo());
+            }
+            // 仅凭邀请码参团时，以邀请码对应的组队作为参团组队，后续节点与落库统一使用该组队
+            checkLockEntity.setTeamId(inviteEntity.getTeamId());
         }
         return next(checkLockEntity, dynamicContext);
     }

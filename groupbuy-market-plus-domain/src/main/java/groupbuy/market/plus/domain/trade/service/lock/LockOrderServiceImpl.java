@@ -31,6 +31,8 @@ public class LockOrderServiceImpl implements LockOrderService{
                 .inviteId(userEntity.getInviteId())
                 .build();
         CheckLockResEntity checkLockResEntity = lockOrderLink.apply(checkLockEntity, new LockOrderLinkFactory.DynamicContext());
+        // 以责任链最终确定的组队为准（仅凭邀请码参团时由邀请码补全），保证 Redis 抢占与数据库落库为同一组队
+        groupBuyTeamEntity.setTeamId(checkLockEntity.getTeamId());
         LockOrderAggregate orderAggregate = LockOrderAggregate.builder()
                 .userEntity(userEntity)
                 .groupBuyTeamEntity(groupBuyTeamEntity)

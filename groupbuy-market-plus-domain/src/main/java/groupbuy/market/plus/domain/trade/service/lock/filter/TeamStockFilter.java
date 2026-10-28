@@ -28,13 +28,14 @@ public class TeamStockFilter implements LogicHandler<CheckLockEntity, LockOrderL
     public CheckLockResEntity apply(CheckLockEntity checkLockEntity, LockOrderLinkFactory.DynamicContext dynamicContext) throws Exception {
         log.info("进入锁单责任链 - 拼团组队可用位置过滤节点");
         // 拼团组队ID为空 - 团长不需要限制
-        if (StringUtils.isBlank(checkLockEntity.getTeamId()) && dynamicContext.getInviteEntity() == null) {
+        if (StringUtils.isBlank(checkLockEntity.getTeamId())) {
             log.info("锁单责任链 - 拼团组队可用位置过滤节点，用户为团长，无需抢占可用位置：{}", checkLockEntity.getUserId());
             return CheckLockResEntity.builder()
                     .isHeader(true)
                     .build();
         }
-        String teamId = dynamicContext.getInviteEntity() == null ? checkLockEntity.getTeamId() : dynamicContext.getInviteEntity().getTeamId();
+        // 参团组队 - 仅凭邀请码参团时已由邀请码过滤节点补全
+        String teamId = checkLockEntity.getTeamId();
         // 抢占库存
         log.info("锁单责任链 - 拼团组队可用位置过滤节点，尝试抢占可用位置，用户ID：{}", checkLockEntity.getUserId());
         Integer target = dynamicContext.getActivityEntity().getTarget();    // 目标量
