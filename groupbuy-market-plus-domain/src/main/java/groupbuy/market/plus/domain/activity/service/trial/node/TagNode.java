@@ -72,27 +72,24 @@ public class TagNode extends AbstractGroupBuyMarketSupport<MarketProductEntity, 
             dynamicContext.setDiscount(true);
             return router(marketProductEntity, dynamicContext);
         }
+        // 人群范围配置错误（仅支持白名单 2,2、黑名单 1,1）- 无法确定优惠对象，所有用户均不享受优惠，
+        // 避免如黑名单漏配范围时反而只给人群内用户优惠
+        if (!activityVO.isValidTagScope()) {
+            log.error("活动人群范围配置错误，仅支持白名单 {}、黑名单 {}，所有用户不可享用优惠，活动ID：{}，tagId：{}，tagScope：{}",
+                    ActivityVO.TAG_SCOPE_WHITE_LIST, ActivityVO.TAG_SCOPE_BLACK_LIST, activityVO.getActivityId(), tagId, activityVO.getTagScope());
+            dynamicContext.setDiscount(false);
+            return router(marketProductEntity, dynamicContext);
+        }
         // 人群标签数据不存在 - 无法判断用户是否在人群内，不可享用优惠（白名单、黑名单两种配置均拒绝）
         if (!tagRepository.isTagCrowdExists(tagId)) {
             log.warn("人群标签数据不存在，不可参与优惠试算，tagId：{}，用户ID：{}", tagId, marketProductEntity.getUserId());
             dynamicContext.setDiscount(false);
             return router(marketProductEntity, dynamicContext);
         }
-        // 人群标签不为空 - 校验用户
-        // 是否在人群标签范围内
+        // 人群标签只决定能否享受优惠，不限制参与拼团 - 不享受优惠的用户按原价拼团
+        // 白名单：人群内用户享受优惠；黑名单：人群外用户享受优惠
         boolean isTagCrowdUser = tagRepository.isTagCrowdUser(tagId, marketProductEntity.getUserId());
-        // 是否可见
-        boolean visible = activityVO.isVisible();
-        // 是否可参与
-        boolean enable = activityVO.isEnable();
-        // 对于人群标签内的用户
-        // 同时满足可见和可参与条件时才能享用折扣
-        // 同时满足不可见和不可参与条件时，则限定该人群标签用户不能享用此折扣，不在人群标签内的用户能享用折扣
-        if (isTagCrowdUser) {
-            dynamicContext.setDiscount(visible && enable);
-        } else {
-            dynamicContext.setDiscount(!visible && !enable);
-        }
+        dynamicContext.setDiscount(activityVO.isTagCrowdDiscount(isTagCrowdUser));
         return router(marketProductEntity, dynamicContext);
     }
 

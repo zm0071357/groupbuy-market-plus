@@ -1,6 +1,5 @@
 package groupbuy.market.plus.domain.activity.model.valobj;
 
-import groupbuy.market.plus.types.common.Constants;
 import lombok.*;
 import org.apache.commons.lang3.StringUtils;
 
@@ -84,7 +83,10 @@ public class ActivityVO {
     private String tagId;
 
     /**
-     * 人群标签规则范围
+     * 人群标签规则范围 - 决定人群标签内的用户能否享受优惠（不限制参与拼团，不享受优惠的用户原价拼团）
+     * 2,2 白名单：仅人群内用户享受优惠
+     * 1,1 黑名单：人群内用户（如羊毛党）不享受优惠，人群外用户享受优惠
+     * 其他取值或未配置视为配置错误，所有用户均不享受优惠
      */
     private String tagScope;
 
@@ -126,38 +128,34 @@ public class ActivityVO {
     }
 
     /**
-     * 人群标签用户 - 可见限制
-     * 该值为1 - 不可见
-     * 该值为2 - 可见
-     * 没设置 - 可见
-     *
+     * 人群范围 - 白名单：仅人群内用户享受优惠，人群外用户原价拼团
      */
-    public boolean isVisible() {
-        String[] split = this.tagScope.split(Constants.SPLIT);
-        if (split.length > 0 && StringUtils.isNotBlank(split[0]) && split[0].equals("1")) {
-            return false;
-        }
-        else if (split.length > 0 && StringUtils.isNotBlank(split[0]) && split[0].equals("2")) {
-            return true;
-        }
-        return true;
+    public static final String TAG_SCOPE_WHITE_LIST = "2,2";
+
+    /**
+     * 人群范围 - 黑名单：人群内用户（如羊毛党）原价拼团，人群外用户享受优惠
+     */
+    public static final String TAG_SCOPE_BLACK_LIST = "1,1";
+
+    /**
+     * 人群范围配置是否合法 - 人群标签只决定能否享受优惠，仅支持白名单 2,2 与黑名单 1,1 两种配置；
+     * 其他取值（如 1,2、2,1）或配置了人群标签却未配置人群范围，均为配置错误
+     * @return 是否合法
+     */
+    public boolean isValidTagScope() {
+        String scope = StringUtils.deleteWhitespace(this.tagScope);
+        return TAG_SCOPE_WHITE_LIST.equals(scope) || TAG_SCOPE_BLACK_LIST.equals(scope);
     }
 
     /**
-     * 人群标签用户 - 可参与限制
-     * 该值为1 - 不可参与
-     * 该值为2 - 可参与
-     * 没设置 - 可参与
+     * 按人群范围判断用户能否享受优惠 - 调用前需先校验 {@link #isValidTagScope()}
+     * 白名单：人群内用户享受优惠；黑名单：人群外用户享受优惠
+     * @param isTagCrowdUser 用户是否在人群标签内
+     * @return 是否享受优惠
      */
-    public boolean isEnable() {
-        String[] split = this.tagScope.split(Constants.SPLIT);
-        if (split.length == 2 && StringUtils.isNotBlank(split[1]) && split[1].equals("1")) {
-            return false;
-        }
-        else if (split.length == 2 && StringUtils.isNotBlank(split[1]) && split[1].equals("2")) {
-            return true;
-        }
-        return true;
+    public boolean isTagCrowdDiscount(boolean isTagCrowdUser) {
+        boolean whiteList = TAG_SCOPE_WHITE_LIST.equals(StringUtils.deleteWhitespace(this.tagScope));
+        return whiteList == isTagCrowdUser;
     }
 
 }

@@ -48,14 +48,4 @@ public class TrialBalanceEntity {
      */
     private ActivityVO activityVO;
 
-    /**
-     * 是否可见拼团
-     */
-    private Boolean isVisible;
-
-    /**
-     * 是否可参与拼团
-     */
-    private Boolean isEnable;
-
 }

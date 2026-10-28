@@ -57,7 +57,7 @@ public class TagFailClosedUnitTest {
 
     @Test
     public void test_tagNode_bitmapMissing_rejectWhitelistAndBlacklist() throws Exception {
-        // tagScope "2,2" 白名单：标签内可见可参与；"1,1" 黑名单：标签内不可见不可参与、标签外可参与
+        // tagScope "2,2" 白名单：仅人群内用户享受优惠；"1,1" 黑名单：人群内用户原价、人群外用户享受优惠
         for (String tagScope : new String[]{"2,2", "1,1"}) {
             DefaultActivityStrategyFactory.DynamicContext context = runTagNode(tagScope);
             Assert.assertFalse("tagScope=" + tagScope + " 标签数据缺失时不可享用优惠", context.isDiscount());
