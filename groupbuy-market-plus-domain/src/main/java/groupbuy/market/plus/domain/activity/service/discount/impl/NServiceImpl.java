@@ -17,6 +17,7 @@ public class NServiceImpl extends AbstractDiscountService {
     @Override
     protected BigDecimal doCalculate(BigDecimal originalPrice, ActivityVO.GroupBuyDiscount groupBuyDiscount) {
         String marketExpr = groupBuyDiscount.getMarketExpr();
+        // N元购价格高于原价时按原价，由抽象类统一收尾
         return new BigDecimal(marketExpr);
     }
 }

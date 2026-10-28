@@ -2,7 +2,6 @@ package groupbuy.market.plus.domain.activity.service.discount.impl;
 
 import groupbuy.market.plus.domain.activity.model.valobj.ActivityVO;
 import groupbuy.market.plus.domain.activity.service.discount.AbstractDiscountService;
-import groupbuy.market.plus.types.common.GroupBuyConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -20,10 +19,7 @@ public class ZKServiceImpl extends AbstractDiscountService {
         String marketExpr = groupBuyDiscount.getMarketExpr();
         // 折扣
         BigDecimal discount = new BigDecimal(marketExpr);
-        BigDecimal payPrice = originalPrice.multiply(discount);
-        if (payPrice.compareTo(BigDecimal.ZERO) <= 0) {
-            return GroupBuyConstants.MinPrice;
-        }
-        return payPrice;
+        // 最低价格、保留位数由抽象类统一收尾
+        return originalPrice.multiply(discount);
     }
 }

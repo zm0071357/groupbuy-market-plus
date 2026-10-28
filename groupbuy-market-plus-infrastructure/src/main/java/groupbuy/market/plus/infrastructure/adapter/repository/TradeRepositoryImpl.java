@@ -28,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
@@ -210,7 +211,7 @@ public class TradeRepositoryImpl implements TradeRepository {
     private BigDecimal calculatePayPrice(Boolean isHeader, BigDecimal payPrice) {
         // 团长有额外优惠
         if (isHeader) {
-            BigDecimal endPrice = payPrice.multiply(GroupBuyConstants.HeaderDiscount);
+            BigDecimal endPrice = payPrice.multiply(GroupBuyConstants.HeaderDiscount).setScale(2, RoundingMode.HALF_UP);
             // 最少支付0.01
             if (endPrice.compareTo(GroupBuyConstants.MinPrice) < 0) {
                 return GroupBuyConstants.MinPrice;
