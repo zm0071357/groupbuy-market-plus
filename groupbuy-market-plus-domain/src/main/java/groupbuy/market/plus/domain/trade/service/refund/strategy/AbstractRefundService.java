@@ -26,8 +26,11 @@ public abstract class AbstractRefundService implements RefundService {
     @Resource
     protected TradeRepository tradeRepository;
 
+    /**
+     * 回调线程池 - 慢 IO 回调与试算、退单查询线程池隔离
+     */
     @Resource
-    private ThreadPoolExecutor threadPoolExecutor;
+    private ThreadPoolExecutor notifyThreadPoolExecutor;
 
     @Resource
     private TaskService taskService;
@@ -39,7 +42,7 @@ public abstract class AbstractRefundService implements RefundService {
      */
     protected void sendRefundNotifyMQMessage(NotifyTaskEntity notifyTaskEntity, String refundType) {
         if (null != notifyTaskEntity) {
-            threadPoolExecutor.execute(() -> {
+            notifyThreadPoolExecutor.execute(() -> {
                 Map<String, Integer> notifyResultMap = null;
                 try {
                     notifyResultMap = taskService.execNotifyJob(notifyTaskEntity);
@@ -79,7 +82,7 @@ public abstract class AbstractRefundService implements RefundService {
         // 回调任务
         NotifyTaskEntity notifyTaskEntity = tradeRepository.newHeaderNotify(newLeaderUserId, orderId, groupBuyTeamEntity);
         if (null != notifyTaskEntity) {
-            threadPoolExecutor.execute(() -> {
+            notifyThreadPoolExecutor.execute(() -> {
                 Map<String, Integer> notifyResultMap = null;
                 try {
                     notifyResultMap = taskService.execNotifyJob(notifyTaskEntity);

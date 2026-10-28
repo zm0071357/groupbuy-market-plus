@@ -19,6 +19,7 @@ import javax.annotation.Resource;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * 重复退单节点
@@ -42,7 +43,14 @@ public class RefundRepeatNode extends AbstractRefundOrderSupport<PreRefundEntity
         GetAggregateThreadTask getAggregateThreadTask = new GetAggregateThreadTask(preRefundEntity, tradeRepository);
         FutureTask<RefundThreadTaskAggregate> refundThreadTaskResAggregateFutureTask = new FutureTask<>(getAggregateThreadTask);
         threadPoolExecutor.execute(refundThreadTaskResAggregateFutureTask);
-        RefundThreadTaskAggregate refundThreadTaskAggregate = refundThreadTaskResAggregateFutureTask.get(timeout, TimeUnit.MILLISECONDS);
+        RefundThreadTaskAggregate refundThreadTaskAggregate;
+        try {
+            refundThreadTaskAggregate = refundThreadTaskResAggregateFutureTask.get(timeout, TimeUnit.MILLISECONDS);
+        } catch (TimeoutException e) {
+            // 超时后取消未完成的任务，避免线程池积压时过期任务继续占用线程执行查询
+            refundThreadTaskResAggregateFutureTask.cancel(true);
+            throw e;
+        }
         // 订单不存在（外部交易单号、来源、渠道不匹配）
         if (refundThreadTaskAggregate == null || refundThreadTaskAggregate.getPreRefundOrderEntity() == null) {
             throw new AppException(ResponseCodeEnum.E0013.getCode(), ResponseCodeEnum.E0013.getInfo());

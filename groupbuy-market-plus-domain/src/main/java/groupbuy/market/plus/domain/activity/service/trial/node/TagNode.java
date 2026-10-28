@@ -50,9 +50,15 @@ public class TagNode extends AbstractGroupBuyMarketSupport<MarketProductEntity, 
         FutureTask<ActivityVO> activityVOFutureTask = new FutureTask<>(getActivityVOThreadTask);
         threadPoolExecutor.execute(activityVOFutureTask);
 
-        // 写入上下文
-        dynamicContext.setSkuVO(skuVOFutureTask.get(timeout, TimeUnit.MILLISECONDS));
-        dynamicContext.setActivityVO(activityVOFutureTask.get(timeout, TimeUnit.MILLISECONDS));
+        // 写入上下文 - 超时后取消未完成的任务，避免线程池积压时过期任务继续占用线程执行查询
+        try {
+            dynamicContext.setSkuVO(skuVOFutureTask.get(timeout, TimeUnit.MILLISECONDS));
+            dynamicContext.setActivityVO(activityVOFutureTask.get(timeout, TimeUnit.MILLISECONDS));
+        } catch (TimeoutException e) {
+            skuVOFutureTask.cancel(true);
+            activityVOFutureTask.cancel(true);
+            throw e;
+        }
 
         log.info("用户ID：{}，异步线程加载数据「拼团活动、拼团商品」完成", marketProductEntity.getUserId());
     }

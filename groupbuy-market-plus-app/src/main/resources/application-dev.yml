@@ -11,6 +11,14 @@ thread:
         keep-alive-time: 5000
         block-queue-size: 5000
         policy: CallerRunsPolicy
+    # 回调线程池 - 成团、退单、新团长回调专用，与试算、退单查询线程池隔离；
+    # 队列满时丢弃本次异步回调，由定时补偿任务补发
+    notify:
+      config:
+        core-pool-size: 10
+        max-pool-size: 20
+        keep-alive-time: 10
+        block-queue-size: 1000
 
 # OkHttp 配置 - 回调商户接口的超时时间（秒）
 okhttpclient:

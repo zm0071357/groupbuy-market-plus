@@ -28,8 +28,11 @@ public class SettleOrderServiceImpl implements SettleOrderService{
     @Resource
     private BusinessLinkedList<CheckSettleEntity, SettleOrderLinkFactory.DynamicContext, CheckSettleResEntity> settleOrderLink;
 
+    /**
+     * 回调线程池 - 慢 IO 回调与试算、退单查询线程池隔离
+     */
     @Resource
-    private ThreadPoolExecutor threadPoolExecutor;
+    private ThreadPoolExecutor notifyThreadPoolExecutor;
 
     @Override
     public SettleOrderEntity settleOrder(OrderPaySuccessEntity orderPaySuccessEntity) throws Exception {
@@ -64,7 +67,7 @@ public class SettleOrderServiceImpl implements SettleOrderService{
         if (notifyTaskEntity != null) {
             log.info("拼团完成，异步执行回调任务，组队ID：{}", notifyTaskEntity.getTeamId());
             // 异步执行回调任务
-            threadPoolExecutor.execute(() -> {
+            notifyThreadPoolExecutor.execute(() -> {
                 Map<String, Integer> notifyResultMap = null;
                 try {
                     notifyResultMap = taskService.execNotifyJob(notifyTaskEntity);
