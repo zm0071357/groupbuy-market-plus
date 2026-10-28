@@ -271,6 +271,8 @@ public class TradeRepositoryImpl implements TradeRepository {
                 .payPrice(groupBuyTeamOrder.getPayPrice())
                 .outTradeNo(groupBuyTeamOrder.getOutTradeNo())
                 .outTradeNoPayTime(groupBuyTeamOrder.getOutTradeNoPayTime())
+                .source(groupBuyTeamOrder.getSource())
+                .channel(groupBuyTeamOrder.getChannel())
                 .orderStatusEnum(OrderStatusEnum.valueOf(groupBuyTeamOrder.getStatus()))
                 .build();
     }
@@ -683,6 +685,12 @@ public class TradeRepositoryImpl implements TradeRepository {
 
     @Override
     public NotifyTaskEntity newHeaderNotify(String newLeaderUserId, String orderId, GroupBuyTeamEntity groupBuyTeamEntity) {
+        // HTTP 回调方式且商户未配置团长退单补偿回调地址 - 商户不接收该通知，不生成回调任务
+        if (NotifyTypeEnum.HTTP.equals(groupBuyTeamEntity.getNotifyConfigVO().getNotifyTypeEnum())
+                && StringUtils.isBlank(groupBuyTeamEntity.getNotifyConfigVO().getHeaderRefundNotifyUrl())) {
+            log.info("未配置团长退单补偿回调地址，不生成新团长回调任务，组队ID：{}，新团长ID：{}", groupBuyTeamEntity.getTeamId(), newLeaderUserId);
+            return null;
+        }
         // 回调任务
         String taskId = groupBuyTeamEntity.getTeamId() + Constants.UNDERSCORE +
                 NotifyTaskTypeEnum.NEW_HEADER.getType() + Constants.UNDERSCORE +

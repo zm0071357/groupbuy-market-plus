@@ -58,6 +58,16 @@ public class TradeController implements TradeService {
                         .info(ResponseCodeEnum.ILLEGAL_PARAMETER.getInfo())
                         .build();
             }
+            // 回调配置校验 - 回调类型仅支持 1 HTTP、2 MQ；HTTP 方式必须提供成团回调地址（团长退单补偿回调地址可选）
+            Integer notifyType = lockOrderRequestDTO.getNotifyConfig().getNotifyType();
+            boolean isHttp = Integer.valueOf(1).equals(notifyType);
+            if ((!isHttp && !Integer.valueOf(2).equals(notifyType)) ||
+                    (isHttp && StringUtils.isBlank(lockOrderRequestDTO.getNotifyConfig().getNotifyUrl()))) {
+                return Response.<LockOrderResponseDTO>builder()
+                        .code(ResponseCodeEnum.ILLEGAL_PARAMETER.getCode())
+                        .info(ResponseCodeEnum.ILLEGAL_PARAMETER.getInfo())
+                        .build();
+            }
 
             // 是否有未支付的锁单订单
             LockOrderEntity lockOrderEntity = lockOrderService.getNoPayLockOrderByOutTradeNo(lockOrderRequestDTO.getUserId(), lockOrderRequestDTO.getOutTradeNo());
@@ -281,6 +291,12 @@ public class TradeController implements TradeService {
             }
             // 获取拼团组队进度
             TeamProgressVO teamProgressVO = refundOrderService.getTeamProgress(teamId);
+            if (teamProgressVO == null) {
+                return Response.<TeamProgressResponseDTO>builder()
+                        .code(ResponseCodeEnum.E0015.getCode())
+                        .info(ResponseCodeEnum.E0015.getInfo())
+                        .build();
+            }
             return Response.<TeamProgressResponseDTO>builder()
                     .code(ResponseCodeEnum.SUCCESS.getCode())
                     .data(TeamProgressResponseDTO.builder()

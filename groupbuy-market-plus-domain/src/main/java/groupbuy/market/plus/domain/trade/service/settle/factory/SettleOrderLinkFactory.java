@@ -25,7 +25,7 @@ public class SettleOrderLinkFactory {
     @Bean("settleOrderLink")
     public BusinessLinkedList<CheckSettleEntity, DynamicContext, CheckSettleResEntity> settleOrderLink(SCFilter scFilter, OrderStatusFilter orderStatusFilter, OrderTimeFilter orderTimeFilter) {
         // 组装链
-        LinkArmory<CheckSettleEntity, DynamicContext, CheckSettleResEntity> linkArmory = new LinkArmory<>("结算责任链", scFilter, orderStatusFilter, orderTimeFilter);
+        LinkArmory<CheckSettleEntity, DynamicContext, CheckSettleResEntity> linkArmory = new LinkArmory<>("结算责任链", orderStatusFilter, scFilter, orderTimeFilter);
         return linkArmory.getLogicLink();
     }
 

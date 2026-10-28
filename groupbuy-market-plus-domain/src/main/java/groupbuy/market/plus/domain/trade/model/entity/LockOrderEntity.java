@@ -53,6 +53,16 @@ public class LockOrderEntity {
     private String outTradeNo;
 
     /**
+     * 来源
+     */
+    private String source;
+
+    /**
+     * 渠道
+     */
+    private String channel;
+
+    /**
      * 外部交易单号支付完成时间
      */
     private Date outTradeNoPayTime;
