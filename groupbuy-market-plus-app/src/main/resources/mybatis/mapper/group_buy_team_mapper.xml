@@ -77,11 +77,12 @@
         where team_id = #{teamId} and status = 0 and complete_count = target_count
     </update>
 
-    <!-- 按活动与商品单条聚合统计：组队总数、完成组队数、完成组队的参团人数；无数据时返回 0 -->
+    <!-- 按活动与商品单条聚合统计：组队总数、完成组队数、完成组队的参团人数；无数据时返回 0
+         完成组队包含 完成(1) 与 完成 - 存在退单(3)；参团人数按实际锁单量累加（退单已扣减） -->
     <select id="getTeamStatistics" resultType="groupbuy.market.plus.infrastructure.dao.po.GroupBuyTeamStatistics" parameterType="groupbuy.market.plus.infrastructure.dao.po.GroupBuyTeam">
         select count(id) as allTeamCount,
-               count(case when status = 1 then 1 end) as allTeamCompleteCount,
-               coalesce(sum(case when status = 1 then lock_count else 0 end), 0) as allTeamUserCount
+               count(case when status in (1, 3) then 1 end) as allTeamCompleteCount,
+               coalesce(sum(case when status in (1, 3) then lock_count else 0 end), 0) as allTeamUserCount
         from group_buy_team
         where activity_id = #{activityId} and goods_id = #{goodsId}
     </select>
@@ -101,7 +102,7 @@
     <select id="getRandomTeam" resultMap="dataMap">
         select team_id, target_count, complete_count, lock_count, start_time, end_time
         from group_buy_team
-        where status = 0 and team_id in
+        where status = 0 and lock_count &lt; target_count and end_time > now() and team_id in
         <foreach item="teamId" collection="teamIdList" open="(" separator="," close=")">
             #{teamId}
         </foreach>

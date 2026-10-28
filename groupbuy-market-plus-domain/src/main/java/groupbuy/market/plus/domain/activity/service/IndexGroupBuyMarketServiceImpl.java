@@ -45,7 +45,7 @@ public class IndexGroupBuyMarketServiceImpl implements IndexGroupBuyMarketServic
             }
         }
         // 个人没有拼团组队 - 随机拼团组队数量需加上个人的数量
-        if (userTeamEntityList != null && userTeamEntityList.isEmpty()) {
+        if (userTeamEntityList == null || userTeamEntityList.isEmpty()) {
             randomTeamCount += userTeamCount;
         }
         // 获取随机拼团组队

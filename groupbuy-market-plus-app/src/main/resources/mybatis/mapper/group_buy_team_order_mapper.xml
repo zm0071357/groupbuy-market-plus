@@ -89,13 +89,19 @@
         order by id desc
     </select>
 
+    <!-- 随机组队：排除用户已参与的组队，按组队去重（group by 代替 distinct，以便按最新订单排序） -->
     <select id="getRandomTeamIdList" resultType="java.lang.String">
         select team_id
         from group_buy_team_order
         where activity_id = #{groupBuyTeamOrderReq.activityId} and user_id != #{groupBuyTeamOrderReq.userId}
           and source = #{groupBuyTeamOrderReq.source} and goods_id = #{groupBuyTeamOrderReq.goodsId}
           and channel = #{groupBuyTeamOrderReq.channel} and end_time > now() and status in (0, 1)
-        order by id desc
+          and team_id not in (
+              select team_id from group_buy_team_order
+              where activity_id = #{groupBuyTeamOrderReq.activityId} and user_id = #{groupBuyTeamOrderReq.userId} and status in (0, 1)
+          )
+        group by team_id
+        order by max(id) desc
         limit #{limitCount}
     </select>
 

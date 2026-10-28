@@ -114,15 +114,15 @@ public class IndexResponseDTO {
             if (startTime == null || endTime == null) {
                 return "无效的时间";
             }
-            // 获取秒
-            long sec = endTime.getTime() - startTime.getTime();
-            if (sec < 0) {
+            // 剩余时间（毫秒）= 结束时间 - 当前时间
+            long sec = endTime.getTime() - System.currentTimeMillis();
+            if (sec <= 0) {
                 return "已结束";
             }
-            // 将秒转换为指定时间格式
+            // 将剩余时间转换为 时:分:秒，小时不按天取模（超过一天时显示总小时数）
             long seconds = TimeUnit.MILLISECONDS.toSeconds(sec) % 60;
             long minutes = TimeUnit.MILLISECONDS.toMinutes(sec) % 60;
-            long hours = TimeUnit.MILLISECONDS.toHours(sec) % 24;
+            long hours = TimeUnit.MILLISECONDS.toHours(sec);
             return String.format("%02d:%02d:%02d", hours, minutes, seconds);
         }
     }

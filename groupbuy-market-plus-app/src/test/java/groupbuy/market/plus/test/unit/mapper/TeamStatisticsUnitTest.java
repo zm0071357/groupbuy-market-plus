@@ -28,8 +28,8 @@ public class TeamStatisticsUnitTest {
         String sql = MapperTestSupport.sql(configuration, "groupbuy.market.plus.infrastructure.dao.GroupBuyTeamDao.getTeamStatistics", param);
 
         Assert.assertTrue(sql, sql.contains("where activity_id = ? and goods_id = ?"));
-        Assert.assertFalse("不应再使用 IN 列表", sql.contains(" in "));
-        Assert.assertTrue(sql, sql.contains("coalesce(sum(case when status = 1 then lock_count else 0 end), 0) as allTeamUserCount"));
+        Assert.assertFalse("不应再使用组队ID的 IN 列表", sql.contains("team_id in"));
+        Assert.assertTrue(sql, sql.contains("coalesce(sum(case when status in (1, 3) then lock_count else 0 end), 0) as allTeamUserCount"));
         // 旧的三条语句已移除
         Assert.assertFalse(configuration.hasStatement("groupbuy.market.plus.infrastructure.dao.GroupBuyTeamDao.getTeamIdList"));
     }
