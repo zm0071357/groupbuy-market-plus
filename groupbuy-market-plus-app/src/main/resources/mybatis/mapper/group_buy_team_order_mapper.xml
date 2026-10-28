@@ -41,9 +41,10 @@
               )
     </insert>
 
+    <!-- 参与次数仅统计已创建(0)、已支付(1)的订单，已退单的订单不计入 -->
     <select id="checkUserTakeActivityCount" parameterType="groupbuy.market.plus.infrastructure.dao.po.GroupBuyTeamOrder" resultType="java.lang.Integer">
         select count(id) from group_buy_team_order
-        where user_id = #{userId} and activity_id = #{activityId}
+        where user_id = #{userId} and activity_id = #{activityId} and status in (0, 1)
     </select>
 
     <select id="checkUserTakeTeamCount" parameterType="groupbuy.market.plus.infrastructure.dao.po.GroupBuyTeamOrder" resultType="java.lang.Integer">

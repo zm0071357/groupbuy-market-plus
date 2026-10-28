@@ -29,7 +29,8 @@ public class UserFilter implements LogicHandler<CheckLockEntity, LockOrderLinkFa
         // 校验用户可参与次数
         log.info("锁单责任链 - 用户过滤节点，校验用户可参与次数，用户ID：{}", checkLockEntity.getUserId());
         Integer userTakeActivityCount = tradeRepository.checkUserTakeActivityCount(checkLockEntity.getActivityId(), checkLockEntity.getUserId());
-        if (userTakeActivityCount > dynamicContext.getActivityEntity().getTakeLimitCount()) {
+        // 已参与次数为本次锁单前的有效订单数，达到上限即不可再参与
+        if (userTakeActivityCount >= dynamicContext.getActivityEntity().getTakeLimitCount()) {
             throw new AppException(ResponseCodeEnum.E0008.getCode(), ResponseCodeEnum.E0008.getInfo());
         }
         // 校验用户是否参与自身拼团
