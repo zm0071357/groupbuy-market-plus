@@ -133,6 +133,10 @@ public class ActivityVO {
      *
      */
     public boolean isVisible() {
+        // 未设置人群范围 - 可见
+        if (StringUtils.isBlank(this.tagScope)) {
+            return true;
+        }
         String[] split = this.tagScope.split(Constants.SPLIT);
         if (split.length > 0 && StringUtils.isNotBlank(split[0]) && split[0].equals("1")) {
             return false;
@@ -150,6 +154,10 @@ public class ActivityVO {
      * 没设置 - 可参与
      */
     public boolean isEnable() {
+        // 未设置人群范围 - 可参与
+        if (StringUtils.isBlank(this.tagScope)) {
+            return true;
+        }
         String[] split = this.tagScope.split(Constants.SPLIT);
         if (split.length == 2 && StringUtils.isNotBlank(split[1]) && split[1].equals("1")) {
             return false;
