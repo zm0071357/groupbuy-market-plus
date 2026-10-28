@@ -22,6 +22,8 @@
         <result column="notify_url" property="notifyUrl"/>
         <result column="notify_mq" property="notifyMQ"/>
         <result column="refund_notify_mq" property="refundNotifyMQ"/>
+        <result column="header_refund_notify_url" property="headerRefundNotifyUrl"/>
+        <result column="header_refund_notify_mq" property="headerRefundNotifyMQ"/>
         <result column="create_time" property="createTime"/>
         <result column="update_time" property="updateTime"/>
     </resultMap>
@@ -31,11 +33,11 @@
             team_id, activity_id, goods_id, source, channel, original_price,
             deduction_price, pay_price, target_count, complete_count, lock_count,
             status, start_time, end_time, notify_type, notify_url, notify_mq,
-            refund_notify_mq, create_time, update_time
+            refund_notify_mq, header_refund_notify_url, header_refund_notify_mq, create_time, update_time
         ) values(
                     #{teamId}, #{activityId}, #{goodsId}, #{source}, #{channel}, #{originalPrice}, #{deductionPrice}, #{payPrice},
                     #{targetCount}, #{completeCount}, #{lockCount}, 0, #{startTime}, #{endTime}, #{notifyType}, #{notifyUrl},
-                    #{notifyMQ}, #{refundNotifyMQ}, now(), now()
+                    #{notifyMQ}, #{refundNotifyMQ}, #{headerRefundNotifyUrl}, #{headerRefundNotifyMQ}, now(), now()
                 )
     </insert>
 
@@ -55,7 +57,8 @@
 
     <select id="getTeamById" resultMap="dataMap" parameterType="java.lang.String">
         select team_id, activity_id, goods_id, target_count, complete_count, lock_count,
-               status, notify_type, notify_url, start_time, end_time
+               status, notify_type, notify_url, refund_notify_mq, header_refund_notify_url, header_refund_notify_mq,
+               start_time, end_time
         from group_buy_team
         where team_id = #{teamId}
     </select>
