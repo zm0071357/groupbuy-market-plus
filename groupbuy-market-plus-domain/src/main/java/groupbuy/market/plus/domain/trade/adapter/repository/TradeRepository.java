@@ -190,6 +190,12 @@ public interface TradeRepository {
     List<String> getTimeoutTeamIdList();
 
     /**
+     * 将超时且订单已全部退单的拼团组队标记为失败
+     * @return 更新行数
+     */
+    Integer updateTimeoutTeamFail();
+
+    /**
      * 获取超时的拼团订单集合
      * @param timeoutTeamIdList 超时的拼团ID集合
      * @return

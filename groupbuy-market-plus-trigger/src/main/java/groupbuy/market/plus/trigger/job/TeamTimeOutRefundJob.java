@@ -45,7 +45,9 @@ public class TeamTimeOutRefundJob {
             Map<String, Integer> resultMap = refundOrderService.teamTimeoutRefund();
             // 将邀请返利标记为不可用
             inviteService.inviteExpire();
-            log.info("定时任务 - 执行拼团超时进行退单任务完成，result：{}", resultMap);
+            // 订单已全部退单的超时组队标记为失败 - 必须在退单、邀请码失效之后执行
+            Integer failTeamCount = refundOrderService.teamTimeoutFail();
+            log.info("定时任务 - 执行拼团超时进行退单任务完成，result：{}，标记失败组队数：{}", resultMap, failTeamCount);
         } catch (Exception e) {
             log.error("定时任务 - 执行拼团超时进行退单任务失败", e);
         } finally {

@@ -711,6 +711,11 @@ public class TradeRepositoryImpl implements TradeRepository {
     }
 
     @Override
+    public Integer updateTimeoutTeamFail() {
+        return groupBuyTeamDao.updateTimeoutTeamFail();
+    }
+
+    @Override
     public List<PreRefundEntity> getTimeoutOrderList(List<String> timeoutTeamIdList) {
         List<PreRefundEntity> preRefundEntityList = new ArrayList<>();
         List<GroupBuyTeamOrder> groupBuyTeamOrderList = groupBuyTeamOrderDao.getTimeoutOrderList(timeoutTeamIdList);

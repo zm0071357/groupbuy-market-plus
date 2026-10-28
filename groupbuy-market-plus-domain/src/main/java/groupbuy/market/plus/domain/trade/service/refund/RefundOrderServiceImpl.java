@@ -98,6 +98,11 @@ public class RefundOrderServiceImpl implements RefundOrderService {
     }
 
     @Override
+    public Integer teamTimeoutFail() {
+        return tradeRepository.updateTimeoutTeamFail();
+    }
+
+    @Override
     public TeamProgressVO getTeamProgress(String teamId) {
         return tradeRepository.getTeamProgress(teamId);
     }

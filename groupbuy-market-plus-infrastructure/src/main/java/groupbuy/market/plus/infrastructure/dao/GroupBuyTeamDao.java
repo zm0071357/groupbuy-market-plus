@@ -116,4 +116,10 @@ public interface GroupBuyTeamDao {
      * @return
      */
     List<String> getTimeoutTeamIdList();
+
+    /**
+     * 将超时且订单已全部退单的拼团组队标记为失败
+     * @return 更新行数
+     */
+    Integer updateTimeoutTeamFail();
 }
