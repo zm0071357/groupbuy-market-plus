@@ -164,6 +164,8 @@ public class TradeRepositoryImpl implements TradeRepository {
         String orderId = GroupBuyConstants.ORDER.concat(RandomStringUtils.randomNumeric(12));
         // 团长有额外优惠
         BigDecimal payPrice = calculatePayPrice(checkLockResEntity.getIsHeader(), orderDetailEntity.getPayPrice());
+        // 优惠金额与最终支付价格保持一致：团长的额外优惠计入优惠金额，保证 原价 = 优惠金额 + 支付价格
+        BigDecimal deductionPrice = calculateDeductionPrice(checkLockResEntity.getIsHeader(), orderDetailEntity, payPrice);
         String sign = checkLockResEntity.getIsHeader() ? GroupBuyConstants.HEADER : GroupBuyConstants.MEMBER;
         String bizId = groupBuyTeamEntity.getActivityId() + Constants.UNDERSCORE +
                 userEntity.getUserId() + Constants.UNDERSCORE +
@@ -182,7 +184,7 @@ public class TradeRepositoryImpl implements TradeRepository {
                     .source(orderDetailEntity.getSource())
                     .channel(orderDetailEntity.getChannel())
                     .originalPrice(orderDetailEntity.getOriginalPrice())
-                    .deductionPrice(orderDetailEntity.getDeductionPrice())
+                    .deductionPrice(deductionPrice)
                     .payPrice(payPrice)
                     .isHeader(checkLockResEntity.getIsHeader() ? 1 : 0)
                     .status(OrderStatusEnum.CREATE.getCode())
@@ -198,10 +200,25 @@ public class TradeRepositoryImpl implements TradeRepository {
                 .orderId(orderId)
                 .isHeader(checkLockResEntity.getIsHeader())
                 .originalPrice(orderDetailEntity.getOriginalPrice())
-                .deductionPrice(orderDetailEntity.getDeductionPrice())
+                .deductionPrice(deductionPrice)
                 .payPrice(payPrice)
                 .orderStatusEnum(OrderStatusEnum.CREATE)
                 .build();
+    }
+
+    /**
+     * 根据是否为团长计算优惠金额
+     * 团员 - 试算优惠金额；团长 - 原价 - 最终支付价格（含团长额外优惠）
+     * @param isHeader 是否为团长
+     * @param orderDetailEntity 订单明细（试算结果）
+     * @param payPrice 最终支付价格
+     * @return
+     */
+    private BigDecimal calculateDeductionPrice(Boolean isHeader, OrderDetailEntity orderDetailEntity, BigDecimal payPrice) {
+        if (isHeader && orderDetailEntity.getOriginalPrice() != null) {
+            return orderDetailEntity.getOriginalPrice().subtract(payPrice);
+        }
+        return orderDetailEntity.getDeductionPrice();
     }
 
     /**
