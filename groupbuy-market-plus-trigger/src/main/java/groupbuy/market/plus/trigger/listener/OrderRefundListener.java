@@ -5,6 +5,7 @@ import groupbuy.market.plus.domain.trade.adapter.event.OrderRefundMessage;
 import groupbuy.market.plus.domain.trade.service.refund.RefundOrderService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.ExchangeTypes;
+import org.springframework.amqp.rabbit.annotation.Argument;
 import org.springframework.amqp.rabbit.annotation.Exchange;
 import org.springframework.amqp.rabbit.annotation.Queue;
 import org.springframework.amqp.rabbit.annotation.QueueBinding;
@@ -25,7 +26,11 @@ public class OrderRefundListener {
 
     @RabbitListener(
             bindings = @QueueBinding(
-                    value = @Queue(value = "${spring.rabbitmq.config.consumer.topic_order_refund.queue}"),
+                    value = @Queue(value = "${spring.rabbitmq.config.consumer.topic_order_refund.queue}", arguments = {
+                            // 重试耗尽后转入死信队列，便于人工补偿
+                            @Argument(name = "x-dead-letter-exchange", value = "${spring.rabbitmq.config.dead_letter.exchange}"),
+                            @Argument(name = "x-dead-letter-routing-key", value = "${spring.rabbitmq.config.consumer.topic_order_refund.dead_letter_queue}")
+                    }),
                     exchange = @Exchange(value = "${spring.rabbitmq.config.consumer.topic_order_refund.exchange}", type = ExchangeTypes.TOPIC),
                     key = "${spring.rabbitmq.config.consumer.topic_order_refund.routing_key}"
             )

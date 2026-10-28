@@ -50,6 +50,14 @@ spring:
     listener:
       simple:
         prefetch: 10 # 每次投递n个消息，消费完在投递n个
+        # 消费失败不重新入队（避免无限重投），本地重试耗尽后拒绝消息，由死信交换机转入死信队列
+        default-requeue-rejected: false
+        retry:
+          enabled: true
+          max-attempts: 3
+          initial-interval: 1000
+          multiplier: 2
+          max-interval: 10000
     template:
       delivery-mode: persistent # 确保全局默认设置为持久化（可选）
     # 自定义消息配置
@@ -76,6 +84,10 @@ spring:
           routing_key: topic.header_refund
           queue: groupbuy_market_plus_topic_header_refund_queue
 
+      # 死信交换机 - 消费重试耗尽的消息转入对应死信队列
+      dead_letter:
+        exchange: groupbuy_market_plus_dlx_exchange
+
       # 消费者
       consumer:
         # 退单回调
@@ -83,12 +95,14 @@ spring:
           exchange: groupbuy_market_plus_exchange
           routing_key: topic.order_refund
           queue: groupbuy_market_plus_topic_order_refund_queue
+          dead_letter_queue: groupbuy_market_plus_topic_order_refund_dlq
 
         # 订单退款成功回调
         topic_order_refund_success:
           exchange: chat_platform_plus_exchange
           routing_key: topic.order_refund_success
           queue: chat_platform_plus_order_refund_success_queue
+          dead_letter_queue: groupbuy_market_plus_order_refund_success_dlq
 
 # MyBatis 配置
 mybatis:

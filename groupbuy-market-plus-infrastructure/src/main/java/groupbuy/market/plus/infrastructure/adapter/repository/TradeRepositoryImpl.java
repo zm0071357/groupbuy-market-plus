@@ -784,16 +784,14 @@ public class TradeRepositoryImpl implements TradeRepository {
     }
 
     @Override
-    public void updateRefundNoAndRefundTime(String userId, String outTradeNo, String outRefundNo, Date outRefundNoCompleteTime) {
+    public boolean updateRefundNoAndRefundTime(String userId, String outTradeNo, String outRefundNo, Date outRefundNoCompleteTime) {
         GroupBuyTeamOrder groupBuyTeamOrderReq = new GroupBuyTeamOrder();
         groupBuyTeamOrderReq.setUserId(userId);
         groupBuyTeamOrderReq.setOutTradeNo(outTradeNo);
         groupBuyTeamOrderReq.setOutRefundNo(outRefundNo);
         groupBuyTeamOrderReq.setOutRefundNoCompleteTime(outRefundNoCompleteTime);
         Integer updateCount = groupBuyTeamOrderDao.updateRefundNoAndRefundTime(groupBuyTeamOrderReq);
-        if (updateCount != 1) {
-            throw new AppException(ResponseCodeEnum.UPDATE_ZERO.getCode(), ResponseCodeEnum.UPDATE_ZERO.getInfo());
-        }
+        return updateCount != null && updateCount == 1;
     }
 
     @Override

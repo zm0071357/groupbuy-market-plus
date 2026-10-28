@@ -220,8 +220,9 @@ public interface TradeRepository {
      * @param outTradeNo 外部交易单号
      * @param outRefundNo 退款外部交易单号
      * @param outRefundNoCompleteTime 退款完成时间
+     * @return 是否更新到本系统的拼团订单（外部退款消息可能不属于拼团订单）
      */
-    void updateRefundNoAndRefundTime(String userId, String outTradeNo, String outRefundNo, Date outRefundNoCompleteTime);
+    boolean updateRefundNoAndRefundTime(String userId, String outTradeNo, String outRefundNo, Date outRefundNoCompleteTime);
 
     /**
      * 生成唯一邀请码
