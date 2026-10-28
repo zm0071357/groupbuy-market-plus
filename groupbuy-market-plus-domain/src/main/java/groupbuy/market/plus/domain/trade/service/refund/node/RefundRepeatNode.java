@@ -10,6 +10,8 @@ import groupbuy.market.plus.domain.trade.service.refund.AbstractRefundOrderSuppo
 import groupbuy.market.plus.domain.trade.service.refund.factory.DefaultRefundStrategyFactory;
 import groupbuy.market.plus.domain.trade.service.refund.thread.GetAggregateThreadTask;
 import groupbuy.market.plus.types.design.framework.tree.StrategyHandler;
+import groupbuy.market.plus.types.enums.ResponseCodeEnum;
+import groupbuy.market.plus.types.exception.AppException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -41,6 +43,10 @@ public class RefundRepeatNode extends AbstractRefundOrderSupport<PreRefundEntity
         FutureTask<RefundThreadTaskAggregate> refundThreadTaskResAggregateFutureTask = new FutureTask<>(getAggregateThreadTask);
         threadPoolExecutor.execute(refundThreadTaskResAggregateFutureTask);
         RefundThreadTaskAggregate refundThreadTaskAggregate = refundThreadTaskResAggregateFutureTask.get(timeout, TimeUnit.MILLISECONDS);
+        // 订单不存在（外部交易单号、来源、渠道不匹配）
+        if (refundThreadTaskAggregate == null || refundThreadTaskAggregate.getPreRefundOrderEntity() == null) {
+            throw new AppException(ResponseCodeEnum.E0013.getCode(), ResponseCodeEnum.E0013.getInfo());
+        }
 
         // 写入上下文
         dynamicContext.setPreRefundOrderEntity(refundThreadTaskAggregate.getPreRefundOrderEntity());

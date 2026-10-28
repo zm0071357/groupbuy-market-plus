@@ -69,6 +69,7 @@ public class RefundOrderServiceImpl implements RefundOrderService {
         if (!preRefundEntityList.isEmpty()) {
             // 遍历订单集合进行退单
             for (PreRefundEntity preRefundEntity : preRefundEntityList) {
+                preRefundEntity.setTimeoutRefund(true);
                 // 单条退单失败不影响后续订单处理
                 RefundResEntity refundResEntity;
                 try {

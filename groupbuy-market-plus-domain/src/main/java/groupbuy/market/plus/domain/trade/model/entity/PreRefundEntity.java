@@ -35,4 +35,9 @@ public class PreRefundEntity {
      */
     private String channel;
 
+    /**
+     * 是否超时退单 - 超时组队的订单将全部退单，团长退单时无需选出新团长
+     */
+    private boolean timeoutRefund;
+
 }

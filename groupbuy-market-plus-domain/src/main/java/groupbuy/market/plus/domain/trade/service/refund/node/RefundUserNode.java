@@ -30,8 +30,12 @@ public class RefundUserNode extends AbstractRefundOrderSupport<PreRefundEntity, 
         GroupBuyTeamEntity groupBuyTeamEntity = dynamicContext.getGroupBuyTeamEntity();
         if (preRefundOrderEntity.getIsHeader()) {
             log.info("退单服务 - 退单成员节点，团长进行退单，用户ID：{}", preRefundEntity.getUserId());
+            // 超时退单 - 组队订单将全部退单，无需选出新团长，也不发送新团长回调
+            if (preRefundEntity.isTimeoutRefund()) {
+                log.info("退单服务 - 退单成员节点，拼团组队超时退单，无需选出新团长，用户ID：{}", preRefundEntity.getUserId());
+            }
             // 组队未完成 - 选出新团长（仅查询候选人，团长变更随退单在同一事务内完成）
-            if (groupBuyTeamEntity.getTeamStatusEnum().equals(TeamStatusEnum.PROGRESS)) {
+            else if (groupBuyTeamEntity.getTeamStatusEnum().equals(TeamStatusEnum.PROGRESS)) {
                 String newHeaderUserId = tradeRepository.queryNewHeaderUserId(groupBuyTeamEntity.getTeamId());
                 // 写入动态上下文
                 dynamicContext.setNewLeaderUserId(newHeaderUserId);
