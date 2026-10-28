@@ -3,6 +3,7 @@ package groupbuy.market.plus.test.unit.refund;
 import groupbuy.market.plus.domain.trade.adapter.repository.TradeRepository;
 import groupbuy.market.plus.domain.trade.service.invite.InviteServiceImpl;
 import groupbuy.market.plus.infrastructure.adapter.repository.TradeRepositoryImpl;
+import groupbuy.market.plus.types.common.GroupBuyConstants;
 import org.junit.Assert;
 import org.junit.Test;
 import org.redisson.api.RAtomicLong;
@@ -70,7 +71,7 @@ public class TeamStockExpireUnitTest {
     @Test
     public void test_inviteExpire_emptyList_skip() {
         TradeRepository tradeRepository = mock(TradeRepository.class);
-        when(tradeRepository.getTimeoutTeamIdList()).thenReturn(Collections.emptyList());
+        when(tradeRepository.getTimeoutTeamIdList(null, GroupBuyConstants.TimeoutTeamPageSize)).thenReturn(Collections.emptyList());
         InviteServiceImpl inviteService = new InviteServiceImpl();
         ReflectionTestUtils.setField(inviteService, "tradeRepository", tradeRepository);
 

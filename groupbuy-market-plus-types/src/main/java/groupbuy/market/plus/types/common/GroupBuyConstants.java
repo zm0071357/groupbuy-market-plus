@@ -35,6 +35,11 @@ public class GroupBuyConstants {
      */
     public static final String InviteUserLockPrefix = "groupbuy_market_plus_invite_user_lock_";
 
+    /**
+     * 超时组队分页查询每页数量 - 超时退单、邀请码失效按组队ID游标分批处理，避免积压时生成超长 IN 语句
+     */
+    public static final int TimeoutTeamPageSize = 200;
+
     public static final String TeamStockKey = "groupbuy_market_plus_stock_key_";
 
 }

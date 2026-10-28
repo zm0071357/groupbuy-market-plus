@@ -800,8 +800,8 @@ public class TradeRepositoryImpl implements TradeRepository {
     }
 
     @Override
-    public List<String> getTimeoutTeamIdList() {
-        return groupBuyTeamDao.getTimeoutTeamIdList();
+    public List<String> getTimeoutTeamIdList(String lastTeamId, Integer limit) {
+        return groupBuyTeamDao.getTimeoutTeamIdList(lastTeamId, limit);
     }
 
     @Override

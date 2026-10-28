@@ -13,6 +13,7 @@ import groupbuy.market.plus.domain.trade.model.valobj.TeamProgressVO;
 import groupbuy.market.plus.domain.trade.service.refund.factory.DefaultRefundStrategyFactory;
 import groupbuy.market.plus.domain.trade.service.refund.strategy.RefundService;
 import groupbuy.market.plus.types.design.framework.tree.StrategyHandler;
+import groupbuy.market.plus.types.common.GroupBuyConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -54,43 +55,51 @@ public class RefundOrderServiceImpl implements RefundOrderService {
 
     @Override
     public Map<String, Integer> teamTimeoutRefund() throws Exception {
-        // 获取超时的拼团ID集合
-        List<String> timeoutTeamIdList = tradeRepository.getTimeoutTeamIdList();
-        // 获取超时的拼团订单集合
-        List<PreRefundEntity> preRefundEntityList = new ArrayList<>();
-        if (timeoutTeamIdList != null && !timeoutTeamIdList.isEmpty()) {
-            preRefundEntityList = tradeRepository.getTimeoutOrderList(timeoutTeamIdList);
-        }
-
+        Integer size = 0;
         Integer successCount = 0;
         Integer repeatCount = 0;
         Integer failCount = 0;
 
-        if (!preRefundEntityList.isEmpty()) {
-            // 遍历订单集合进行退单
-            for (PreRefundEntity preRefundEntity : preRefundEntityList) {
-                preRefundEntity.setTimeoutRefund(true);
-                // 单条退单失败不影响后续订单处理
-                RefundResEntity refundResEntity;
-                try {
-                    refundResEntity = this.refundOrder(preRefundEntity);
-                } catch (Exception e) {
-                    log.error("拼团超时退单失败，用户ID：{}，外部交易单号：{}", preRefundEntity.getUserId(), preRefundEntity.getOutTradeNo(), e);
-                    failCount ++;
-                    continue;
-                }
-                if (refundResEntity.getRefundStatusEnum().equals(RefundStatusEnum.SUCCESS)) {
-                    successCount ++;
-                } else if (refundResEntity.getRefundStatusEnum().equals(RefundStatusEnum.REPEAT)) {
-                    repeatCount ++;
-                } else {
-                    failCount ++;
+        // 按组队ID游标分批获取超时的拼团ID集合，避免积压时一次加载全部订单、生成超长 IN 语句
+        String lastTeamId = null;
+        while (true) {
+            List<String> timeoutTeamIdList = tradeRepository.getTimeoutTeamIdList(lastTeamId, GroupBuyConstants.TimeoutTeamPageSize);
+            if (timeoutTeamIdList == null || timeoutTeamIdList.isEmpty()) {
+                break;
+            }
+            // 获取超时的拼团订单集合
+            List<PreRefundEntity> preRefundEntityList = tradeRepository.getTimeoutOrderList(timeoutTeamIdList);
+            if (preRefundEntityList != null) {
+                size += preRefundEntityList.size();
+                // 遍历订单集合进行退单
+                for (PreRefundEntity preRefundEntity : preRefundEntityList) {
+                    preRefundEntity.setTimeoutRefund(true);
+                    // 单条退单失败不影响后续订单处理
+                    RefundResEntity refundResEntity;
+                    try {
+                        refundResEntity = this.refundOrder(preRefundEntity);
+                    } catch (Exception e) {
+                        log.error("拼团超时退单失败，用户ID：{}，外部交易单号：{}", preRefundEntity.getUserId(), preRefundEntity.getOutTradeNo(), e);
+                        failCount ++;
+                        continue;
+                    }
+                    if (refundResEntity.getRefundStatusEnum().equals(RefundStatusEnum.SUCCESS)) {
+                        successCount ++;
+                    } else if (refundResEntity.getRefundStatusEnum().equals(RefundStatusEnum.REPEAT)) {
+                        repeatCount ++;
+                    } else {
+                        failCount ++;
+                    }
                 }
             }
+            if (timeoutTeamIdList.size() < GroupBuyConstants.TimeoutTeamPageSize) {
+                break;
+            }
+            lastTeamId = timeoutTeamIdList.get(timeoutTeamIdList.size() - 1);
         }
 
         Map<String, Integer> resultMap = new HashMap<>();
-        resultMap.put("size", preRefundEntityList.size());
+        resultMap.put("size", size);
         resultMap.put("successCount", successCount);
         resultMap.put("repeatCount", repeatCount);
         resultMap.put("failCount", failCount);

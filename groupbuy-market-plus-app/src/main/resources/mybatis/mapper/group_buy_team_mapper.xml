@@ -146,10 +146,17 @@
           )
     </update>
 
+    <!-- 超时组队按组队ID游标分页：lastTeamId 为空时从头查询，否则查询大于上一页最后一个组队ID的数据；
+         分批处理避免积压时生成超长 IN 语句，游标分页保证退单持续失败的组队不会一直占满首页 -->
     <select id="getTimeoutTeamIdList" resultType="java.lang.String">
         select team_id
         from group_buy_team
         where now() > end_time and status = 0
+        <if test="lastTeamId != null and lastTeamId != ''">
+            and team_id &gt; #{lastTeamId}
+        </if>
+        order by team_id
+        limit #{limit}
     </select>
 
 </mapper>

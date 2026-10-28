@@ -99,10 +99,12 @@ public interface GroupBuyTeamDao {
     Integer updateTeamByTeamCompletePaidRefund(GroupBuyTeam groupBuyTeamReq);
 
     /**
-     * 获取超时的拼团ID集合
+     * 按组队ID游标分页获取超时的拼团ID集合
+     * @param lastTeamId 上一页最后一个组队ID，为空时从头查询
+     * @param limit 每页数量
      * @return
      */
-    List<String> getTimeoutTeamIdList();
+    List<String> getTimeoutTeamIdList(@Param("lastTeamId") String lastTeamId, @Param("limit") Integer limit);
 
     /**
      * 将超时且订单已全部退单的拼团组队标记为失败

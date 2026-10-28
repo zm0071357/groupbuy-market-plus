@@ -15,6 +15,7 @@ import groupbuy.market.plus.domain.trade.service.refund.node.RefundUserNode;
 import groupbuy.market.plus.types.design.framework.tree.StrategyHandler;
 import groupbuy.market.plus.types.enums.ResponseCodeEnum;
 import groupbuy.market.plus.types.exception.AppException;
+import groupbuy.market.plus.types.common.GroupBuyConstants;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -41,7 +42,7 @@ public class TimeoutRefundHeaderUnitTest {
         DefaultRefundStrategyFactory factory = mock(DefaultRefundStrategyFactory.class);
         StrategyHandler<PreRefundEntity, DefaultRefundStrategyFactory.DynamicContext, RefundResEntity> handler = mock(StrategyHandler.class);
         List<String> teamIdList = Collections.singletonList("TEAM12345678");
-        when(tradeRepository.getTimeoutTeamIdList()).thenReturn(teamIdList);
+        when(tradeRepository.getTimeoutTeamIdList(null, GroupBuyConstants.TimeoutTeamPageSize)).thenReturn(teamIdList);
         when(tradeRepository.getTimeoutOrderList(teamIdList)).thenReturn(Collections.singletonList(PreRefundEntity.builder().userId("user01").outTradeNo("OUT0001").build()));
         when(factory.strategyHandler()).thenReturn(handler);
         when(handler.apply(any(), any())).thenReturn(RefundResEntity.builder().refundStatusEnum(RefundStatusEnum.SUCCESS).build());
