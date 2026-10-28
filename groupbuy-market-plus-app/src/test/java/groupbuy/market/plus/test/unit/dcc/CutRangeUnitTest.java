@@ -49,6 +49,26 @@ public class CutRangeUnitTest {
         Assert.assertFalse(dccService.isCutRange(userOfBucket(50)));
     }
 
+    @Test
+    public void test_cutRange_invalidValue_noException() {
+        // 非数字、空值 - 按默认值 100 全部放行，不抛 NumberFormatException
+        for (String invalid : new String[]{"50%", "", " ", "abc", null}) {
+            DCCServiceImpl dccService = buildService(invalid);
+            for (int i = 0; i < 100; i++) {
+                Assert.assertTrue("非法值 [" + invalid + "] 应全部放行", dccService.isCutRange("user" + i));
+            }
+        }
+        // 首尾空白可正常解析
+        Assert.assertFalse(buildService(" 0 ").isCutRange(userOfBucket(0)));
+        // 越界 - 限定在 [0, 100]
+        DCCServiceImpl over = buildService("150");
+        DCCServiceImpl under = buildService("-5");
+        for (int bucket = 0; bucket < 100; bucket++) {
+            Assert.assertTrue(over.isCutRange(userOfBucket(bucket)));
+            Assert.assertFalse(under.isCutRange(userOfBucket(bucket)));
+        }
+    }
+
     private DCCServiceImpl buildService(String cutRange) {
         DCCServiceImpl dccService = new DCCServiceImpl();
         ReflectionTestUtils.setField(dccService, "cutRange", cutRange);
