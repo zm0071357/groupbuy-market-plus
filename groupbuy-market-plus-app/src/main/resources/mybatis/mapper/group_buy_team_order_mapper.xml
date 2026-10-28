@@ -55,7 +55,7 @@
 
     <select id="getNoPayLockOrderByOutTradeNo" resultMap="dataMap" parameterType="groupbuy.market.plus.infrastructure.dao.po.GroupBuyTeamOrder">
         select user_id, team_id, order_id, activity_id, start_time, end_time,
-               goods_id, source, channel, original_price, deduction_price, pay_price, status
+               goods_id, source, channel, original_price, deduction_price, pay_price, status, is_header
         from group_buy_team_order
         where user_id = #{userId} and out_trade_no = #{outTradeNo} and status = 0
     </select>
