@@ -534,6 +534,8 @@ public class TradeRepositoryImpl implements TradeRepository {
         GroupBuyTeamOrder groupBuyTeamOrderReq = new GroupBuyTeamOrder();
         groupBuyTeamOrderReq.setUserId(refundOrderEntity.getUserId());
         groupBuyTeamOrderReq.setOrderId(refundOrderEntity.getOrderId());
+        // 原状态须为已创建 - 策略按事务外读到的状态选定，期间被并发结算为已支付时更新 0 行并回滚，避免已支付订单按未支付退单
+        groupBuyTeamOrderReq.setStatus(OrderStatusEnum.CREATE.getCode());
         Integer updateOrderCount = groupBuyTeamOrderDao.updateOrderStatusRefund(groupBuyTeamOrderReq);
         if (updateOrderCount != 1) {
             throw new AppException(ResponseCodeEnum.UPDATE_ZERO.getCode(), ResponseCodeEnum.UPDATE_ZERO.getInfo());
@@ -594,6 +596,8 @@ public class TradeRepositoryImpl implements TradeRepository {
         GroupBuyTeamOrder groupBuyTeamOrderReq = new GroupBuyTeamOrder();
         groupBuyTeamOrderReq.setUserId(refundOrderEntity.getUserId());
         groupBuyTeamOrderReq.setOrderId(refundOrderEntity.getOrderId());
+        // 原状态须为已支付 - 与选择退单策略时读到的订单状态一致
+        groupBuyTeamOrderReq.setStatus(OrderStatusEnum.COMPLETE.getCode());
         Integer updateOrderCount = groupBuyTeamOrderDao.updateOrderStatusRefund(groupBuyTeamOrderReq);
         if (updateOrderCount != 1) {
             throw new AppException(ResponseCodeEnum.UPDATE_ZERO.getCode(), ResponseCodeEnum.UPDATE_ZERO.getInfo());
@@ -655,6 +659,8 @@ public class TradeRepositoryImpl implements TradeRepository {
         GroupBuyTeamOrder groupBuyTeamOrderReq = new GroupBuyTeamOrder();
         groupBuyTeamOrderReq.setUserId(refundOrderEntity.getUserId());
         groupBuyTeamOrderReq.setOrderId(refundOrderEntity.getOrderId());
+        // 原状态须为已支付 - 与选择退单策略时读到的订单状态一致
+        groupBuyTeamOrderReq.setStatus(OrderStatusEnum.COMPLETE.getCode());
         Integer updateOrderCount = groupBuyTeamOrderDao.updateOrderStatusRefund(groupBuyTeamOrderReq);
         if (updateOrderCount != 1) {
             throw new AppException(ResponseCodeEnum.UPDATE_ZERO.getCode(), ResponseCodeEnum.UPDATE_ZERO.getInfo());
