@@ -94,6 +94,13 @@ public interface TradeRepository {
     List<NotifyTaskEntity> getUnNotifyTeamSuccessTask();
 
     /**
+     * 查询回调任务当前状态
+     * @param taskId 回调任务ID
+     * @return 回调状态（0 初始、1 完成、2 重试、3 失败），任务不存在时返回 null
+     */
+    Integer getNotifyStatus(String taskId);
+
+    /**
      * 更新回调任务状态为完成
      * @param taskId 回调任务ID
      * @return

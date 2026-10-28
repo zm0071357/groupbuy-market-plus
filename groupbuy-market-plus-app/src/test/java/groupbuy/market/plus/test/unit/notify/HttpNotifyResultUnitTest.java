@@ -13,11 +13,16 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.TimeUnit;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
@@ -65,8 +70,14 @@ public class HttpNotifyResultUnitTest {
         TaskServiceImpl taskService = new TaskServiceImpl();
         ReflectionTestUtils.setField(taskService, "tradeRepository", tradeRepository);
         ReflectionTestUtils.setField(taskService, "tradePort", tradePort);
+        RedissonClient redissonClient = mock(RedissonClient.class);
+        RLock lock = mock(RLock.class);
+        when(redissonClient.getLock(anyString())).thenReturn(lock);
+        when(lock.tryLock(anyLong(), any(TimeUnit.class))).thenReturn(true);
+        ReflectionTestUtils.setField(taskService, "redissonClient", redissonClient);
         NotifyTaskEntity task = NotifyTaskEntity.builder().taskId("TEAM12345678_1").teamId("TEAM12345678")
                 .notifyTypeEnum(NotifyTypeEnum.HTTP).notifyCount(0).build();
+        when(tradeRepository.getNotifyStatus("TEAM12345678_1")).thenReturn(0);
         // 端口层返回约定之外的结果时，按失败累加重试次数，而不是什么都不做
         when(tradePort.groupBuyNotify(task)).thenReturn("UNKNOWN");
 
@@ -75,6 +86,7 @@ public class HttpNotifyResultUnitTest {
         verify(tradeRepository).updateNotifyTaskRetry("TEAM12345678_1");
         // 空执行（未抢到锁 / 已回调成功）不更新状态
         reset(tradeRepository);
+        when(tradeRepository.getNotifyStatus("TEAM12345678_1")).thenReturn(0);
         when(tradePort.groupBuyNotify(task)).thenReturn(NofifyStatusEnum.NULL.getStatus());
         taskService.execNotifyJob(task);
         verify(tradeRepository, never()).updateNotifyTaskRetry(anyString());

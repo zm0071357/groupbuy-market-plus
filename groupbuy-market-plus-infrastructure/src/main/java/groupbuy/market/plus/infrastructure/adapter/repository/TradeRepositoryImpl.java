@@ -383,6 +383,11 @@ public class TradeRepositoryImpl implements TradeRepository {
     }
 
     @Override
+    public Integer getNotifyStatus(String taskId) {
+        return notifyTaskDao.getNotifyStatusByTaskId(taskId);
+    }
+
+    @Override
     public int updateNotifyTaskSuccess(String taskId) {
         return notifyTaskDao.updateNotifyTaskSuccess(taskId);
     }
