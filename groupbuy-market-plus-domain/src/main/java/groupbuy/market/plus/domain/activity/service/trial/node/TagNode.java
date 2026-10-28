@@ -10,6 +10,8 @@ import groupbuy.market.plus.domain.activity.service.trial.thread.GetActivityVOTh
 import groupbuy.market.plus.domain.activity.service.trial.thread.GetSkuVOThreadTask;
 import groupbuy.market.plus.domain.tag.adapter.repository.TagRepository;
 import groupbuy.market.plus.types.design.framework.tree.StrategyHandler;
+import groupbuy.market.plus.types.enums.ResponseCodeEnum;
+import groupbuy.market.plus.types.exception.AppException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -58,6 +60,11 @@ public class TagNode extends AbstractGroupBuyMarketSupport<MarketProductEntity, 
     @Override
     protected TrialBalanceEntity doApply(MarketProductEntity marketProductEntity, DefaultActivityStrategyFactory.DynamicContext dynamicContext) throws Exception {
         ActivityVO activityVO = dynamicContext.getActivityVO();
+        // 商品未配置拼团活动或商品不存在 - 与错误节点保持一致，返回不存在拼团营销配置
+        if (activityVO == null || dynamicContext.getSkuVO() == null) {
+            log.info("拼团商品试算服务-标签节点，不存在拼团营销配置，用户ID：{}，商品ID：{}", marketProductEntity.getUserId(), marketProductEntity.getGoodsId());
+            throw new AppException(ResponseCodeEnum.E0002.getCode(), ResponseCodeEnum.E0002.getInfo());
+        }
         String tagId = activityVO.getTagId();
         // 人群标签为空 - 默认都可以参与优惠试算
         if (StringUtils.isBlank(tagId)) {

@@ -29,6 +29,9 @@ public class TeamStatusFilter implements LogicHandler<CheckInviteEntity, InviteL
         log.info("进入邀请责任链 - 拼团组队过滤节点");
         log.info("邀请责任链 - 拼团组队过滤节点，拼团组队状态校验。邀请人ID：{}，拼团组队ID：{}", checkInviteEntity.getInviteUserId(), checkInviteEntity.getTeamId());
         TeamProgressVO teamProgressVO = tradeRepository.getTeamProgress(checkInviteEntity.getTeamId());
+        if (teamProgressVO == null) {
+            throw new AppException(ResponseCodeEnum.E0015.getCode(), ResponseCodeEnum.E0015.getInfo());
+        }
         if (!teamProgressVO.getStatus().equals(TeamStatusEnum.PROGRESS.getStatus())) {
             throw new AppException(ResponseCodeEnum.E0023.getCode(), ResponseCodeEnum.E0023.getInfo());
         }
