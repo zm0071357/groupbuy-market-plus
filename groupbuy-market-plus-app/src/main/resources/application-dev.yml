@@ -12,7 +12,19 @@ thread:
         block-queue-size: 5000
         policy: CallerRunsPolicy
 
+# OkHttp 配置 - 回调商户接口的超时时间（秒）
+okhttpclient:
+  config:
+    connect-time-out: 5
+    write-time-out: 10
+    read-time-out: 10
+
 spring:
+  # 定时任务调度线程池 - 默认仅 1 个线程，任一任务阻塞会拖停所有定时任务
+  task:
+    scheduling:
+      pool:
+        size: 4
   # 数据库配置；启动时配置数据库资源信息
   datasource:
     username:

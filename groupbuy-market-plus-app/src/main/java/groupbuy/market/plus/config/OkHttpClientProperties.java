@@ -8,7 +8,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "okhttpclient.config", ignoreInvalidFields = true)
 public class OkHttpClientProperties {
     private HttpLoggingInterceptor.Level level = HttpLoggingInterceptor.Level.HEADERS;
-    private long connectTimeOut;
-    private long writeTimeOut;
-    private long readTimeOut;
+    /**
+     * 超时时间（秒）- OkHttp 中 0 表示永不超时，必须设置默认值，避免商户回调接口挂起时回调线程被无限阻塞
+     */
+    private long connectTimeOut = 5;
+    private long writeTimeOut = 10;
+    private long readTimeOut = 10;
 }
