@@ -126,7 +126,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.0</version>
+                <!-- 版本由 spring-boot-starter-parent 管理，并继承其 parameters=true（编译保留方法参数名） -->
                 <configuration>
                     <source>${java.version}</source>
                     <target>${java.version}</target>

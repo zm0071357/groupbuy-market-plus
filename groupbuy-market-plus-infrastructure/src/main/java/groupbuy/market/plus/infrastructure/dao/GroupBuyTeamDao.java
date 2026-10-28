@@ -63,14 +63,14 @@ public interface GroupBuyTeamDao {
      * @param teamIdList 组队ID集合
      * @return
      */
-    Integer getAllTeamCompleteCount(List<String> teamIdList);
+    Integer getAllTeamCompleteCount(@Param("teamIdList") List<String> teamIdList);
 
     /**
      * 查询参与拼团人数
      * @param teamIdList 组队ID集合
      * @return
      */
-    Integer getAllTeamUserCount(List<String> teamIdList);
+    Integer getAllTeamUserCount(@Param("teamIdList") List<String> teamIdList);
 
     /**
      * 根据组队ID集合查询用户组队信息
@@ -85,7 +85,7 @@ public interface GroupBuyTeamDao {
      * @param teamIdList 组队ID集合
      * @return
      */
-    List<GroupBuyTeam> getRandomTeam(List<String> teamIdList);
+    List<GroupBuyTeam> getRandomTeam(@Param("teamIdList") List<String> teamIdList);
 
     /**
      * 更新拼团组队 - 锁单量-1
