@@ -30,6 +30,11 @@ public class GroupBuyConstants {
     // 锁单用户维度锁前缀 - 拼接 活动ID_用户ID
     public static final String LockOrderUserLockPrefix = "groupbuy_market_plus_lock_order_user_lock_";
 
+    /**
+     * 生成邀请码锁前缀 - 按「组队 + 用户」加锁，防止并发生成多条有效邀请码
+     */
+    public static final String InviteUserLockPrefix = "groupbuy_market_plus_invite_user_lock_";
+
     public static final String TeamStockKey = "groupbuy_market_plus_stock_key_";
 
 }

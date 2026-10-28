@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.redisson.api.RAtomicLong;
+import org.redisson.api.RLock;
 import org.redisson.api.RScript;
 import org.redisson.api.RedissonClient;
 import org.redisson.client.codec.StringCodec;
@@ -877,6 +878,27 @@ public class TradeRepositoryImpl implements TradeRepository {
 
     @Override
     public InviteEntity invite(String userId, String teamId) {
+        // 按「组队 + 用户」加锁 - 先查后插，并发请求时需串行，避免插入多条有效邀请码导致后续查询 selectOne 报错
+        RLock lock = redissonClient.getLock(GroupBuyConstants.InviteUserLockPrefix + teamId + Constants.UNDERSCORE + userId);
+        try {
+            if (!lock.tryLock(3, TimeUnit.SECONDS)) {
+                log.info("生成邀请码请求处理中，拒绝重复请求，组队ID：{}，用户ID：{}", teamId, userId);
+                throw new AppException(ResponseCodeEnum.E0031.getCode(), ResponseCodeEnum.E0031.getInfo());
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new AppException(ResponseCodeEnum.E0031.getCode(), ResponseCodeEnum.E0031.getInfo());
+        }
+        try {
+            return doInvite(userId, teamId);
+        } finally {
+            if (lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
+        }
+    }
+
+    private InviteEntity doInvite(String userId, String teamId) {
         Invite inviteReq = new Invite();
         inviteReq.setInviteUserId(userId);
         inviteReq.setTeamId(teamId);
