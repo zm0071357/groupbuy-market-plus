@@ -116,10 +116,11 @@
         limit 1
     </select>
 
+    <!-- 仅将本组队内该用户未退单的团员订单设为团长 -->
     <update id="updateUserIsHeader">
         update group_buy_team_order
         set is_header = 1, update_time = now()
-        where user_id = #{userId}
+        where team_id = #{teamId} and user_id = #{userId} and status in (0, 1) and is_header = 0
     </update>
 
     <!-- 仅已创建(0)或已支付(1)的订单可退单，并发重复退单时只有一个请求能更新成功 -->

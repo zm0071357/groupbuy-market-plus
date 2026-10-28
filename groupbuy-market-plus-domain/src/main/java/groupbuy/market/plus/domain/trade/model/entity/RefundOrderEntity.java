@@ -39,4 +39,9 @@ public class RefundOrderEntity {
      */
     private String outTradeNo;
 
+    /**
+     * 新团长用户ID - 拼团中的团长退单时由退单成员节点选出，为空表示无需变更团长
+     */
+    private String newHeaderUserId;
+
 }

@@ -87,10 +87,11 @@ public interface GroupBuyTeamOrderDao {
     String getNewHeaderUserId(@Param("teamId") String teamId);
 
     /**
-     * 更新用户为新团长
+     * 更新用户为新团长 - 仅更新本组队内该用户的订单
+     * @param teamId 拼团组队ID
      * @param newHeaderUserId 新团长用户ID
      */
-    Integer updateUserIsHeader(@Param("userId") String newHeaderUserId);
+    Integer updateUserIsHeader(@Param("teamId") String teamId, @Param("userId") String newHeaderUserId);
 
     /**
      * 更新订单状态为退单

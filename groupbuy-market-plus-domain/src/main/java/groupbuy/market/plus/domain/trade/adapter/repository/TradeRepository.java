@@ -147,11 +147,11 @@ public interface TradeRepository {
     RefundThreadTaskAggregate getRefundThreadTaskResAggregate(PreRefundEntity preRefundEntity);
 
     /**
-     * 选出新团长
+     * 查询新团长候选人 - 仅查询不更新，团长变更在退单事务内完成
      * @param teamId 拼团组队ID
-     * @return
+     * @return 新团长用户ID，没有可选的团员时返回null
      */
-    String getNewHeaderUser(String teamId);
+    String queryNewHeaderUserId(String teamId);
 
     /**
      * 退单 - 拼团组队未完成 - 未支付

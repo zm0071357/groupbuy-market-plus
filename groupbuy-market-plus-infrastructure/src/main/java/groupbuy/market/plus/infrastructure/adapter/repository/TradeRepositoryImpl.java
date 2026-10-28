@@ -484,17 +484,22 @@ public class TradeRepositoryImpl implements TradeRepository {
     }
 
     @Override
-    public String getNewHeaderUser(String teamId) {
-        // 获取新团长ID
-        String newHeaderUserId = groupBuyTeamOrderDao.getNewHeaderUserId(teamId);
-        // 更新为新团长
-        if (StringUtils.isNotBlank(newHeaderUserId)) {
-            Integer updateCount = groupBuyTeamOrderDao.updateUserIsHeader(newHeaderUserId);
-            if (updateCount != 1) {
-                throw new AppException(ResponseCodeEnum.UPDATE_ZERO.getCode(), ResponseCodeEnum.UPDATE_ZERO.getInfo());
-            }
+    public String queryNewHeaderUserId(String teamId) {
+        return groupBuyTeamOrderDao.getNewHeaderUserId(teamId);
+    }
+
+    /**
+     * 团长退单时将新团长写入 - 在退单事务内调用，退单失败时一并回滚
+     * @param refundOrderEntity 退单订单（新团长ID为空时不处理）
+     */
+    private void transferHeader(RefundOrderEntity refundOrderEntity) {
+        if (StringUtils.isBlank(refundOrderEntity.getNewHeaderUserId())) {
+            return;
         }
-        return newHeaderUserId;
+        Integer updateCount = groupBuyTeamOrderDao.updateUserIsHeader(refundOrderEntity.getTeamId(), refundOrderEntity.getNewHeaderUserId());
+        if (updateCount != 1) {
+            throw new AppException(ResponseCodeEnum.UPDATE_ZERO.getCode(), ResponseCodeEnum.UPDATE_ZERO.getInfo());
+        }
     }
 
     @Override
@@ -510,6 +515,9 @@ public class TradeRepositoryImpl implements TradeRepository {
         if (updateOrderCount != 1) {
             throw new AppException(ResponseCodeEnum.UPDATE_ZERO.getCode(), ResponseCodeEnum.UPDATE_ZERO.getInfo());
         }
+
+        // 团长退单 - 在同一事务内变更新团长
+        transferHeader(refundOrderEntity);
 
         // 更新拼团组队 - 锁单量-1
         GroupBuyTeam groupBuyTeamReq = new GroupBuyTeam();
@@ -567,6 +575,9 @@ public class TradeRepositoryImpl implements TradeRepository {
         if (updateOrderCount != 1) {
             throw new AppException(ResponseCodeEnum.UPDATE_ZERO.getCode(), ResponseCodeEnum.UPDATE_ZERO.getInfo());
         }
+
+        // 团长退单 - 在同一事务内变更新团长
+        transferHeader(refundOrderEntity);
 
         // 更新拼团组队 - 锁单量-1，完成量-1
         GroupBuyTeam groupBuyTeamReq = new GroupBuyTeam();
