@@ -71,15 +71,15 @@ public class TaskServiceImpl implements TaskService {
             // 执行
             String status = tradePort.groupBuyNotify(notifyTaskEntity);
             // 执行成功
-            if (status.equals(NofifyStatusEnum.SUCCESS.getStatus())) {
+            if (NofifyStatusEnum.SUCCESS.getStatus().equals(status)) {
                 // 更新数据库状态
                 int updateCount = tradeRepository.updateNotifyTaskSuccess(notifyTaskEntity.getTaskId());
                 if (updateCount == 1) {
                     successCount ++;
                     log.info("回调任务执行成功，组队ID：{}，任务ID：{}", notifyTaskEntity.getTeamId(), notifyTaskEntity.getTaskId());
                 }
-            } else if (status.equals(NofifyStatusEnum.FAIL.getStatus())) {
-                // 执行失败
+            } else if (!NofifyStatusEnum.NULL.getStatus().equals(status)) {
+                // 执行失败 - 除成功、空执行（未抢到锁或已回调成功）外的任何结果均按失败处理，累加回调次数直至标记失败
                 // 回调次数小于5次 - 更新为重试
                 if (notifyTaskEntity.getNotifyCount() < 5) {
                     int updateCount = tradeRepository.updateNotifyTaskRetry(notifyTaskEntity.getTaskId());
