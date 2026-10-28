@@ -44,4 +44,9 @@ public class RefundOrderEntity {
      */
     private String newHeaderUserId;
 
+    /**
+     * 拼团组队 - 团长退单变更新团长时，用于在退单事务内生成新团长回调任务（回调方式、团长退单补偿回调配置、组队状态）
+     */
+    private GroupBuyTeamEntity groupBuyTeamEntity;
+
 }

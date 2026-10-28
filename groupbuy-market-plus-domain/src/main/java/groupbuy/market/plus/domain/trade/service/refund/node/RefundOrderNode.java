@@ -44,11 +44,17 @@ public class RefundOrderNode extends AbstractRefundOrderSupport<PreRefundEntity,
                         .orderId(preRefundOrderEntity.getOrderId())
                         .outTradeNo(preRefundEntity.getOutTradeNo())
                         .newHeaderUserId(dynamicContext.getNewLeaderUserId())
+                        .groupBuyTeamEntity(groupBuyTeamEntity)
                 .build());
-        // 新团长回调
+        // 新团长回调 - 回调任务已在退单事务内与团长变更一同落库，这里仅触发异步回调；
+        // 触发失败不影响已成功的退单结果，由定时补偿任务补发
         if (StringUtils.isNotBlank(dynamicContext.getNewLeaderUserId())) {
             log.info("退单服务 - 退单执行节点，新团长回调，新团长用户ID：{}", dynamicContext.getNewLeaderUserId());
-            refundService.newHeaderNotify(dynamicContext.getNewLeaderUserId(), preRefundOrderEntity.getOrderId(), groupBuyTeamEntity);
+            try {
+                refundService.newHeaderNotify(groupBuyTeamEntity.getTeamId(), preRefundOrderEntity.getOrderId());
+            } catch (Exception e) {
+                log.error("退单服务 - 退单执行节点，新团长回调触发失败，由补偿任务补发，组队ID：{}，订单ID：{}", groupBuyTeamEntity.getTeamId(), preRefundOrderEntity.getOrderId(), e);
+            }
         }
         return router(preRefundEntity, dynamicContext);
     }

@@ -15,6 +15,13 @@ public interface NotifyTaskDao {
     void insert(NotifyTask notifyTask);
 
     /**
+     * 按任务ID查询回调任务
+     * @param taskId 任务ID
+     * @return
+     */
+    NotifyTask getNotifyTaskByTaskId(String taskId);
+
+    /**
      * 获取未完成的拼团完成回调通知任务集合
      * @return
      */

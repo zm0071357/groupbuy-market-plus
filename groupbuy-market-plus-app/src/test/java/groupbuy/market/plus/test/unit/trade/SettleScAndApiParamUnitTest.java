@@ -78,17 +78,6 @@ public class SettleScAndApiParamUnitTest {
         Assert.assertEquals(ResponseCodeEnum.E0015.getCode(), response.getCode());
     }
 
-    @Test
-    public void test_newHeaderNotify_httpWithoutUrl_noTask() {
-        TradeRepositoryImpl tradeRepository = new TradeRepositoryImpl();
-        GroupBuyTeamEntity team = GroupBuyTeamEntity.builder()
-                .teamId("TEAM12345678")
-                .notifyConfigVO(NotifyConfigVO.builder().notifyTypeEnum(NotifyTypeEnum.HTTP).headerRefundNotifyUrl(null).build())
-                .build();
-
-        Assert.assertNull(tradeRepository.newHeaderNotify("user02", "ORDER000000000001", team));
-    }
-
     private BusinessLinkedList<CheckSettleEntity, SettleOrderLinkFactory.DynamicContext, CheckSettleResEntity> buildSettleChain(boolean orderScBlack) {
         TradeRepository tradeRepository = mock(TradeRepository.class);
         when(tradeRepository.checkLockOrderStatusByOutTradeNo("user01", "OUT0001")).thenReturn(LockOrderEntity.builder()

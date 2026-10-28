@@ -532,7 +532,8 @@ public class TradeRepositoryImpl implements TradeRepository {
     }
 
     /**
-     * 团长退单时将新团长写入 - 在退单事务内调用，退单失败时一并回滚
+     * 团长退单时将新团长写入，并生成新团长回调任务 - 在退单事务内调用，退单失败时一并回滚；
+     * 回调任务与团长变更同事务落库，避免事务提交后写入失败导致新团长通知永久丢失
      * @param refundOrderEntity 退单订单（新团长ID为空时不处理）
      */
     private void transferHeader(RefundOrderEntity refundOrderEntity) {
@@ -542,6 +543,9 @@ public class TradeRepositoryImpl implements TradeRepository {
         Integer updateCount = groupBuyTeamOrderDao.updateUserIsHeader(refundOrderEntity.getTeamId(), refundOrderEntity.getNewHeaderUserId());
         if (updateCount != 1) {
             throw new AppException(ResponseCodeEnum.UPDATE_ZERO.getCode(), ResponseCodeEnum.UPDATE_ZERO.getInfo());
+        }
+        if (refundOrderEntity.getGroupBuyTeamEntity() != null) {
+            insertNewHeaderNotifyTask(refundOrderEntity.getNewHeaderUserId(), refundOrderEntity.getOrderId(), refundOrderEntity.getGroupBuyTeamEntity());
         }
     }
 
@@ -725,7 +729,37 @@ public class TradeRepositoryImpl implements TradeRepository {
     }
 
     @Override
-    public NotifyTaskEntity newHeaderNotify(String newLeaderUserId, String orderId, GroupBuyTeamEntity groupBuyTeamEntity) {
+    public NotifyTaskEntity getNewHeaderNotifyTask(String teamId, String orderId) {
+        NotifyTask notifyTask = notifyTaskDao.getNotifyTaskByTaskId(getNewHeaderNotifyTaskId(teamId, orderId));
+        if (notifyTask == null) {
+            return null;
+        }
+        return NotifyTaskEntity.builder()
+                .taskId(notifyTask.getTaskId())
+                .teamId(notifyTask.getTeamId())
+                .notifyTypeEnum(NotifyTypeEnum.getByType(notifyTask.getNotifyType()))
+                .notifyMQ(notifyTask.getNotifyMQ())
+                .notifyUrl(notifyTask.getNotifyUrl())
+                .notifyCount(notifyTask.getNotifyCount())
+                .parameterJson(notifyTask.getParameterJson())
+                .build();
+    }
+
+    /**
+     * 新团长回调任务ID：组队ID_回调类型_退单订单ID
+     */
+    private String getNewHeaderNotifyTaskId(String teamId, String orderId) {
+        return teamId + Constants.UNDERSCORE + NotifyTaskTypeEnum.NEW_HEADER.getType() + Constants.UNDERSCORE + orderId;
+    }
+
+    /**
+     * 生成新团长回调任务 - 仅在团长退单的退单事务内调用
+     * @param newLeaderUserId 新团长ID
+     * @param orderId 退单订单ID
+     * @param groupBuyTeamEntity 拼团组队信息
+     * @return 回调任务，HTTP 方式未配置团长退单补偿回调地址时不生成，返回 null
+     */
+    private NotifyTaskEntity insertNewHeaderNotifyTask(String newLeaderUserId, String orderId, GroupBuyTeamEntity groupBuyTeamEntity) {
         // HTTP 回调方式且商户未配置团长退单补偿回调地址 - 商户不接收该通知，不生成回调任务
         if (NotifyTypeEnum.HTTP.equals(groupBuyTeamEntity.getNotifyConfigVO().getNotifyTypeEnum())
                 && StringUtils.isBlank(groupBuyTeamEntity.getNotifyConfigVO().getHeaderRefundNotifyUrl())) {
@@ -733,9 +767,7 @@ public class TradeRepositoryImpl implements TradeRepository {
             return null;
         }
         // 回调任务
-        String taskId = groupBuyTeamEntity.getTeamId() + Constants.UNDERSCORE +
-                NotifyTaskTypeEnum.NEW_HEADER.getType() + Constants.UNDERSCORE +
-                orderId;
+        String taskId = getNewHeaderNotifyTaskId(groupBuyTeamEntity.getTeamId(), orderId);
         NotifyTask notifyTask = NotifyTask.builder()
                 .taskId(taskId)
                 .activityId(groupBuyTeamEntity.getActivityId())

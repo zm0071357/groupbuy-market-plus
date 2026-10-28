@@ -52,6 +52,13 @@
         where task_id = #{taskId} and notify_status in (0, 2)
     </update>
 
+    <select id="getNotifyTaskByTaskId" parameterType="java.lang.String" resultMap="dataMap">
+        select activity_id, team_id, task_id, task_type, notify_type, notify_url, notify_mq,
+               notify_count, notify_status, parameter_json
+        from notify_task
+        where task_id = #{taskId}
+    </select>
+
     <select id="getNotifyStatusByTaskId" parameterType="java.lang.String" resultType="java.lang.Integer">
         select notify_status
         from notify_task

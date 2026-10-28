@@ -176,13 +176,12 @@ public interface TradeRepository {
     NotifyTaskEntity teamCompletePaidRefund(RefundOrderAggregate teamCompletePaidRefundAggregate);
 
     /**
-     * 新团长回调
-     * @param newLeaderUserId 新团长ID
-     * @param orderId 订单ID
-     * @param groupBuyTeamEntity 拼团组队信息
-     * @return
+     * 查询新团长回调任务 - 任务在团长退单的退单事务内生成，事务提交后查询用于异步回调
+     * @param teamId 拼团组队ID
+     * @param orderId 退单订单ID
+     * @return 回调任务，未生成（如 HTTP 方式未配置团长退单补偿回调地址）时返回 null
      */
-    NotifyTaskEntity newHeaderNotify(String newLeaderUserId, String orderId, GroupBuyTeamEntity groupBuyTeamEntity);
+    NotifyTaskEntity getNewHeaderNotifyTask(String teamId, String orderId);
 
     /**
      * 获取超时的拼团ID集合

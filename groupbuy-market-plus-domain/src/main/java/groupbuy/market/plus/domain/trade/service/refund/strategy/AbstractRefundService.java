@@ -4,7 +4,6 @@ import com.alibaba.fastjson.JSON;
 import groupbuy.market.plus.domain.trade.adapter.event.OrderRefundMessage;
 import groupbuy.market.plus.domain.trade.adapter.repository.TradeRepository;
 import groupbuy.market.plus.domain.trade.model.entity.ActivityEntity;
-import groupbuy.market.plus.domain.trade.model.entity.GroupBuyTeamEntity;
 import groupbuy.market.plus.domain.trade.model.entity.NotifyTaskEntity;
 import groupbuy.market.plus.domain.trade.service.lock.factory.LockOrderLinkFactory;
 import groupbuy.market.plus.domain.trade.service.task.TaskService;
@@ -75,17 +74,17 @@ public abstract class AbstractRefundService implements RefundService {
     }
 
     @Override
-    public void newHeaderNotify(String newLeaderUserId, String orderId, GroupBuyTeamEntity groupBuyTeamEntity) {
-        // 回调任务
-        NotifyTaskEntity notifyTaskEntity = tradeRepository.newHeaderNotify(newLeaderUserId, orderId, groupBuyTeamEntity);
+    public void newHeaderNotify(String teamId, String orderId) {
+        // 回调任务 - 已在退单事务内生成
+        NotifyTaskEntity notifyTaskEntity = tradeRepository.getNewHeaderNotifyTask(teamId, orderId);
         if (null != notifyTaskEntity) {
             threadPoolExecutor.execute(() -> {
                 Map<String, Integer> notifyResultMap = null;
                 try {
                     notifyResultMap = taskService.execNotifyJob(notifyTaskEntity);
-                    log.info("新团长回调通知 - 新团长ID：{}，结果:{}", newLeaderUserId, JSON.toJSONString(notifyResultMap));
+                    log.info("新团长回调通知 - 组队ID：{}，结果:{}", teamId, JSON.toJSONString(notifyResultMap));
                 } catch (Exception e) {
-                    log.error("新团长回调通知失败 - 新团长ID：{}，结果:{}", newLeaderUserId, JSON.toJSONString(notifyResultMap), e);
+                    log.error("新团长回调通知失败 - 组队ID：{}，结果:{}", teamId, JSON.toJSONString(notifyResultMap), e);
                     throw new AppException(e.getMessage());
                 }
             });

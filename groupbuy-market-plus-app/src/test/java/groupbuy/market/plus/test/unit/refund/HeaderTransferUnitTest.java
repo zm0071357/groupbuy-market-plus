@@ -20,6 +20,11 @@ import groupbuy.market.plus.test.unit.mapper.MapperTestSupport;
 import groupbuy.market.plus.types.enums.ResponseCodeEnum;
 import groupbuy.market.plus.types.exception.AppException;
 import org.apache.ibatis.session.Configuration;
+import groupbuy.market.plus.infrastructure.dao.po.NotifyTask;
+import groupbuy.market.plus.domain.trade.model.entity.NotifyTaskEntity;
+import groupbuy.market.plus.domain.trade.model.valobj.NotifyConfigVO;
+import groupbuy.market.plus.domain.trade.model.valobj.NotifyTypeEnum;
+import org.mockito.ArgumentCaptor;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,6 +47,7 @@ public class HeaderTransferUnitTest {
 
     private GroupBuyTeamOrderDao groupBuyTeamOrderDao;
     private GroupBuyTeamDao groupBuyTeamDao;
+    private NotifyTaskDao notifyTaskDao;
     private TradeRepositoryImpl tradeRepository;
 
     @Before
@@ -51,7 +57,8 @@ public class HeaderTransferUnitTest {
         tradeRepository = new TradeRepositoryImpl();
         ReflectionTestUtils.setField(tradeRepository, "groupBuyTeamOrderDao", groupBuyTeamOrderDao);
         ReflectionTestUtils.setField(tradeRepository, "groupBuyTeamDao", groupBuyTeamDao);
-        ReflectionTestUtils.setField(tradeRepository, "notifyTaskDao", mock(NotifyTaskDao.class));
+        notifyTaskDao = mock(NotifyTaskDao.class);
+        ReflectionTestUtils.setField(tradeRepository, "notifyTaskDao", notifyTaskDao);
         when(groupBuyTeamOrderDao.updateOrderStatusRefund(any(GroupBuyTeamOrder.class))).thenReturn(1);
         when(groupBuyTeamDao.updateTeamByTeamInCompleteUnPaidRefund(any(GroupBuyTeam.class))).thenReturn(1);
         when(groupBuyTeamDao.updateTeamByTeamInCompletePaidRefund(any(GroupBuyTeam.class))).thenReturn(1);
@@ -90,6 +97,66 @@ public class HeaderTransferUnitTest {
     }
 
     @Test
+    public void test_headerRefund_newHeaderTaskInRefundTx() {
+        when(groupBuyTeamOrderDao.updateUserIsHeader(TEAM_ID, "user02")).thenReturn(1);
+        RefundOrderEntity refundOrder = buildRefundOrder("user02");
+        refundOrder.setGroupBuyTeamEntity(buildTeam(NotifyTypeEnum.MQ, null));
+
+        tradeRepository.teamInCompletePaidRefund(RefundOrderAggregate.buildTeamInCompletePaidRefundAggregate(refundOrder, -1, -1));
+
+        // 新团长回调任务与退单回调任务在同一个退单方法（同一事务）内写入
+        ArgumentCaptor<NotifyTask> captor = ArgumentCaptor.forClass(NotifyTask.class);
+        verify(notifyTaskDao, times(2)).insert(captor.capture());
+        NotifyTask newHeaderTask = captor.getAllValues().stream()
+                .filter(task -> Integer.valueOf(5).equals(task.getTaskType())).findFirst().orElse(null);
+        Assert.assertNotNull("应生成新团长回调任务", newHeaderTask);
+        Assert.assertEquals(TEAM_ID + "_5_ORDER000000000001", newHeaderTask.getTaskId());
+        Assert.assertTrue(newHeaderTask.getParameterJson(), newHeaderTask.getParameterJson().contains("\"userId\":\"user02\""));
+    }
+
+    @Test
+    public void test_headerRefund_httpWithoutUrl_noNewHeaderTask() {
+        when(groupBuyTeamOrderDao.updateUserIsHeader(TEAM_ID, "user02")).thenReturn(1);
+        RefundOrderEntity refundOrder = buildRefundOrder("user02");
+        refundOrder.setGroupBuyTeamEntity(buildTeam(NotifyTypeEnum.HTTP, null));
+
+        tradeRepository.teamInCompleteUnPaidRefund(RefundOrderAggregate.buildTeamInCompleteUnPaidRefundAggregate(refundOrder, -1));
+
+        // HTTP 方式未配置团长退单补偿回调地址 - 商户不接收该通知，只生成退单回调任务
+        ArgumentCaptor<NotifyTask> captor = ArgumentCaptor.forClass(NotifyTask.class);
+        verify(notifyTaskDao, times(1)).insert(captor.capture());
+        Assert.assertNotEquals(Integer.valueOf(5), captor.getValue().getTaskType());
+    }
+
+    @Test
+    public void test_transferFail_noNewHeaderTask() {
+        when(groupBuyTeamOrderDao.updateUserIsHeader(TEAM_ID, "user02")).thenReturn(0);
+        RefundOrderEntity refundOrder = buildRefundOrder("user02");
+        refundOrder.setGroupBuyTeamEntity(buildTeam(NotifyTypeEnum.MQ, null));
+        try {
+            tradeRepository.teamInCompleteUnPaidRefund(RefundOrderAggregate.buildTeamInCompleteUnPaidRefundAggregate(refundOrder, -1));
+            Assert.fail("应抛出 UPDATE_ZERO");
+        } catch (AppException e) {
+            Assert.assertEquals(ResponseCodeEnum.UPDATE_ZERO.getCode(), e.getCode());
+        }
+        verify(notifyTaskDao, never()).insert(any(NotifyTask.class));
+    }
+
+    @Test
+    public void test_getNewHeaderNotifyTask_byTaskId() {
+        when(notifyTaskDao.getNotifyTaskByTaskId(TEAM_ID + "_5_ORDER000000000001")).thenReturn(NotifyTask.builder()
+                .taskId(TEAM_ID + "_5_ORDER000000000001").teamId(TEAM_ID).notifyType(NotifyTypeEnum.MQ.getType())
+                .notifyMQ("topic.header_refund").notifyCount(0).parameterJson("{}").build());
+
+        NotifyTaskEntity task = tradeRepository.getNewHeaderNotifyTask(TEAM_ID, "ORDER000000000001");
+
+        Assert.assertEquals(TEAM_ID + "_5_ORDER000000000001", task.getTaskId());
+        Assert.assertEquals(NotifyTypeEnum.MQ, task.getNotifyTypeEnum());
+        Assert.assertEquals("topic.header_refund", task.getNotifyMQ());
+        Assert.assertNull(tradeRepository.getNewHeaderNotifyTask(TEAM_ID, "ORDER000000000002"));
+    }
+
+    @Test
     public void test_memberRefund_noTransfer() {
         tradeRepository.teamInCompleteUnPaidRefund(RefundOrderAggregate.buildTeamInCompleteUnPaidRefundAggregate(buildRefundOrder(null), -1));
 
@@ -125,6 +192,15 @@ public class HeaderTransferUnitTest {
 
         Assert.assertEquals("user02", context.getNewLeaderUserId());
         verify(repository).queryNewHeaderUserId(TEAM_ID);
+    }
+
+    private GroupBuyTeamEntity buildTeam(NotifyTypeEnum notifyTypeEnum, String headerRefundNotifyUrl) {
+        return GroupBuyTeamEntity.builder()
+                .teamId(TEAM_ID)
+                .activityId(100123L)
+                .teamStatusEnum(TeamStatusEnum.PROGRESS)
+                .notifyConfigVO(NotifyConfigVO.builder().notifyTypeEnum(notifyTypeEnum).headerRefundNotifyUrl(headerRefundNotifyUrl).build())
+                .build();
     }
 
     private RefundOrderEntity buildRefundOrder(String newHeaderUserId) {
