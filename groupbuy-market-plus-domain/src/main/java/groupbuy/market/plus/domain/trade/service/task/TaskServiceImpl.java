@@ -5,6 +5,7 @@ import groupbuy.market.plus.domain.trade.adapter.repository.TradeRepository;
 import groupbuy.market.plus.domain.trade.model.entity.NotifyTaskEntity;
 import groupbuy.market.plus.domain.trade.model.valobj.NofifyStatusEnum;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -61,6 +62,11 @@ public class TaskServiceImpl implements TaskService {
             return null;
         }
         for (NotifyTaskEntity notifyTaskEntity : notifyTaskEntityList) {
+            // 回调状态按任务ID更新、按任务ID加锁，缺少任务ID时无法正确更新状态，跳过避免无限重复回调
+            if (StringUtils.isBlank(notifyTaskEntity.getTaskId())) {
+                log.error("回调任务缺少任务ID，跳过执行，组队ID：{}", notifyTaskEntity.getTeamId());
+                continue;
+            }
             log.info("开始执行回调任务，组队ID：{}，任务ID：{}", notifyTaskEntity.getTeamId(), notifyTaskEntity.getTaskId());
             // 执行
             String status = tradePort.groupBuyNotify(notifyTaskEntity);

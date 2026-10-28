@@ -760,6 +760,7 @@ public class TradeRepositoryImpl implements TradeRepository {
         List<NotifyTaskEntity> notifyTaskEntityList = new ArrayList<>();
         for (NotifyTask notifyTask : notifyTaskList) {
             notifyTaskEntityList.add(NotifyTaskEntity.builder()
+                    .taskId(notifyTask.getTaskId())
                     .teamId(notifyTask.getTeamId())
                     .notifyTypeEnum(NotifyTypeEnum.getByType(notifyTask.getNotifyType()))
                     .notifyUrl(notifyTask.getNotifyUrl())
