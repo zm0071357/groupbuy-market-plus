@@ -35,4 +35,11 @@ public interface TagRepository {
      * @return
      */
     boolean isTagCrowdUser(String tagId, String userId);
+
+    /**
+     * 人群标签数据是否存在（标签任务是否已生成 bitmap）
+     * @param tagId 标签ID
+     * @return
+     */
+    boolean isTagCrowdExists(String tagId);
 }

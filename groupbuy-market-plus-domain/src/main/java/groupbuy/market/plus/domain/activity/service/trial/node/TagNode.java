@@ -72,6 +72,12 @@ public class TagNode extends AbstractGroupBuyMarketSupport<MarketProductEntity, 
             dynamicContext.setDiscount(true);
             return router(marketProductEntity, dynamicContext);
         }
+        // 人群标签数据不存在 - 无法判断用户是否在人群内，不可享用优惠（白名单、黑名单两种配置均拒绝）
+        if (!tagRepository.isTagCrowdExists(tagId)) {
+            log.warn("人群标签数据不存在，不可参与优惠试算，tagId：{}，用户ID：{}", tagId, marketProductEntity.getUserId());
+            dynamicContext.setDiscount(false);
+            return router(marketProductEntity, dynamicContext);
+        }
         // 人群标签不为空 - 校验用户
         // 是否在人群标签范围内
         boolean isTagCrowdUser = tagRepository.isTagCrowdUser(tagId, marketProductEntity.getUserId());

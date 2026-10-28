@@ -84,10 +84,17 @@ public class TagRepositoryImpl implements TagRepository {
     @Override
     public boolean isTagCrowdUser(String tagId, String userId) {
         RBitSet bitSet = redissonClient.getBitSet(getBitmapKey(tagId));
+        // 标签数据不存在（未跑批、被清理或标签配置错误）时按不在标签内处理，避免限定人群的优惠对全员放开
         if (!bitSet.isExists()) {
-            return true;
+            log.warn("人群标签数据不存在，按不在标签内处理，tagId：{}", tagId);
+            return false;
         }
         return bitSet.get(ModuloUtil.getIndexFromUserId(userId));
+    }
+
+    @Override
+    public boolean isTagCrowdExists(String tagId) {
+        return redissonClient.getBitSet(getBitmapKey(tagId)).isExists();
     }
 
     private String getBitmapKey(String tagId) {
