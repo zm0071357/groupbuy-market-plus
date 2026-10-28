@@ -14,6 +14,12 @@ import java.security.NoSuchAlgorithmException;
 public class ModuloUtil {
 
     /**
+     * 人群标签 bitmap 下标范围 2^26 - 单个标签 bitmap 最大约 8MB
+     * 原先对 Integer.MAX_VALUE 取模，下标接近 2^31，Redis 会为每个标签分配约 256MB
+     */
+    public static final int BITMAP_SIZE = 1 << 26;
+
+    /**
      * 取模
      * @param userId
      * @return
@@ -25,7 +31,7 @@ public class ModuloUtil {
             // 将哈希字节数组转换为正整数
             BigInteger bigInt = new BigInteger(1, hashBytes);
             // 取模以确保索引在合理范围内
-            return bigInt.mod(BigInteger.valueOf(Integer.MAX_VALUE)).intValue();
+            return bigInt.mod(BigInteger.valueOf(BITMAP_SIZE)).intValue();
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException("MD5 algorithm not found", e);
         }
