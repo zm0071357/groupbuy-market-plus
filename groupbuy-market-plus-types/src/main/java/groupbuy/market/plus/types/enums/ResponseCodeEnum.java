@@ -46,6 +46,7 @@ public enum ResponseCodeEnum {
     E0024("E0024", "不存在的邀请码状态"),
     E0025("E0025", "邀请人不在该拼团组队中"),
     E0026("E0026", "邀请码已失效"),
+    E0027("E0027", "活动与商品不匹配"),
     ;
     private String code;
     private String info;

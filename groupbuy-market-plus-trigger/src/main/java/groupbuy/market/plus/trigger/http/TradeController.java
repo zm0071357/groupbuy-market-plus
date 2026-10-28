@@ -104,6 +104,16 @@ public class TradeController implements TradeService {
                             .channel(lockOrderRequestDTO.getChannel())
                             .build());
 
+            // 校验请求活动与商品匹配的活动一致 - 试算按商品、来源、渠道匹配活动，防止传入其他活动ID绕过本活动的参与限制
+            Long trialActivityId = trialBalanceEntity.getActivityVO() == null ? null : trialBalanceEntity.getActivityVO().getActivityId();
+            if (!lockOrderRequestDTO.getActivityId().equals(trialActivityId)) {
+                log.info("锁单活动与商品不匹配，用户ID：{}，请求活动ID：{}，商品匹配活动ID：{}", lockOrderRequestDTO.getUserId(), lockOrderRequestDTO.getActivityId(), trialActivityId);
+                return Response.<LockOrderResponseDTO>builder()
+                        .code(ResponseCodeEnum.E0027.getCode())
+                        .info(ResponseCodeEnum.E0027.getInfo())
+                        .build();
+            }
+
             // 锁单
             lockOrderEntity = lockOrderService.lockOrder(
                     UserEntity.builder()
