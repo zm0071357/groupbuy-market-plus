@@ -77,28 +77,13 @@
         where team_id = #{teamId} and status = 0 and complete_count = target_count
     </update>
 
-    <select id="getTeamIdList" resultType="java.lang.String" parameterType="groupbuy.market.plus.infrastructure.dao.po.GroupBuyTeam">
-        select team_id
+    <!-- 按活动与商品单条聚合统计：组队总数、完成组队数、完成组队的参团人数；无数据时返回 0 -->
+    <select id="getTeamStatistics" resultType="groupbuy.market.plus.infrastructure.dao.po.GroupBuyTeamStatistics" parameterType="groupbuy.market.plus.infrastructure.dao.po.GroupBuyTeam">
+        select count(id) as allTeamCount,
+               count(case when status = 1 then 1 end) as allTeamCompleteCount,
+               coalesce(sum(case when status = 1 then lock_count else 0 end), 0) as allTeamUserCount
         from group_buy_team
         where activity_id = #{activityId} and goods_id = #{goodsId}
-    </select>
-
-    <select id="getAllTeamCompleteCount" resultType="java.lang.Integer" parameterType="java.util.List">
-        select count(id)
-        from group_buy_team
-        where status = 1 and team_id in
-        <foreach item="teamId" collection="teamIdList" open="(" separator="," close=")">
-            #{teamId}
-        </foreach>
-    </select>
-
-    <select id="getAllTeamUserCount" resultType="java.lang.Integer" parameterType="java.util.List">
-        select sum(lock_count)
-        from group_buy_team
-        where status = 1 and team_id in
-        <foreach item="teamId" collection="teamIdList" open="(" separator="," close=")">
-            #{teamId}
-        </foreach>
     </select>
 
     <select id="getUserTeam" resultMap="dataMap">

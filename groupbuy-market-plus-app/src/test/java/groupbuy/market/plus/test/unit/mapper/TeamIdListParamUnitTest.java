@@ -19,7 +19,7 @@ public class TeamIdListParamUnitTest {
     @Test
     public void test_teamIdList_bound() throws Exception {
         Configuration configuration = new Configuration();
-        for (String methodName : new String[]{"getAllTeamCompleteCount", "getAllTeamUserCount", "getRandomTeam"}) {
+        for (String methodName : new String[]{"getRandomTeam"}) {
             Method method = GroupBuyTeamDao.class.getMethod(methodName, List.class);
             Object params = new ParamNameResolver(configuration, method).getNamedParams(new Object[]{Collections.singletonList("TEAM12345678")});
 

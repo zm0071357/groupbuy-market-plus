@@ -1,6 +1,7 @@
 package groupbuy.market.plus.infrastructure.dao;
 
 import groupbuy.market.plus.infrastructure.dao.po.GroupBuyTeam;
+import groupbuy.market.plus.infrastructure.dao.po.GroupBuyTeamStatistics;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -52,25 +53,11 @@ public interface GroupBuyTeamDao {
     Integer updateTeamStatusComplete(String teamId);
 
     /**
-     * 查询拼团组队ID集合
-     * @param groupBuyTeamReq
-     * @return
+     * 按活动与商品聚合统计拼团组队
+     * @param groupBuyTeamReq 活动ID、商品ID
+     * @return 组队总数、完成组队数、完成组队的参团人数
      */
-    List<String> getTeamIdList(GroupBuyTeam groupBuyTeamReq);
-
-    /**
-     * 查询完成拼团组队数量
-     * @param teamIdList 组队ID集合
-     * @return
-     */
-    Integer getAllTeamCompleteCount(@Param("teamIdList") List<String> teamIdList);
-
-    /**
-     * 查询参与拼团人数
-     * @param teamIdList 组队ID集合
-     * @return
-     */
-    Integer getAllTeamUserCount(@Param("teamIdList") List<String> teamIdList);
+    GroupBuyTeamStatistics getTeamStatistics(GroupBuyTeam groupBuyTeamReq);
 
     /**
      * 根据组队ID集合查询用户组队信息

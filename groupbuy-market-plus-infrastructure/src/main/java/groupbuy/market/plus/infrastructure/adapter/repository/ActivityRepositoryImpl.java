@@ -199,21 +199,19 @@ public class ActivityRepositoryImpl implements ActivityRepository {
         GroupBuyTeam groupBuyTeamReq = new GroupBuyTeam();
         groupBuyTeamReq.setActivityId(activityId);
         groupBuyTeamReq.setGoodsId(goodsId);
-        List<String> teamIdList = groupBuyTeamDao.getTeamIdList(groupBuyTeamReq);
-        if (teamIdList == null || teamIdList.isEmpty()) {
+        // 单条聚合 SQL 统计，不再加载全部组队ID拼接 IN 查询
+        GroupBuyTeamStatistics statistics = groupBuyTeamDao.getTeamStatistics(groupBuyTeamReq);
+        if (statistics == null) {
             return StatisticsVO.builder()
                     .allTeamCount(0)
                     .allTeamCompleteCount(0)
                     .allTeamUserCount(0)
                     .build();
         }
-        Integer allTeamCount = teamIdList.size();
-        Integer allTeamCompleteCount = groupBuyTeamDao.getAllTeamCompleteCount(teamIdList);
-        Integer allTeamUserCount = groupBuyTeamDao.getAllTeamUserCount(teamIdList);
         return StatisticsVO.builder()
-                .allTeamCount(allTeamCount)
-                .allTeamCompleteCount(allTeamCompleteCount)
-                .allTeamUserCount(allTeamUserCount)
+                .allTeamCount(statistics.getAllTeamCount())
+                .allTeamCompleteCount(statistics.getAllTeamCompleteCount())
+                .allTeamUserCount(statistics.getAllTeamUserCount())
                 .build();
     }
 
