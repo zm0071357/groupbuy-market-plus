@@ -397,24 +397,33 @@ public class TradeRepositoryImpl implements TradeRepository {
         return notifyTaskDao.updateNotifyTaskFail(taskId);
     }
 
+    /**
+     * 抢占组队可用位置：读取恢复量、抢占量+1、判断是否超出、超出则回滚，在同一 Lua 脚本中原子执行
+     * 团长不参与抢占，抢占量只统计团员，抢占量+1（团长）即为总占位，可用上限为 恢复量 + 目标量
+     * 超出时回滚本次抢占（不重置为目标量），保证抢占量始终等于成功抢占数，序号不重复，恢复的位置可被再次抢占
+     * KEYS[1] 抢占Key，KEYS[2] 恢复Key，ARGV[1] 目标量，ARGV[2] 抢占Key与恢复Key的过期时间（毫秒）
+     * 返回 -1 表示位置不足，否则返回本次抢占后的总占位
+     */
+    private static final String OCCUPY_TEAM_STOCK_SCRIPT =
+            "local recoverCount = tonumber(redis.call('get', KEYS[2]) or '0') " +
+            "local occupyCount = redis.call('incr', KEYS[1]) + 1 " +
+            "redis.call('pexpire', KEYS[1], ARGV[2]) " +
+            "redis.call('pexpire', KEYS[2], ARGV[2]) " +
+            "if occupyCount > recoverCount + tonumber(ARGV[1]) then " +
+            "    redis.call('decr', KEYS[1]) " +
+            "    return -1 " +
+            "end " +
+            "return occupyCount";
+
     @Override
     public boolean occupyTeamStock(Integer target, Integer validTime, String teamStockOccupyKey, String teamStockRecoverKey) {
-        // 获取恢复量 - 没有恢复量时，get()方法会返回0
-        // 恢复量：当拼团锁单最后失败，失败了需要把这个位置给恢复，其他用户可以抢占这个恢复位置，原来抢占失败的位置视为已经占有
-        long teamStockRecoverCount = redissonClient.getAtomicLong(teamStockRecoverKey).get();
-        // 抢占量+1，再加上团长原先就占有的一个位置即为目前的总抢占量
-        RAtomicLong teamStockOccupy = redissonClient.getAtomicLong(teamStockOccupyKey);
-        long teamStockOccupyCount = teamStockOccupy.incrementAndGet() + 1;
         // 抢占Key、恢复Key 设置过期时间（拼团有效时间 + 60分钟），组队结束后自动清理
-        Duration teamStockExpire = getTeamStockExpire(validTime);
-        teamStockOccupy.expire(teamStockExpire);
-        redissonClient.getAtomicLong(teamStockRecoverKey).expire(teamStockExpire);
-        // 抢占量大于恢复量+目标量 - 位置已经不够了，返回失败
-        if (teamStockOccupyCount > teamStockRecoverCount + target) {
-            // 重置抢占量为目标量 - 位置已经不够，那抢占量最低就是目标量
-            // SET 会清除过期时间，重置后需重新设置
-            teamStockOccupy.set(target);
-            teamStockOccupy.expire(teamStockExpire);
+        long expireMillis = getTeamStockExpire(validTime).toMillis();
+        Long teamStockOccupyCount = redissonClient.getScript(StringCodec.INSTANCE).eval(RScript.Mode.READ_WRITE,
+                OCCUPY_TEAM_STOCK_SCRIPT, RScript.ReturnType.INTEGER,
+                Arrays.asList(teamStockOccupyKey, teamStockRecoverKey), String.valueOf(target), String.valueOf(expireMillis));
+        // 位置已经不够了，返回失败（脚本内已回滚本次抢占）
+        if (teamStockOccupyCount == null || teamStockOccupyCount < 0) {
             return false;
         }
         // 给每个产生的值加锁兜底，虽然incr操作是原子的，基本不会产生一样的值
