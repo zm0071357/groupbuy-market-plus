@@ -54,7 +54,7 @@ public class RecoverTeamStockUnitTest {
 
         verify(tradeRepository).recoverTeamStockOnce(recoverKey, ORDER_ID, 15);
         // 不再调用无幂等的恢复方法
-        verify(tradeRepository, never()).recoverTeamStock(anyString());
+        verify(tradeRepository, never()).recoverTeamStock(anyString(), any());
     }
 
     @Test

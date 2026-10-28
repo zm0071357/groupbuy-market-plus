@@ -127,8 +127,9 @@ public interface TradeRepository {
     /**
      * 锁单失败时恢复可用位置
      * @param teamStockRecoverKey 恢复Key
+     * @param validTime 拼团有效时间（分钟），用于设置恢复Key的过期时间
      */
-    Long recoverTeamStock(String teamStockRecoverKey);
+    Long recoverTeamStock(String teamStockRecoverKey, Integer validTime);
 
     /**
      * 退单时恢复可用位置 - 按订单幂等，同一订单只恢复一次

@@ -18,6 +18,7 @@ import groupbuy.market.plus.types.exception.AppException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.redisson.api.RAtomicLong;
 import org.redisson.api.RScript;
 import org.redisson.api.RedissonClient;
 import org.redisson.client.codec.StringCodec;
@@ -31,6 +32,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -401,11 +403,18 @@ public class TradeRepositoryImpl implements TradeRepository {
         // 恢复量：当拼团锁单最后失败，失败了需要把这个位置给恢复，其他用户可以抢占这个恢复位置，原来抢占失败的位置视为已经占有
         long teamStockRecoverCount = redissonClient.getAtomicLong(teamStockRecoverKey).get();
         // 抢占量+1，再加上团长原先就占有的一个位置即为目前的总抢占量
-        long teamStockOccupyCount = redissonClient.getAtomicLong(teamStockOccupyKey).incrementAndGet() + 1;
+        RAtomicLong teamStockOccupy = redissonClient.getAtomicLong(teamStockOccupyKey);
+        long teamStockOccupyCount = teamStockOccupy.incrementAndGet() + 1;
+        // 抢占Key、恢复Key 设置过期时间（拼团有效时间 + 60分钟），组队结束后自动清理
+        Duration teamStockExpire = getTeamStockExpire(validTime);
+        teamStockOccupy.expire(teamStockExpire);
+        redissonClient.getAtomicLong(teamStockRecoverKey).expire(teamStockExpire);
         // 抢占量大于恢复量+目标量 - 位置已经不够了，返回失败
         if (teamStockOccupyCount > teamStockRecoverCount + target) {
             // 重置抢占量为目标量 - 位置已经不够，那抢占量最低就是目标量
-            redissonClient.getAtomicLong(teamStockOccupyKey).set(target);
+            // SET 会清除过期时间，重置后需重新设置
+            teamStockOccupy.set(target);
+            teamStockOccupy.expire(teamStockExpire);
             return false;
         }
         // 给每个产生的值加锁兜底，虽然incr操作是原子的，基本不会产生一样的值
@@ -419,21 +428,33 @@ public class TradeRepositoryImpl implements TradeRepository {
     }
 
     @Override
-    public Long recoverTeamStock(String teamStockRecoverKey) {
+    public Long recoverTeamStock(String teamStockRecoverKey, Integer validTime) {
         // teamID为空 - 团长锁单失败，不需要恢复
         if (StringUtils.isBlank(teamStockRecoverKey)) {
             return 0L;
         }
-        return redissonClient.getAtomicLong(teamStockRecoverKey).incrementAndGet();
+        RAtomicLong teamStockRecover = redissonClient.getAtomicLong(teamStockRecoverKey);
+        long recoverCount = teamStockRecover.incrementAndGet();
+        teamStockRecover.expire(getTeamStockExpire(validTime));
+        return recoverCount;
+    }
+
+    /**
+     * 组队库存相关 Key 的过期时间：拼团有效时间 + 60分钟，与抢占位置加锁保持一致
+     */
+    private Duration getTeamStockExpire(Integer validTime) {
+        return Duration.ofMinutes((validTime == null ? 0 : validTime) + 60L);
     }
 
     /**
      * 按订单幂等恢复可用位置：防重标记写入成功才将恢复量+1，两步在同一 Lua 脚本中原子执行
-     * KEYS[1] 防重标记Key，KEYS[2] 恢复Key，ARGV[1] 防重标记过期时间（毫秒）
+     * KEYS[1] 防重标记Key，KEYS[2] 恢复Key，ARGV[1] 防重标记与恢复Key的过期时间（毫秒）
      */
     private static final String RECOVER_TEAM_STOCK_ONCE_SCRIPT =
             "if redis.call('set', KEYS[1], '1', 'NX', 'PX', ARGV[1]) then " +
-            "    return redis.call('incr', KEYS[2]) " +
+            "    local recoverCount = redis.call('incr', KEYS[2]) " +
+            "    redis.call('pexpire', KEYS[2], ARGV[1]) " +
+            "    return recoverCount " +
             "end " +
             "return -1";
 

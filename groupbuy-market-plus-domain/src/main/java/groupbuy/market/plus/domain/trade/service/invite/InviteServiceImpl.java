@@ -35,6 +35,10 @@ public class InviteServiceImpl implements InviteService{
     @Override
     public void inviteExpire() {
         List<String> timeoutTeamIdList = tradeRepository.getTimeoutTeamIdList();
+        // 没有超时组队时直接返回，避免生成 where team_id in () 非法 SQL
+        if (timeoutTeamIdList == null || timeoutTeamIdList.isEmpty()) {
+            return;
+        }
         tradeRepository.inviteExpire(timeoutTeamIdList);
     }
 
