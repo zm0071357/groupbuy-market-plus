@@ -13,8 +13,14 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
+
+import java.util.concurrent.TimeUnit;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 /**
@@ -29,11 +35,19 @@ public class LockOrderTeamIdWriteBackUnitTest {
     @Mock
     private BusinessLinkedList<CheckLockEntity, LockOrderLinkFactory.DynamicContext, CheckLockResEntity> lockOrderLink;
 
+    @Mock
+    private RedissonClient redissonClient;
+
+    @Mock
+    private RLock lock;
+
     @InjectMocks
     private LockOrderServiceImpl lockOrderService;
 
     @Test
     public void test_inviteOnly_teamIdWriteBack() throws Exception {
+        when(redissonClient.getLock(anyString())).thenReturn(lock);
+        when(lock.tryLock(anyLong(), any(TimeUnit.class))).thenReturn(true);
         // 模拟邀请码过滤节点补全组队ID
         when(lockOrderLink.apply(any(CheckLockEntity.class), any(LockOrderLinkFactory.DynamicContext.class))).thenAnswer(invocation -> {
             CheckLockEntity checkLockEntity = invocation.getArgument(0);

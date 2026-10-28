@@ -27,6 +27,9 @@ public class GroupBuyConstants {
 
     public static final String OrderRefundNotifyJobLock = "groupbuy_market_plus_order_refund_notify_job_lock";
 
+    // 锁单用户维度锁前缀 - 拼接 活动ID_用户ID
+    public static final String LockOrderUserLockPrefix = "groupbuy_market_plus_lock_order_user_lock_";
+
     public static final String TeamStockKey = "groupbuy_market_plus_stock_key_";
 
 }

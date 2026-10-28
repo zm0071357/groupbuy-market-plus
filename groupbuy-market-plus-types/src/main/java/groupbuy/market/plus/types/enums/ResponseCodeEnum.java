@@ -50,6 +50,7 @@ public enum ResponseCodeEnum {
     E0028("E0028", "邀请码与组队不匹配"),
     E0029("E0029", "组队已结束或已过有效期"),
     E0030("E0030", "组队与活动不匹配"),
+    E0031("E0031", "请求处理中，请勿重复提交"),
     ;
     private String code;
     private String info;
