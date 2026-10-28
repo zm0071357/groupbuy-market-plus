@@ -109,7 +109,8 @@
         limit #{limitCount}
     </select>
 
-    <select id="getRandomTeam" resultType="groupbuy.market.plus.infrastructure.dao.po.GroupBuyTeam">
+    <!-- 使用 resultMap 映射下划线列名（未开启 mapUnderscoreToCamelCase，resultType 自动映射会得到空行） -->
+    <select id="getRandomTeam" resultMap="dataMap">
         select team_id, target_count, complete_count, lock_count, start_time, end_time
         from group_buy_team
         where status = 0 and team_id in
