@@ -8,6 +8,8 @@ import groupbuy.market.plus.infrastructure.dao.*;
 import groupbuy.market.plus.infrastructure.dao.po.*;
 import groupbuy.market.plus.infrastructure.dcc.DCCServiceImpl;
 import groupbuy.market.plus.types.common.Constants;
+import groupbuy.market.plus.types.enums.ResponseCodeEnum;
+import groupbuy.market.plus.types.exception.AppException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Repository;
@@ -67,9 +69,15 @@ public class ActivityRepositoryImpl implements ActivityRepository {
         // 获取折扣组合
         List<ActivityVO.GroupBuyDiscount> groupBuyDiscountList = new ArrayList<>();
         String discountExpr = activity.getDiscountExpr();
-        String[] discountIds = discountExpr.split(Constants.SPLIT);
+        // 未配置折扣 - 折扣组合为空
+        String[] discountIds = StringUtils.isBlank(discountExpr) ? new String[0] : discountExpr.split(Constants.SPLIT);
         for (String discountId : discountIds) {
             Discount discount = discountDao.getDiscountById(discountId);
+            // 活动引用的折扣不存在（配置错误或折扣被删除）- 返回明确错误码，避免空指针，也避免跳过折扣按错误价格试算
+            if (discount == null) {
+                log.error("活动折扣配置不存在，活动ID：{}，折扣ID：{}", activityId, discountId);
+                throw new AppException(ResponseCodeEnum.E0002.getCode(), ResponseCodeEnum.E0002.getInfo());
+            }
             groupBuyDiscountList.add(ActivityVO.GroupBuyDiscount.builder()
                             .discountName(discount.getDiscountName())
                             .discountDesc(discount.getDiscountDesc())

@@ -50,9 +50,17 @@ public class TagNode extends AbstractGroupBuyMarketSupport<MarketProductEntity, 
         FutureTask<ActivityVO> activityVOFutureTask = new FutureTask<>(getActivityVOThreadTask);
         threadPoolExecutor.execute(activityVOFutureTask);
 
-        // 写入上下文
-        dynamicContext.setSkuVO(skuVOFutureTask.get(timeout, TimeUnit.MILLISECONDS));
-        dynamicContext.setActivityVO(activityVOFutureTask.get(timeout, TimeUnit.MILLISECONDS));
+        // 写入上下文 - 异步任务内抛出的业务异常（如活动折扣配置不存在）被 FutureTask 包装为 ExecutionException，
+        // 解包后抛出，使接口返回明确错误码而不是未知错误
+        try {
+            dynamicContext.setSkuVO(skuVOFutureTask.get(timeout, TimeUnit.MILLISECONDS));
+            dynamicContext.setActivityVO(activityVOFutureTask.get(timeout, TimeUnit.MILLISECONDS));
+        } catch (ExecutionException e) {
+            if (e.getCause() instanceof AppException) {
+                throw (AppException) e.getCause();
+            }
+            throw e;
+        }
 
         log.info("用户ID：{}，异步线程加载数据「拼团活动、拼团商品」完成", marketProductEntity.getUserId());
     }
