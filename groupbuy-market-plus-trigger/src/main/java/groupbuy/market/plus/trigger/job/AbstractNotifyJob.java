@@ -31,8 +31,9 @@ public abstract class AbstractNotifyJob {
         // 加锁 - 部署多个应用时可能会同时执行，需要加上分布式锁，谁先抢占到谁先执行
         RLock lock = redissonClient.getLock(lockKey);
         try {
-            // 尝试获取锁
-            boolean getLock = lock.tryLock(3, 30, TimeUnit.SECONDS);
+            // 尝试获取锁 - 不指定租约时间，由 Redisson 看门狗自动续期，任务执行超过 30 秒也不会提前释放锁，
+            // 避免锁过期后其他实例并发处理同一批任务
+            boolean getLock = lock.tryLock(3, TimeUnit.SECONDS);
             if (!getLock) {
                 log.info("获取锁失败：{}，此时有其他应用在执行：{}，等待", lockKey, jobDesc);
                 return;

@@ -49,7 +49,7 @@ public class TeamTimeoutFailUnitTest {
     @Test
     public void test_job_order() throws Exception {
         when(redissonClient.getLock(anyString())).thenReturn(lock);
-        when(lock.tryLock(anyLong(), anyLong(), any(TimeUnit.class))).thenReturn(true);
+        when(lock.tryLock(anyLong(), any(TimeUnit.class))).thenReturn(true);
         when(refundOrderService.teamTimeoutRefund()).thenReturn(Collections.emptyMap());
         when(refundOrderService.teamTimeoutFail()).thenReturn(1);
 
