@@ -34,6 +34,9 @@ public class LockOrderLinkUnitTest {
     private static final String TEAM_ID = "TEAM12345678";
     private static final String INVITE_ID = "INVITE001";
     private static final String USER_ID = "user02";
+    private static final String GOODS_ID = "9890001";
+    private static final String SOURCE = "s01";
+    private static final String CHANNEL = "c01";
 
     @Mock
     private TradeRepository tradeRepository;
@@ -119,6 +122,25 @@ public class LockOrderLinkUnitTest {
     }
 
     @Test
+    public void test_teamOfOtherGoodsOrChannel_reject() {
+        // 同一活动下，组队的商品、来源、渠道任一与本次锁单不一致均拒绝参团
+        CheckLockEntity otherGoods = buildCheckLock(TEAM_ID, null);
+        otherGoods.setGoodsId("9890002");
+        assertReject(otherGoods, ResponseCodeEnum.E0030);
+        CheckLockEntity otherSource = buildCheckLock(TEAM_ID, null);
+        otherSource.setSource("s02");
+        assertReject(otherSource, ResponseCodeEnum.E0030);
+        CheckLockEntity otherChannel = buildCheckLock(TEAM_ID, null);
+        otherChannel.setChannel("c02");
+        assertReject(otherChannel, ResponseCodeEnum.E0030);
+        // 凭邀请码参团时，同样校验邀请码所属组队的商品
+        CheckLockEntity inviteOtherGoods = buildCheckLock(null, INVITE_ID);
+        inviteOtherGoods.setGoodsId("9890002");
+        assertReject(inviteOtherGoods, ResponseCodeEnum.E0030);
+        verify(tradeRepository, never()).occupyTeamStock(anyInt(), anyInt(), anyString(), anyString());
+    }
+
+    @Test
     public void test_teamNotExist_reject() {
         when(tradeRepository.getTeamById(TEAM_ID)).thenReturn(null);
         assertReject(buildCheckLock(TEAM_ID, null), ResponseCodeEnum.E0015);
@@ -149,6 +171,9 @@ public class LockOrderLinkUnitTest {
                 .userId(USER_ID)
                 .teamId(teamId)
                 .inviteId(inviteId)
+                .goodsId(GOODS_ID)
+                .source(SOURCE)
+                .channel(CHANNEL)
                 .build();
     }
 
@@ -156,6 +181,9 @@ public class LockOrderLinkUnitTest {
         return GroupBuyTeamEntity.builder()
                 .teamId(TEAM_ID)
                 .activityId(activityId)
+                .goodsId(GOODS_ID)
+                .source(SOURCE)
+                .channel(CHANNEL)
                 .teamStatusEnum(teamStatusEnum)
                 .startTime(new Date(System.currentTimeMillis() - 600_000))
                 .endTime(new Date(System.currentTimeMillis() + endOffsetMillis))

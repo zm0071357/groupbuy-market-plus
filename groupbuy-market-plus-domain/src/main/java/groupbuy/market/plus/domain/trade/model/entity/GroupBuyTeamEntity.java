@@ -34,6 +34,16 @@ public class GroupBuyTeamEntity {
     private String goodsId;
 
     /**
+     * 来源
+     */
+    private String source;
+
+    /**
+     * 渠道
+     */
+    private String channel;
+
+    /**
      * 拼团开始时间
      */
     private Date startTime;

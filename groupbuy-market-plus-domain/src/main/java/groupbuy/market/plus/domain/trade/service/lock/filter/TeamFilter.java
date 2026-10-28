@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.Date;
+import java.util.Objects;
 
 /**
  * 组队过滤节点 - 参团时校验组队存在、属于本活动、拼单中且在有效期内
@@ -40,8 +41,15 @@ public class TeamFilter implements LogicHandler<CheckLockEntity, LockOrderLinkFa
         if (groupBuyTeamEntity == null) {
             throw new AppException(ResponseCodeEnum.E0015.getCode(), ResponseCodeEnum.E0015.getInfo());
         }
-        // 组队必须属于本次锁单的活动
-        if (!checkLockEntity.getActivityId().equals(groupBuyTeamEntity.getActivityId())) {
+        // 组队必须属于本次锁单的活动，且商品、来源、渠道一致 - 同一活动可绑定多个商品或渠道，避免跨商品参团混入组队
+        if (!checkLockEntity.getActivityId().equals(groupBuyTeamEntity.getActivityId())
+                || !Objects.equals(checkLockEntity.getGoodsId(), groupBuyTeamEntity.getGoodsId())
+                || !Objects.equals(checkLockEntity.getSource(), groupBuyTeamEntity.getSource())
+                || !Objects.equals(checkLockEntity.getChannel(), groupBuyTeamEntity.getChannel())) {
+            log.info("锁单责任链 - 组队过滤节点，组队与本次锁单的活动商品不匹配，用户ID：{}，组队ID：{}，锁单商品：{} {} {}，组队商品：{} {} {}",
+                    checkLockEntity.getUserId(), checkLockEntity.getTeamId(),
+                    checkLockEntity.getGoodsId(), checkLockEntity.getSource(), checkLockEntity.getChannel(),
+                    groupBuyTeamEntity.getGoodsId(), groupBuyTeamEntity.getSource(), groupBuyTeamEntity.getChannel());
             throw new AppException(ResponseCodeEnum.E0030.getCode(), ResponseCodeEnum.E0030.getInfo());
         }
         // 组队必须为拼单中且未过有效期

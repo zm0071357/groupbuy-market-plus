@@ -56,7 +56,7 @@
     </select>
 
     <select id="getTeamById" resultMap="dataMap" parameterType="java.lang.String">
-        select team_id, activity_id, goods_id, target_count, complete_count, lock_count,
+        select team_id, activity_id, goods_id, source, channel, target_count, complete_count, lock_count,
                status, notify_type, notify_url, refund_notify_mq, header_refund_notify_url, header_refund_notify_mq,
                start_time, end_time
         from group_buy_team

@@ -34,4 +34,19 @@ public class CheckLockEntity {
      */
     private String inviteId;
 
+    /**
+     * 商品ID - 参团时校验与组队商品一致
+     */
+    private String goodsId;
+
+    /**
+     * 来源 - 参团时校验与组队来源一致
+     */
+    private String source;
+
+    /**
+     * 渠道 - 参团时校验与组队渠道一致
+     */
+    private String channel;
+
 }
