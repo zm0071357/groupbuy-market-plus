@@ -41,11 +41,12 @@
                 )
     </insert>
 
+    <!-- 仅拼单中(0)且未过有效期的组队可增加锁单量，防止组队在事务外校验后被超时任务置为失败，仍插入新订单 -->
     <update id="updateLockCount" parameterType="java.lang.String">
         <![CDATA[
         update group_buy_team
         set lock_count = lock_count + 1, update_time= now()
-        where team_id = #{teamId} and lock_count < target_count
+        where team_id = #{teamId} and lock_count < target_count and status = 0 and end_time > now()
         ]]>
     </update>
 
@@ -63,11 +64,12 @@
         where team_id = #{teamId}
     </select>
 
+    <!-- 仅拼单中(0)的组队可增加完成量 -->
     <update id="updateTeamAddCompleteCount" parameterType="java.lang.String">
         <![CDATA[
         update group_buy_team
         set complete_count = complete_count + 1, update_time= now()
-        where team_id = #{teamId} and complete_count < target_count
+        where team_id = #{teamId} and complete_count < target_count and status = 0
         ]]>
     </update>
 
