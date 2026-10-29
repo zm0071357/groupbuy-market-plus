@@ -46,12 +46,13 @@ public class TeamStockExpireUnitTest {
         verify(occupy).expire(Duration.ofMinutes(75));
         verify(recover).expire(Duration.ofMinutes(75));
 
-        // 抢占失败：重置抢占量后重新设置过期时间（SET 会清除过期时间）
+        // 抢占失败：回滚本次自增，不再重置抢占量
         reset(occupy);
         when(occupy.incrementAndGet()).thenReturn(5L);
         Assert.assertFalse(tradeRepository.occupyTeamStock(3, 15, OCCUPY_KEY, RECOVER_KEY));
-        verify(occupy).set(3);
-        verify(occupy, times(2)).expire(Duration.ofMinutes(75));
+        verify(occupy).decrementAndGet();
+        verify(occupy, never()).set(anyLong());
+        verify(occupy).expire(Duration.ofMinutes(75));
     }
 
     @Test

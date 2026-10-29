@@ -411,10 +411,8 @@ public class TradeRepositoryImpl implements TradeRepository {
         redissonClient.getAtomicLong(teamStockRecoverKey).expire(teamStockExpire);
         // 抢占量大于恢复量+目标量 - 位置已经不够了，返回失败
         if (teamStockOccupyCount > teamStockRecoverCount + target) {
-            // 重置抢占量为目标量 - 位置已经不够，那抢占量最低就是目标量
-            // SET 会清除过期时间，重置后需重新设置
-            teamStockOccupy.set(target);
-            teamStockOccupy.expire(teamStockExpire);
+            // 回滚本次自增 - 失败的抢占不占用位置，避免抢占量虚高导致后续恢复的位置无法再被抢占
+            teamStockOccupy.decrementAndGet();
             return false;
         }
         // 给每个产生的值加锁兜底，虽然incr操作是原子的，基本不会产生一样的值
