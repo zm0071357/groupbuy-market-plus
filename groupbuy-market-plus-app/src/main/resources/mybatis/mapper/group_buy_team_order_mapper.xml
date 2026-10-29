@@ -130,11 +130,13 @@
         where team_id = #{teamId} and user_id = #{userId} and status in (0, 1) and is_header = 0
     </update>
 
-    <!-- 仅已创建(0)或已支付(1)的订单可退单，并发重复退单时只有一个请求能更新成功 -->
+    <!-- 按退单策略选定时的原状态更新：未支付退单要求已创建(0)，已支付退单要求已支付(1)；
+         与结算并发导致原状态已变化时更新 0 行，事务回滚后由重试按最新状态重新选择退单策略；
+         并发重复退单时只有一个请求能更新成功 -->
     <update id="updateOrderStatusRefund">
         update group_buy_team_order
         set status = 2, update_time = now()
-        where user_id = #{userId} and order_id = #{orderId} and status in (0, 1)
+        where user_id = #{userId} and order_id = #{orderId} and status = #{status}
     </update>
 
     <select id="getTimeoutOrderList" resultMap="dataMap">

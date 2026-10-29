@@ -534,6 +534,8 @@ public class TradeRepositoryImpl implements TradeRepository {
         GroupBuyTeamOrder groupBuyTeamOrderReq = new GroupBuyTeamOrder();
         groupBuyTeamOrderReq.setUserId(refundOrderEntity.getUserId());
         groupBuyTeamOrderReq.setOrderId(refundOrderEntity.getOrderId());
+        // 未支付退单 - 原状态必须为已创建，与结算并发已变为已支付时更新失败并回滚
+        groupBuyTeamOrderReq.setStatus(OrderStatusEnum.CREATE.getCode());
         Integer updateOrderCount = groupBuyTeamOrderDao.updateOrderStatusRefund(groupBuyTeamOrderReq);
         if (updateOrderCount != 1) {
             throw new AppException(ResponseCodeEnum.UPDATE_ZERO.getCode(), ResponseCodeEnum.UPDATE_ZERO.getInfo());
@@ -594,6 +596,8 @@ public class TradeRepositoryImpl implements TradeRepository {
         GroupBuyTeamOrder groupBuyTeamOrderReq = new GroupBuyTeamOrder();
         groupBuyTeamOrderReq.setUserId(refundOrderEntity.getUserId());
         groupBuyTeamOrderReq.setOrderId(refundOrderEntity.getOrderId());
+        // 已支付退单 - 原状态必须为已支付
+        groupBuyTeamOrderReq.setStatus(OrderStatusEnum.COMPLETE.getCode());
         Integer updateOrderCount = groupBuyTeamOrderDao.updateOrderStatusRefund(groupBuyTeamOrderReq);
         if (updateOrderCount != 1) {
             throw new AppException(ResponseCodeEnum.UPDATE_ZERO.getCode(), ResponseCodeEnum.UPDATE_ZERO.getInfo());
@@ -655,6 +659,8 @@ public class TradeRepositoryImpl implements TradeRepository {
         GroupBuyTeamOrder groupBuyTeamOrderReq = new GroupBuyTeamOrder();
         groupBuyTeamOrderReq.setUserId(refundOrderEntity.getUserId());
         groupBuyTeamOrderReq.setOrderId(refundOrderEntity.getOrderId());
+        // 已支付退单 - 原状态必须为已支付
+        groupBuyTeamOrderReq.setStatus(OrderStatusEnum.COMPLETE.getCode());
         Integer updateOrderCount = groupBuyTeamOrderDao.updateOrderStatusRefund(groupBuyTeamOrderReq);
         if (updateOrderCount != 1) {
             throw new AppException(ResponseCodeEnum.UPDATE_ZERO.getCode(), ResponseCodeEnum.UPDATE_ZERO.getInfo());

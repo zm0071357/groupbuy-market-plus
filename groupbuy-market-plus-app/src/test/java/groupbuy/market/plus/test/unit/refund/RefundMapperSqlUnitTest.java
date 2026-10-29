@@ -43,13 +43,16 @@ public class RefundMapperSqlUnitTest {
     }
 
     @Test
-    public void test_refundOrderSql_onlyCreateOrComplete() {
+    public void test_refundOrderSql_expectOriginalStatus() {
         GroupBuyTeamOrder param = new GroupBuyTeamOrder();
         param.setUserId("user01");
         param.setOrderId("ORDER000000000001");
+        param.setStatus(0);
         String sql = sql("groupbuy.market.plus.infrastructure.dao.GroupBuyTeamOrderDao.updateOrderStatusRefund", param);
 
-        Assert.assertTrue(sql, sql.contains("where user_id = ? and order_id = ? and status in (0, 1)"));
+        // 按退单策略选定时的原状态更新，不再允许已创建与已支付互相覆盖
+        Assert.assertTrue(sql, sql.contains("where user_id = ? and order_id = ? and status = ?"));
+        Assert.assertFalse(sql, sql.contains("status in (0, 1)"));
     }
 
     private void parse(String resource) throws Exception {
