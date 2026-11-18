@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @Slf4j
@@ -55,7 +56,11 @@ public class IndexController implements IndexService {
 
             Long activityId = trialBalanceEntity.getActivityVO().getActivityId();
             boolean eligible = Boolean.TRUE.equals(trialBalanceEntity.getIsEnable());
-            List<IndexResponseDTO.Tier> tiers = eligible
+            Date now = new Date();
+            var activity = trialBalanceEntity.getActivityVO();
+            boolean canOpen = activity.getOpeningEnabled() == null || (activity.getOpeningEnabled()
+                    && !now.before(activity.getStartTime()) && now.before(activity.getEndTime()));
+            List<IndexResponseDTO.Tier> tiers = eligible && canOpen
                     ? GroupBuyTierVO.validate(trialBalanceEntity.getActivityVO().getTiers(), trialBalanceEntity.getOriginalPrice())
                             .stream()
                             .map(tier -> IndexResponseDTO.Tier.builder()

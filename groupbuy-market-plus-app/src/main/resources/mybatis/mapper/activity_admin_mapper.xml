@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="groupbuy.market.plus.infrastructure.dao.ActivityAdminDao">
+    <resultMap id="draft" type="groupbuy.market.plus.infrastructure.dao.po.ManagedActivity">
+        <id column="id" property="id"/>
+        <result column="activity_id" property="activityId"/>
+        <result column="state" property="state"/>
+        <result column="draft_json" property="draftJson"/>
+    </resultMap>
+    <select id="products" resultMap="groupbuy.market.plus.infrastructure.dao.SkuDao.dataMap">
+        select id, goods_id, goods_name, source, channel, original_price
+        from sku where id > #{afterId} order by id limit #{limit}
+    </select>
+    <select id="product" resultMap="groupbuy.market.plus.infrastructure.dao.SkuDao.dataMap">
+        select id, goods_id, goods_name, source, channel, original_price
+        from sku where goods_id = #{goodsId} and source = #{source} and channel = #{channel}
+        <if test="lock">for update</if>
+    </select>
+    <select id="list" resultMap="draft">
+        select id, activity_id, state, draft_json from group_buy_activity_admin
+        where id > #{afterId} order by id limit #{limit}
+    </select>
+    <select id="find" resultMap="draft">
+        select id, activity_id, state, draft_json from group_buy_activity_admin where id = #{id}
+        <if test="lock">for update</if>
+    </select>
+    <insert id="create" useGeneratedKeys="true" keyProperty="id">
+        insert into group_buy_activity_admin (state, draft_json) values ('DRAFT', #{draftJson})
+    </insert>
+    <update id="updateDraft">
+        update group_buy_activity_admin set draft_json = #{draftJson} where id = #{id} and state = 'DRAFT'
+    </update>
+    <update id="changeState">
+        update group_buy_activity_admin set activity_id = #{activityId}, state = #{state} where id = #{id}
+    </update>
+    <!-- 保留历史活动及组队，只替换已停止营业且没有在途组队的商品映射。 -->
+    <update id="replaceInactiveMapping">
+        update sc_sku_activity m
+        left join activity a on a.activity_id = m.activity_id
+        set m.activity_id = #{activityId}, m.tiers_json = #{tiersJson}, m.update_time = now()
+        where m.goods_id = #{goodsId} and m.source = #{source} and m.channel = #{channel}
+          and (a.activity_id is null or a.status != 1 or a.opening_enabled = 0 or a.end_time &lt; now())
+          and not exists (
+            select 1 from group_buy_team t where t.activity_id = m.activity_id and t.goods_id = m.goods_id
+              and t.source = m.source and t.channel = m.channel and t.status = 0 and t.end_time >= now()
+          )
+    </update>
+    <insert id="insertMapping">
+        insert into sc_sku_activity (activity_id, goods_id, source, channel, tiers_json, create_time, update_time)
+        values (#{activityId}, #{goodsId}, #{source}, #{channel}, #{tiersJson}, now(), now())
+    </insert>
+</mapper>

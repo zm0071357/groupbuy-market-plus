@@ -78,6 +78,7 @@ public class TradeRepositoryImpl implements TradeRepository {
         }
         return ActivityEntity.builder()
                 .activityId(activity.getActivityId())
+                .openingEnabled(activity.getOpeningEnabled())
                 .activityName(activity.getActivityName())
                 .discountExpr(activity.getDiscountExpr())
                 .groupType(activity.getGroupType())
@@ -126,6 +127,14 @@ public class TradeRepositoryImpl implements TradeRepository {
 
         // 团长 - 新建一个团，锁单量为1
         if (checkLockResEntity.getIsHeader() && StringUtils.isBlank(teamId)) {
+            if (groupBuyTeamEntity.getOpeningEnabled() != null) {
+                Activity activity = activityDao.getManagedOpeningForUpdate(groupBuyTeamEntity.getActivityId());
+                Date now = new Date();
+                if (activity == null || !Boolean.TRUE.equals(activity.getOpeningEnabled())
+                        || now.before(activity.getStartTime()) || !now.before(activity.getEndTime())) {
+                    throw new AppException(ResponseCodeEnum.E0038.getCode(), ResponseCodeEnum.E0038.getInfo());
+                }
+            }
             log.info("用户ID：{}为团长，新建一个团", userEntity.getUserId());
             teamId = GroupBuyConstants.TEAM.concat(RandomStringUtils.randomNumeric(8));
             // 拼团组队写入数据库

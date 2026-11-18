@@ -10,6 +10,7 @@ import groupbuy.market.plus.types.design.framework.link.multition.handler.LogicH
 import groupbuy.market.plus.types.enums.ResponseCodeEnum;
 import groupbuy.market.plus.types.exception.AppException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -40,7 +41,14 @@ public class ActivityFilter implements LogicHandler<CheckLockEntity, LockOrderLi
         // 校验活动时间
         log.info("锁单责任链 - 活动过滤节点，活动时间校验，活动ID：{}", activityEntity.getActivityId());
         Date currentDate = new Date();
-        if (currentDate.before(activityEntity.getStartTime()) || currentDate.after(activityEntity.getEndTime())) {
+        // 运营活动关闭开团后，已有组队按自己的有效期继续参团。
+        boolean joining = StringUtils.isNotBlank(checkLockEntity.getTeamId()) || StringUtils.isNotBlank(checkLockEntity.getInviteId());
+        Boolean openingEnabled = activityEntity.getOpeningEnabled();
+        if (Boolean.FALSE.equals(openingEnabled) && !joining) {
+            throw new AppException(ResponseCodeEnum.E0038.getCode(), ResponseCodeEnum.E0038.getInfo());
+        }
+        if ((openingEnabled == null || !joining)
+                && (currentDate.before(activityEntity.getStartTime()) || currentDate.after(activityEntity.getEndTime()))) {
             throw new AppException(ResponseCodeEnum.E0007.getCode(), ResponseCodeEnum.E0007.getInfo());
         }
         // 活动写入上下文

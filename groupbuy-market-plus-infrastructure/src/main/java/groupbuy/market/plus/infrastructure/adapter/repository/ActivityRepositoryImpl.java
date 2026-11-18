@@ -68,7 +68,8 @@ public class ActivityRepositoryImpl implements ActivityRepository {
         // 获取折扣组合
         List<ActivityVO.GroupBuyDiscount> groupBuyDiscountList = new ArrayList<>();
         String discountExpr = activity.getDiscountExpr();
-        String[] discountIds = discountExpr.split(Constants.SPLIT);
+        String[] discountIds = StringUtils.isBlank(discountExpr) && activity.getOpeningEnabled() != null
+                ? new String[0] : discountExpr.split(Constants.SPLIT);
         for (String discountId : discountIds) {
             Discount discount = discountDao.getDiscountById(discountId);
             groupBuyDiscountList.add(ActivityVO.GroupBuyDiscount.builder()
@@ -82,6 +83,7 @@ public class ActivityRepositoryImpl implements ActivityRepository {
         }
         return ActivityVO.builder()
                 .activityId(activity.getActivityId())
+                .openingEnabled(activity.getOpeningEnabled())
                 .activityName(activity.getActivityName())
                 .groupBuyDiscountList(groupBuyDiscountList)
                 .groupType(activity.getGroupType())

@@ -44,7 +44,15 @@ public class MarketNode extends AbstractGroupBuyMarketSupport<MarketProductEntit
         }
         SkuVO skuVO = dynamicContext.getSkuVO();
         List<ActivityVO.GroupBuyDiscount> groupBuyDiscountList = activityVO.getGroupBuyDiscountList();
-        if (skuVO == null || (groupBuyDiscountList == null || groupBuyDiscountList.isEmpty())) {
+        if (skuVO == null) {
+            return router(marketProductEntity, dynamicContext);
+        }
+        if (activityVO.getOpeningEnabled() != null && (groupBuyDiscountList == null || groupBuyDiscountList.isEmpty())) {
+            // 管理端发布的档位团直接使用档位定价，通用商品字段保留商品原价。
+            dynamicContext.setPayPrice(skuVO.getOriginalPrice());
+            return router(marketProductEntity, dynamicContext);
+        }
+        if (groupBuyDiscountList == null || groupBuyDiscountList.isEmpty()) {
             return router(marketProductEntity, dynamicContext);
         }
         log.info("商品信息：{}", JSON.toJSONString(skuVO));

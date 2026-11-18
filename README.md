@@ -218,6 +218,44 @@ java -jar groupbuy-market-plus-app/target/groupbuy-market-plus-app.jar
 
 锁单响应的 `deductionPrice` 是总优惠，等于 `originalPrice - payPrice`，包含团长额外优惠。未支付订单重试时按原订单金额返回。用户不具备活动参与资格时返回 `E0033`，参团商品与开团商品不一致时返回 `E0034`。自选档位缺失、无效或与组队不一致时返回 `E0035`，档位配置校验失败返回 `E0036`，档位团来源或渠道不一致返回 `E0037`。
 
+### 运营管理接口
+
+独立后台的**服务端**调用 `/admin/group-buy`，通过 HTTPS 或内部可信链路发送 `Authorization: Bearer <令牌>`。服务端部署时注入至少 32 个字符的 `GROUPBUY_ADMIN_TOKEN`。凭据由独立后台保管，操作员的登录、角色权限和审计由后台负责。缺少有效服务凭据时返回 HTTP 401、业务码 `E0043`。
+
+| 方法 | 路径（相对于 `/admin/group-buy`） | 用途 |
+|---|---|---|
+| GET | `/products` | 选择现有商品，按商品主键分页 |
+| GET | `/activities` | 查询后台活动列表 |
+| GET | `/activities/{id}` | 查询配置及草稿、已发布或已下架状态 |
+| POST | `/activities/preview` | 校验商品与档位并返回团员价、团长价 |
+| POST | `/activities` | 保存一条草稿，返回草稿编号 |
+| PUT | `/activities/{id}` | 更新草稿 |
+| POST | `/activities/{id}/publish` | 发布，返回交易侧活动编号 |
+| POST | `/activities/{id}/offline` | 下架 |
+
+列表支持 `afterId` 和 `limit`，默认分别为 0 和 20，每次最多 100 条。下一页使用本页最后一条的 `id`。预览、创建和更新使用相同的请求体：
+
+```json
+{
+  "name": "新品拼团",
+  "goodsId": "9890001",
+  "source": "s01",
+  "channel": "c01",
+  "startTime": "2026-11-20T10:00:00+08:00",
+  "endTime": "2026-11-27T22:00:00+08:00",
+  "validMinutes": 30,
+  "userLimit": 1,
+  "tiers": [
+    {"tierId": 1, "targetCount": 3, "memberPrice": 79.00},
+    {"tierId": 2, "targetCount": 5, "memberPrice": 69.00}
+  ]
+}
+```
+
+发布后到开始时间自动开放开团，同一商品、来源和渠道只对应一个可开团活动。原活动下架或结束且没有可继续参团的组队时，商品才可切换到新活动。下架后商品页停止展示可开团档位，旧团按自身有效期继续参团、结算或退单。重复发布和重复下架返回已有结果。缺少活动或商品返回 `E0039` 或 `E0040`，状态变更冲突返回 `E0041`，商品映射占用或活动编号冲突返回 `E0042`。交易侧下架活动拒绝新开团返回 `E0038`。
+
+启用前按顺序执行档位迁移和 [运营管理迁移](db/migration/2026-11-18-2-activity-admin.sql)。在目标库先核对 `activity.activity_id`、`sc_sku_activity(goods_id, source, channel)` 无重复，生产执行前核对现有同列唯一索引、字段范围及活动编号与十亿起始区间的冲突。DDL 分步提交，若中途失败，先核对已执行的列、索引和表，再补执行剩余语句。若需要回滚应用，先停止管理写入、关闭已发布活动并处理完在途档位团，保留新增表列和历史记录。前版上线前须移除这些运营活动的商品映射或接回旧映射，因为前版不读取开团开关和运营活动的档位发布配置。
+
 ### 结算 `/trade/settle_order`
 
 ```json

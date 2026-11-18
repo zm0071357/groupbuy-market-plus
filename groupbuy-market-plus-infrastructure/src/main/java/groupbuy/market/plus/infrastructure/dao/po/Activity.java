@@ -26,6 +26,9 @@ public class Activity {
      */
     private Long activityId;
 
+    /** 运营活动的开团开关，历史活动为空。 */
+    private Boolean openingEnabled;
+
     /**
      * 活动名称
      */

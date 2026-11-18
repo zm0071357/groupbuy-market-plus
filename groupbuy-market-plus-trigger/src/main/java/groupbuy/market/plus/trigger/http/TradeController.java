@@ -138,6 +138,7 @@ public class TradeController implements TradeService {
                     GroupBuyTeamEntity.builder()
                             .teamId(lockOrderRequestDTO.getTeamId())
                             .tierId(lockOrderRequestDTO.getTierId())
+                            .openingEnabled(trialBalanceEntity.getActivityVO().getOpeningEnabled())
                             .activityId(lockOrderRequestDTO.getActivityId())
                             .goodsId(lockOrderRequestDTO.getGoodsId())
                             .startTime(trialBalanceEntity.getActivityVO().getStartTime())

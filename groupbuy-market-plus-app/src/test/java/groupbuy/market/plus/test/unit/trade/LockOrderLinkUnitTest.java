@@ -145,6 +145,19 @@ public class LockOrderLinkUnitTest {
         verify(tradeRepository, never()).occupyTeamStock(anyInt(), anyInt(), anyString(), anyString());
     }
 
+    @Test
+    public void offlineActivityRejectsOpeningButAllowsAnExistingInviteTeam() throws Exception {
+        ActivityEntity activity = tradeRepository.getActivityById(ACTIVITY_ID);
+        activity.setOpeningEnabled(false);
+        activity.setEndTime(new Date(System.currentTimeMillis() - 1_000));
+        when(tradeRepository.checkUserTakeTeamCount(TEAM_ID, USER_ID)).thenReturn(0);
+
+        assertReject(buildCheckLock(null, null), ResponseCodeEnum.E0038);
+        CheckLockResEntity result = lockOrderLink.apply(buildCheckLock(null, INVITE_ID), new LockOrderLinkFactory.DynamicContext());
+        Assert.assertFalse(result.getIsHeader());
+        Assert.assertEquals(TEAM_ID, result.getJoinedTeam().getTeamId());
+    }
+
     private void assertReject(CheckLockEntity checkLockEntity, ResponseCodeEnum expected) {
         try {
             lockOrderLink.apply(checkLockEntity, new LockOrderLinkFactory.DynamicContext());

@@ -5,6 +5,7 @@
     <resultMap id="dataMap" type="groupbuy.market.plus.infrastructure.dao.po.Activity">
         <id column="id" property="id"/>
         <result column="activity_id" property="activityId"/>
+        <result column="opening_enabled" property="openingEnabled"/>
         <result column="activity_name" property="activityName"/>
         <result column="discount_expr" property="discountExpr"/>
         <result column="group_type" property="groupType"/>
@@ -23,10 +24,26 @@
     <select id="getActivityById" parameterType="java.lang.Long" resultMap="dataMap">
         select
             activity_id, activity_name, discount_expr, group_type, take_limit_count,
-            target, valid_time, status, start_time, end_time, tag_id, tag_scope
+            target, valid_time, status, start_time, end_time, tag_id, tag_scope, opening_enabled
         from activity
         where activity_id = #{activityId} and status = 1
     </select>
 
 
+    <select id="getManagedOpeningForUpdate" resultMap="dataMap">
+        select opening_enabled, start_time, end_time from activity
+        where activity_id = #{activityId} and status = 1 for update
+    </select>
+
+    <insert id="insertManaged">
+        insert into activity (activity_id, activity_name, discount_expr, group_type, take_limit_count,
+            target, valid_time, status, start_time, end_time, tag_id, tag_scope, opening_enabled, create_time, update_time)
+        values (#{activityId}, #{activityName}, '', 1, #{takeLimitCount},
+            #{target}, #{validTime}, 1, #{startTime}, #{endTime}, '', '', 1, now(), now())
+    </insert>
+
+    <update id="stopManagedOpening">
+        update activity set opening_enabled = 0, update_time = now()
+        where activity_id = #{activityId} and status = 1 and opening_enabled = 1
+    </update>
 </mapper>
