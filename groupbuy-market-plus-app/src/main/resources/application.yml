@@ -1,4 +1,9 @@
 spring:
+  rabbitmq:
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    template:
+      mandatory: true
   config:
     name: groupbuy-market-plus-app
   profiles:

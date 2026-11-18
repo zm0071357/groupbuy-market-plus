@@ -18,6 +18,7 @@ import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -95,6 +96,17 @@ public class TradePortImplUnitTest {
 
         Assert.assertEquals(NofifyStatusEnum.FAIL.getStatus(), status);
         Assert.assertFalse("回调异常不应设置线程中断标记", Thread.interrupted());
+    }
+
+    @Test
+    public void publishConfirmTimeoutLeavesTaskRetryable() throws Exception {
+        task.setNotifyTypeEnum(NotifyTypeEnum.MQ);
+        task.setNotifyMQ("topic.team_success");
+        when(eventPublisher.publish(task.getTaskId(), task.getNotifyMQ(), task.getParameterJson()))
+                .thenThrow(new TimeoutException());
+
+        Assert.assertEquals(NofifyStatusEnum.FAIL.getStatus(), tradePort.groupBuyNotify(task));
+        verify(lock).unlock();
     }
 
     /**

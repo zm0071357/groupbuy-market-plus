@@ -56,8 +56,9 @@ public class TradePortImpl implements TradePort {
                         return notifyTaskServiceImpl.notify(notifyTaskEntity.getNotifyUrl(), notifyTaskEntity.getParameterJson());
                     } else {
                         log.info("开始执行回调任务，回调类型：MQ，组队ID：{}", notifyTaskEntity.getTeamId());
-                        eventPublisher.publish(notifyTaskEntity.getNotifyMQ(), notifyTaskEntity.getParameterJson());
-                        return NofifyStatusEnum.SUCCESS.getStatus();
+                        boolean delivered = eventPublisher.publish(notifyTaskEntity.getTaskId(),
+                                notifyTaskEntity.getNotifyMQ(), notifyTaskEntity.getParameterJson());
+                        return delivered ? NofifyStatusEnum.SUCCESS.getStatus() : NofifyStatusEnum.FAIL.getStatus();
                     }
                 } finally {
                     // 释放锁
@@ -68,8 +69,8 @@ public class TradePortImpl implements TradePort {
             // 未抢到锁 - 不执行返回空结果
             return NofifyStatusEnum.NULL.getStatus();
         } catch (InterruptedException e) {
-            // 仅在等待锁被中断时恢复中断标记
-            log.error("回调任务等待锁被中断，任务ID：{}", notifyTaskEntity.getTaskId(), e);
+            // 等待锁或投递确认时被中断，恢复中断标记。
+            log.error("回调任务被中断，任务ID：{}", notifyTaskEntity.getTaskId(), e);
             Thread.currentThread().interrupt();
             return NofifyStatusEnum.FAIL.getStatus();
         } catch (Exception e) {

@@ -247,7 +247,7 @@ java -jar groupbuy-market-plus-app/target/groupbuy-market-plus-app.jar
 }
 ```
 
-商城侧需对回调做幂等处理：极端情况下同一回调可能被发送多次。
+MQ 回调收到 RabbitMQ 发布确认且消息未被退回后记为成功。拒绝确认、消息退回和确认超时按回调失败进入补偿。商城侧按业务标识幂等处理，补偿可能重复发送同一回调。
 
 ## 定时任务
 
