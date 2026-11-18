@@ -1,13 +1,14 @@
 package groupbuy.market.plus.domain.trade.service.refund.node;
 
 import groupbuy.market.plus.domain.trade.model.entity.*;
+import groupbuy.market.plus.domain.trade.model.valobj.RefundStatusEnum;
 import groupbuy.market.plus.domain.trade.model.valobj.RefundTypeEnum;
+import groupbuy.market.plus.domain.trade.model.valobj.TeamStatusEnum;
 import groupbuy.market.plus.domain.trade.service.refund.AbstractRefundOrderSupport;
 import groupbuy.market.plus.domain.trade.service.refund.factory.DefaultRefundStrategyFactory;
 import groupbuy.market.plus.domain.trade.service.refund.strategy.RefundService;
 import groupbuy.market.plus.types.design.framework.tree.StrategyHandler;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -31,6 +32,12 @@ public class RefundOrderNode extends AbstractRefundOrderSupport<PreRefundEntity,
         log.info("退单服务 - 退单执行节点，用户ID：{}，外部交易单号：{}", preRefundEntity.getUserId(), preRefundEntity.getOutTradeNo());
         PreRefundOrderEntity preRefundOrderEntity = dynamicContext.getPreRefundOrderEntity();
         GroupBuyTeamEntity groupBuyTeamEntity = dynamicContext.getGroupBuyTeamEntity();
+        // 超时清单读取后，期限内支付的回执仍可能使组队成团。
+        if (preRefundEntity.isTimeoutRefund() && !TeamStatusEnum.PROGRESS.equals(groupBuyTeamEntity.getTeamStatusEnum())) {
+            dynamicContext.setRefundStatusEnum(RefundStatusEnum.SKIPPED);
+            return router(preRefundEntity, dynamicContext);
+        }
+        // 拼单中退单的事务也会校验组队状态，防止读取状态后、写入前发生变化。
         // 根据订单状态和拼团状态获取对应策略
         RefundTypeEnum refundTypeEnum = RefundTypeEnum.get(preRefundOrderEntity.getOrderStatusEnum(), groupBuyTeamEntity.getTeamStatusEnum());
         log.info("退单服务 - 退单执行节点，用户ID：{}，外部交易单号：{}，退单类型：{}", preRefundEntity.getUserId(), preRefundEntity.getOutTradeNo(), refundTypeEnum.getInfo());
@@ -43,13 +50,8 @@ public class RefundOrderNode extends AbstractRefundOrderSupport<PreRefundEntity,
                         .activityId(groupBuyTeamEntity.getActivityId())
                         .orderId(preRefundOrderEntity.getOrderId())
                         .outTradeNo(preRefundEntity.getOutTradeNo())
-                        .newHeaderUserId(dynamicContext.getNewLeaderUserId())
+                        .timeoutRefund(preRefundEntity.isTimeoutRefund())
                 .build());
-        // 新团长回调
-        if (StringUtils.isNotBlank(dynamicContext.getNewLeaderUserId())) {
-            log.info("退单服务 - 退单执行节点，新团长回调，新团长用户ID：{}", dynamicContext.getNewLeaderUserId());
-            refundService.newHeaderNotify(dynamicContext.getNewLeaderUserId(), preRefundOrderEntity.getOrderId(), groupBuyTeamEntity);
-        }
         return router(preRefundEntity, dynamicContext);
     }
 

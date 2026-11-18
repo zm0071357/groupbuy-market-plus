@@ -115,11 +115,16 @@
               channel = #{channel}
     </select>
 
+    <select id="getOrderHeaderFlag" resultType="java.lang.Integer">
+        select is_header from group_buy_team_order
+        where team_id = #{teamId} and order_id = #{orderId}
+    </select>
+
     <select id="getNewHeaderUserId" resultType="java.lang.String">
         select user_id
         from group_buy_team_order
         where team_id = #{teamId} and status in (0,1) and is_header = 0
-        order by create_time asc
+        order by create_time asc, id asc
         limit 1
     </select>
 

@@ -4,14 +4,17 @@ import groupbuy.market.plus.domain.trade.adapter.repository.TradeRepository;
 import groupbuy.market.plus.domain.trade.model.entity.GroupBuyTeamEntity;
 import groupbuy.market.plus.domain.trade.model.entity.PreRefundEntity;
 import groupbuy.market.plus.domain.trade.model.entity.PreRefundOrderEntity;
+import groupbuy.market.plus.domain.trade.model.entity.RefundOrderEntity;
 import groupbuy.market.plus.domain.trade.model.entity.RefundResEntity;
 import groupbuy.market.plus.domain.trade.model.valobj.OrderStatusEnum;
 import groupbuy.market.plus.domain.trade.model.valobj.RefundStatusEnum;
 import groupbuy.market.plus.domain.trade.model.valobj.TeamStatusEnum;
 import groupbuy.market.plus.domain.trade.service.refund.RefundOrderServiceImpl;
 import groupbuy.market.plus.domain.trade.service.refund.factory.DefaultRefundStrategyFactory;
+import groupbuy.market.plus.domain.trade.service.refund.node.RefundEndNode;
+import groupbuy.market.plus.domain.trade.service.refund.node.RefundOrderNode;
 import groupbuy.market.plus.domain.trade.service.refund.node.RefundRepeatNode;
-import groupbuy.market.plus.domain.trade.service.refund.node.RefundUserNode;
+import groupbuy.market.plus.domain.trade.service.refund.strategy.RefundService;
 import groupbuy.market.plus.types.design.framework.tree.StrategyHandler;
 import groupbuy.market.plus.types.enums.ResponseCodeEnum;
 import groupbuy.market.plus.types.exception.AppException;
@@ -57,21 +60,6 @@ public class TimeoutRefundHeaderUnitTest {
     }
 
     @Test
-    public void test_timeoutRefund_headerNoNewLeader() throws Exception {
-        TradeRepository tradeRepository = mock(TradeRepository.class);
-        RefundUserNode node = new RefundUserNode();
-        ReflectionTestUtils.setField(node, "tradeRepository", tradeRepository);
-        DefaultRefundStrategyFactory.DynamicContext context = new DefaultRefundStrategyFactory.DynamicContext();
-        context.setPreRefundOrderEntity(PreRefundOrderEntity.builder().isHeader(true).orderStatusEnum(OrderStatusEnum.CREATE).build());
-        context.setGroupBuyTeamEntity(GroupBuyTeamEntity.builder().teamId("TEAM12345678").teamStatusEnum(TeamStatusEnum.PROGRESS).build());
-
-        invoke(node, RefundUserNode.class, PreRefundEntity.builder().userId("user01").timeoutRefund(true).build(), context);
-
-        Assert.assertNull(context.getNewLeaderUserId());
-        verify(tradeRepository, never()).queryNewHeaderUserId(anyString());
-    }
-
-    @Test
     public void test_orderNotExist_E0013() throws Exception {
         TradeRepository tradeRepository = mock(TradeRepository.class);
         when(tradeRepository.getRefundThreadTaskResAggregate(any(PreRefundEntity.class))).thenReturn(null);
@@ -96,14 +84,40 @@ public class TimeoutRefundHeaderUnitTest {
         }
     }
 
-    private void invoke(Object node, Class<?> clazz, PreRefundEntity request, DefaultRefundStrategyFactory.DynamicContext context) throws Exception {
-        Method doApply = clazz.getDeclaredMethod("doApply", PreRefundEntity.class, DefaultRefundStrategyFactory.DynamicContext.class);
-        doApply.setAccessible(true);
-        try {
-            doApply.invoke(node, request, context);
-        } catch (InvocationTargetException ignored) {
-            // 路由到下一节点时未注入依赖，忽略
-        }
+    @Test
+    public void test_timeoutRefund_skipsTeamCompletedAfterScan() throws Exception {
+        RefundService completedRefund = mock(RefundService.class);
+        RefundOrderNode node = completedRefundNode(completedRefund);
+
+        RefundResEntity result = node.apply(PreRefundEntity.builder().timeoutRefund(true).build(), completedTeamContext());
+
+        Assert.assertEquals(RefundStatusEnum.SKIPPED, result.getRefundStatusEnum());
+        verifyNoInteractions(completedRefund);
+    }
+
+    @Test
+    public void test_manualRefund_stillAllowsCompletedTeam() throws Exception {
+        RefundService completedRefund = mock(RefundService.class);
+        RefundOrderNode node = completedRefundNode(completedRefund);
+
+        RefundResEntity result = node.apply(PreRefundEntity.builder().build(), completedTeamContext());
+
+        Assert.assertEquals(RefundStatusEnum.SUCCESS, result.getRefundStatusEnum());
+        verify(completedRefund).refundOrder(any(RefundOrderEntity.class));
+    }
+
+    private RefundOrderNode completedRefundNode(RefundService completedRefund) {
+        RefundOrderNode node = new RefundOrderNode();
+        ReflectionTestUtils.setField(node, "refundEndNode", new RefundEndNode());
+        ReflectionTestUtils.setField(node, "refundServiceMap", Collections.singletonMap("teamCompletePaidRefund", completedRefund));
+        return node;
+    }
+
+    private DefaultRefundStrategyFactory.DynamicContext completedTeamContext() {
+        return DefaultRefundStrategyFactory.DynamicContext.builder()
+                .preRefundOrderEntity(PreRefundOrderEntity.builder().orderStatusEnum(OrderStatusEnum.COMPLETE).build())
+                .groupBuyTeamEntity(GroupBuyTeamEntity.builder().teamStatusEnum(TeamStatusEnum.COMPLETE).build())
+                .build();
     }
 
 }

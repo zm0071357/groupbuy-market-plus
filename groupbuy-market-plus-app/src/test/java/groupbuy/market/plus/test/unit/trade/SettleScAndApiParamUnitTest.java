@@ -6,8 +6,6 @@ import groupbuy.market.plus.api.dto.TeamProgressResponseDTO;
 import groupbuy.market.plus.api.response.Response;
 import groupbuy.market.plus.domain.trade.adapter.repository.TradeRepository;
 import groupbuy.market.plus.domain.trade.model.entity.*;
-import groupbuy.market.plus.domain.trade.model.valobj.NotifyConfigVO;
-import groupbuy.market.plus.domain.trade.model.valobj.NotifyTypeEnum;
 import groupbuy.market.plus.domain.trade.model.valobj.OrderStatusEnum;
 import groupbuy.market.plus.domain.trade.service.lock.LockOrderService;
 import groupbuy.market.plus.domain.trade.service.refund.RefundOrderService;
@@ -15,7 +13,6 @@ import groupbuy.market.plus.domain.trade.service.settle.factory.SettleOrderLinkF
 import groupbuy.market.plus.domain.trade.service.settle.filter.OrderStatusFilter;
 import groupbuy.market.plus.domain.trade.service.settle.filter.OrderTimeFilter;
 import groupbuy.market.plus.domain.trade.service.settle.filter.SCFilter;
-import groupbuy.market.plus.infrastructure.adapter.repository.TradeRepositoryImpl;
 import groupbuy.market.plus.trigger.http.TradeController;
 import groupbuy.market.plus.types.design.framework.link.multition.chain.BusinessLinkedList;
 import groupbuy.market.plus.types.enums.ResponseCodeEnum;
@@ -76,17 +73,6 @@ public class SettleScAndApiParamUnitTest {
         Response<TeamProgressResponseDTO> response = controller.getTeamProgress("TEAM00000000");
 
         Assert.assertEquals(ResponseCodeEnum.E0015.getCode(), response.getCode());
-    }
-
-    @Test
-    public void test_newHeaderNotify_httpWithoutUrl_noTask() {
-        TradeRepositoryImpl tradeRepository = new TradeRepositoryImpl();
-        GroupBuyTeamEntity team = GroupBuyTeamEntity.builder()
-                .teamId("TEAM12345678")
-                .notifyConfigVO(NotifyConfigVO.builder().notifyTypeEnum(NotifyTypeEnum.HTTP).headerRefundNotifyUrl(null).build())
-                .build();
-
-        Assert.assertNull(tradeRepository.newHeaderNotify("user02", "ORDER000000000001", team));
     }
 
     private BusinessLinkedList<CheckSettleEntity, SettleOrderLinkFactory.DynamicContext, CheckSettleResEntity> buildSettleChain(boolean orderScBlack) {

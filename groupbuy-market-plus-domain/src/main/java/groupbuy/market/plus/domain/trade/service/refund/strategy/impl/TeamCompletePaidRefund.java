@@ -22,7 +22,7 @@ public class TeamCompletePaidRefund extends AbstractRefundService {
         // 退单 - 拼团组队状态（失败 / 完成 - 存在退单）由数据库按最新完成量原子判断，避免并发退单时依据旧完成量判断错误
         NotifyTaskEntity notifyTaskEntity = tradeRepository.teamCompletePaidRefund(RefundOrderAggregate.buildTeamCompletePaidRefundAggregate(refundOrderEntity, -1, -1));
         // 发送MQ消息
-        sendRefundNotifyMQMessage(notifyTaskEntity, "拼团组队完成 - 已支付");
+        sendRefundNotifyMessage(notifyTaskEntity, "拼团组队完成 - 已支付");
     }
 
     @Override

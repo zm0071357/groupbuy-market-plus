@@ -1,24 +1,19 @@
 package groupbuy.market.plus.test.unit.refund;
 
-import groupbuy.market.plus.domain.trade.adapter.repository.TradeRepository;
 import groupbuy.market.plus.domain.trade.model.aggregate.RefundOrderAggregate;
-import groupbuy.market.plus.domain.trade.model.entity.GroupBuyTeamEntity;
-import groupbuy.market.plus.domain.trade.model.entity.PreRefundEntity;
-import groupbuy.market.plus.domain.trade.model.entity.PreRefundOrderEntity;
 import groupbuy.market.plus.domain.trade.model.entity.RefundOrderEntity;
-import groupbuy.market.plus.domain.trade.model.valobj.OrderStatusEnum;
 import groupbuy.market.plus.domain.trade.model.valobj.TeamStatusEnum;
-import groupbuy.market.plus.domain.trade.service.refund.factory.DefaultRefundStrategyFactory;
-import groupbuy.market.plus.domain.trade.service.refund.node.RefundUserNode;
 import groupbuy.market.plus.infrastructure.adapter.repository.TradeRepositoryImpl;
 import groupbuy.market.plus.infrastructure.dao.GroupBuyTeamDao;
 import groupbuy.market.plus.infrastructure.dao.GroupBuyTeamOrderDao;
 import groupbuy.market.plus.infrastructure.dao.NotifyTaskDao;
 import groupbuy.market.plus.infrastructure.dao.po.GroupBuyTeam;
 import groupbuy.market.plus.infrastructure.dao.po.GroupBuyTeamOrder;
+import groupbuy.market.plus.infrastructure.dao.po.NotifyTask;
+import groupbuy.market.plus.domain.trade.model.valobj.NotifyTypeEnum;
+import groupbuy.market.plus.domain.trade.model.valobj.NotifyTaskTypeEnum;
+import org.mockito.InOrder;
 import groupbuy.market.plus.test.unit.mapper.MapperTestSupport;
-import groupbuy.market.plus.types.enums.ResponseCodeEnum;
-import groupbuy.market.plus.types.exception.AppException;
 import org.apache.ibatis.session.Configuration;
 import org.junit.Assert;
 import org.junit.Before;
@@ -40,6 +35,9 @@ public class HeaderTransferUnitTest {
 
     private static final String TEAM_ID = "TEAM12345678";
 
+    private static final String ORDER_ID = "ORDER000000000001";
+
+    private NotifyTaskDao notifyTaskDao;
     private GroupBuyTeamOrderDao groupBuyTeamOrderDao;
     private GroupBuyTeamDao groupBuyTeamDao;
     private TradeRepositoryImpl tradeRepository;
@@ -51,7 +49,11 @@ public class HeaderTransferUnitTest {
         tradeRepository = new TradeRepositoryImpl();
         ReflectionTestUtils.setField(tradeRepository, "groupBuyTeamOrderDao", groupBuyTeamOrderDao);
         ReflectionTestUtils.setField(tradeRepository, "groupBuyTeamDao", groupBuyTeamDao);
-        ReflectionTestUtils.setField(tradeRepository, "notifyTaskDao", mock(NotifyTaskDao.class));
+        notifyTaskDao = mock(NotifyTaskDao.class);
+        ReflectionTestUtils.setField(tradeRepository, "notifyTaskDao", notifyTaskDao);
+        when(groupBuyTeamDao.getTeamByIdForUpdate(TEAM_ID)).thenReturn(GroupBuyTeam.builder()
+                .teamId(TEAM_ID).activityId(100123L).status(TeamStatusEnum.PROGRESS.getStatus())
+                .notifyType(NotifyTypeEnum.MQ.getType()).build());
         when(groupBuyTeamOrderDao.updateOrderStatusRefund(any(GroupBuyTeamOrder.class))).thenReturn(1);
         when(groupBuyTeamDao.updateTeamByTeamInCompleteUnPaidRefund(any(GroupBuyTeam.class))).thenReturn(1);
         when(groupBuyTeamDao.updateTeamByTeamInCompletePaidRefund(any(GroupBuyTeam.class))).thenReturn(1);
@@ -69,73 +71,65 @@ public class HeaderTransferUnitTest {
     }
 
     @Test
-    public void test_unPaidRefund_transferHeaderInRefund() {
+    public void transfersCurrentHeaderAndPersistsNotificationInLockedRefund() throws Exception {
+        when(groupBuyTeamOrderDao.getOrderHeaderFlag(TEAM_ID, ORDER_ID)).thenReturn(1);
+        when(groupBuyTeamOrderDao.getNewHeaderUserId(TEAM_ID)).thenReturn("user02");
         when(groupBuyTeamOrderDao.updateUserIsHeader(TEAM_ID, "user02")).thenReturn(1);
 
-        tradeRepository.teamInCompleteUnPaidRefund(RefundOrderAggregate.buildTeamInCompleteUnPaidRefundAggregate(buildRefundOrder("user02"), -1));
+        tradeRepository.teamInCompleteUnPaidRefund(RefundOrderAggregate.buildTeamInCompleteUnPaidRefundAggregate(buildRefundOrder(false), -1));
+
+        InOrder writes = inOrder(groupBuyTeamDao, groupBuyTeamOrderDao, notifyTaskDao);
+        writes.verify(groupBuyTeamDao).getTeamByIdForUpdate(TEAM_ID);
+        writes.verify(groupBuyTeamOrderDao).updateOrderStatusRefund(any());
+        writes.verify(groupBuyTeamOrderDao).getOrderHeaderFlag(TEAM_ID, ORDER_ID);
+        writes.verify(groupBuyTeamOrderDao).updateUserIsHeader(TEAM_ID, "user02");
+        writes.verify(notifyTaskDao).insert(argThat(task -> hasType(task, NotifyTaskTypeEnum.NEW_HEADER)));
+        writes.verify(notifyTaskDao).insert(argThat(task -> hasType(task, NotifyTaskTypeEnum.TEAM_INCOMPLETE_UNPAID_REFUND)));
+        Method method = TradeRepositoryImpl.class.getMethod("teamInCompleteUnPaidRefund", RefundOrderAggregate.class);
+        Assert.assertNotNull(method.getAnnotation(org.springframework.transaction.annotation.Transactional.class));
+    }
+
+    @Test
+    public void failedHeaderNotificationInsertAbortsRefund() {
+        when(groupBuyTeamOrderDao.getOrderHeaderFlag(TEAM_ID, ORDER_ID)).thenReturn(1);
+        when(groupBuyTeamOrderDao.getNewHeaderUserId(TEAM_ID)).thenReturn("user02");
+        when(groupBuyTeamOrderDao.updateUserIsHeader(TEAM_ID, "user02")).thenReturn(1);
+        doThrow(new IllegalStateException("notification insert failed")).when(notifyTaskDao)
+                .insert(argThat(task -> hasType(task, NotifyTaskTypeEnum.NEW_HEADER)));
+
+        Assert.assertThrows(IllegalStateException.class, () -> tradeRepository.teamInCompletePaidRefund(
+                RefundOrderAggregate.buildTeamInCompletePaidRefundAggregate(buildRefundOrder(false), -1, -1)));
+        verify(notifyTaskDao, never()).insert(argThat(task -> hasType(task, NotifyTaskTypeEnum.TEAM_INCOMPLETE_PAID_REFUND)));
+    }
+
+    @Test
+    public void timeoutRefundDoesNotTransferHeader() {
+        tradeRepository.teamInCompleteUnPaidRefund(RefundOrderAggregate.buildTeamInCompleteUnPaidRefundAggregate(buildRefundOrder(true), -1));
+
+        verify(groupBuyTeamOrderDao, never()).getOrderHeaderFlag(anyString(), anyString());
+        verify(notifyTaskDao, never()).insert(argThat(task -> hasType(task, NotifyTaskTypeEnum.NEW_HEADER)));
+    }
+
+    @Test
+    public void keepsOptionalHeaderNotificationForHttpMerchant() {
+        when(groupBuyTeamDao.getTeamByIdForUpdate(TEAM_ID)).thenReturn(GroupBuyTeam.builder()
+                .teamId(TEAM_ID).notifyType(NotifyTypeEnum.HTTP.getType()).build());
+        when(groupBuyTeamOrderDao.getOrderHeaderFlag(TEAM_ID, ORDER_ID)).thenReturn(1);
+        when(groupBuyTeamOrderDao.getNewHeaderUserId(TEAM_ID)).thenReturn("user02");
+        when(groupBuyTeamOrderDao.updateUserIsHeader(TEAM_ID, "user02")).thenReturn(1);
+
+        tradeRepository.teamInCompleteUnPaidRefund(RefundOrderAggregate.buildTeamInCompleteUnPaidRefundAggregate(buildRefundOrder(false), -1));
 
         verify(groupBuyTeamOrderDao).updateUserIsHeader(TEAM_ID, "user02");
+        verify(notifyTaskDao, never()).insert(argThat(task -> hasType(task, NotifyTaskTypeEnum.NEW_HEADER)));
     }
 
-    @Test
-    public void test_paidRefund_transferFail_throwToRollback() {
-        // 新团长更新失败（如候选人已退单）时抛异常，使退单事务整体回滚
-        when(groupBuyTeamOrderDao.updateUserIsHeader(TEAM_ID, "user02")).thenReturn(0);
-        try {
-            tradeRepository.teamInCompletePaidRefund(RefundOrderAggregate.buildTeamInCompletePaidRefundAggregate(buildRefundOrder("user02"), -1, -1));
-            Assert.fail("应抛出 UPDATE_ZERO");
-        } catch (AppException e) {
-            Assert.assertEquals(ResponseCodeEnum.UPDATE_ZERO.getCode(), e.getCode());
-        }
+    private boolean hasType(NotifyTask task, NotifyTaskTypeEnum type) {
+        return task != null && type.getType().equals(task.getTaskType());
     }
 
-    @Test
-    public void test_memberRefund_noTransfer() {
-        tradeRepository.teamInCompleteUnPaidRefund(RefundOrderAggregate.buildTeamInCompleteUnPaidRefundAggregate(buildRefundOrder(null), -1));
-
-        verify(groupBuyTeamOrderDao, never()).updateUserIsHeader(anyString(), anyString());
+    private RefundOrderEntity buildRefundOrder(boolean timeout) {
+        return RefundOrderEntity.builder().userId("user01").orderId(ORDER_ID).teamId(TEAM_ID)
+                .activityId(100123L).outTradeNo("OUT0001").timeoutRefund(timeout).build();
     }
-
-    @Test
-    public void test_refundTransactional() throws Exception {
-        // 新团长变更依赖退单方法上的事务注解
-        for (String name : new String[]{"teamInCompleteUnPaidRefund", "teamInCompletePaidRefund"}) {
-            Method method = TradeRepositoryImpl.class.getMethod(name, RefundOrderAggregate.class);
-            Assert.assertNotNull(name + " 应有 @Transactional", method.getAnnotation(org.springframework.transaction.annotation.Transactional.class));
-        }
-    }
-
-    @Test
-    public void test_refundUserNode_onlyQueryCandidate() throws Exception {
-        TradeRepository repository = mock(TradeRepository.class);
-        when(repository.queryNewHeaderUserId(TEAM_ID)).thenReturn("user02");
-        RefundUserNode node = new RefundUserNode();
-        ReflectionTestUtils.setField(node, "tradeRepository", repository);
-        DefaultRefundStrategyFactory.DynamicContext context = new DefaultRefundStrategyFactory.DynamicContext();
-        context.setPreRefundOrderEntity(PreRefundOrderEntity.builder().isHeader(true).orderStatusEnum(OrderStatusEnum.CREATE).build());
-        context.setGroupBuyTeamEntity(GroupBuyTeamEntity.builder().teamId(TEAM_ID).teamStatusEnum(TeamStatusEnum.PROGRESS).build());
-
-        Method doApply = RefundUserNode.class.getDeclaredMethod("doApply", PreRefundEntity.class, DefaultRefundStrategyFactory.DynamicContext.class);
-        doApply.setAccessible(true);
-        try {
-            doApply.invoke(node, PreRefundEntity.builder().userId("user01").build(), context);
-        } catch (java.lang.reflect.InvocationTargetException ignored) {
-            // 路由到下一节点时未注入依赖，忽略；只关心候选人已写入上下文
-        }
-
-        Assert.assertEquals("user02", context.getNewLeaderUserId());
-        verify(repository).queryNewHeaderUserId(TEAM_ID);
-    }
-
-    private RefundOrderEntity buildRefundOrder(String newHeaderUserId) {
-        return RefundOrderEntity.builder()
-                .userId("user01")
-                .orderId("ORDER000000000001")
-                .teamId(TEAM_ID)
-                .activityId(100123L)
-                .outTradeNo("OUT0001")
-                .newHeaderUserId(newHeaderUserId)
-                .build();
-    }
-
 }

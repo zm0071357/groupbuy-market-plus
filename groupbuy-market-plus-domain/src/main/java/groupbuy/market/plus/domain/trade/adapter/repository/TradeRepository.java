@@ -6,6 +6,7 @@ import groupbuy.market.plus.domain.trade.model.aggregate.RefundThreadTaskAggrega
 import groupbuy.market.plus.domain.trade.model.aggregate.SettleOrderAggregate;
 import groupbuy.market.plus.domain.trade.model.entity.*;
 import groupbuy.market.plus.domain.trade.model.valobj.TeamProgressVO;
+import groupbuy.market.plus.domain.trade.model.valobj.RefundNotifyTasks;
 
 import java.util.Date;
 import java.util.List;
@@ -148,25 +149,18 @@ public interface TradeRepository {
     RefundThreadTaskAggregate getRefundThreadTaskResAggregate(PreRefundEntity preRefundEntity);
 
     /**
-     * 查询新团长候选人 - 仅查询不更新，团长变更在退单事务内完成
-     * @param teamId 拼团组队ID
-     * @return 新团长用户ID，没有可选的团员时返回null
-     */
-    String queryNewHeaderUserId(String teamId);
-
-    /**
      * 退单 - 拼团组队未完成 - 未支付
      * @param teamInCompleteUnPaidRefundAggregate 退单聚合
      * @return
      */
-    NotifyTaskEntity teamInCompleteUnPaidRefund(RefundOrderAggregate teamInCompleteUnPaidRefundAggregate);
+    RefundNotifyTasks teamInCompleteUnPaidRefund(RefundOrderAggregate teamInCompleteUnPaidRefundAggregate);
 
     /**
      * 退单 - 拼团组队未完成 - 已支付
      * @param teamInCompletePaidRefundAggregate 退单聚合
      * @return
      */
-    NotifyTaskEntity teamInCompletePaidRefund(RefundOrderAggregate teamInCompletePaidRefundAggregate);
+    RefundNotifyTasks teamInCompletePaidRefund(RefundOrderAggregate teamInCompletePaidRefundAggregate);
 
     /**
      * 退单 - 拼团组队完成 - 已支付
@@ -174,15 +168,6 @@ public interface TradeRepository {
      * @return
      */
     NotifyTaskEntity teamCompletePaidRefund(RefundOrderAggregate teamCompletePaidRefundAggregate);
-
-    /**
-     * 新团长回调
-     * @param newLeaderUserId 新团长ID
-     * @param orderId 订单ID
-     * @param groupBuyTeamEntity 拼团组队信息
-     * @return
-     */
-    NotifyTaskEntity newHeaderNotify(String newLeaderUserId, String orderId, GroupBuyTeamEntity groupBuyTeamEntity);
 
     /**
      * 获取超时的拼团ID集合

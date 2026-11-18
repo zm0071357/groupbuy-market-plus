@@ -4,9 +4,9 @@ import com.alibaba.fastjson.JSON;
 import groupbuy.market.plus.domain.trade.adapter.event.OrderRefundMessage;
 import groupbuy.market.plus.domain.trade.adapter.repository.TradeRepository;
 import groupbuy.market.plus.domain.trade.model.entity.ActivityEntity;
-import groupbuy.market.plus.domain.trade.model.entity.GroupBuyTeamEntity;
 import groupbuy.market.plus.domain.trade.model.entity.NotifyTaskEntity;
 import groupbuy.market.plus.domain.trade.service.lock.factory.LockOrderLinkFactory;
+import groupbuy.market.plus.domain.trade.model.valobj.RefundNotifyTasks;
 import groupbuy.market.plus.domain.trade.service.task.TaskService;
 import groupbuy.market.plus.types.exception.AppException;
 import lombok.extern.slf4j.Slf4j;
@@ -33,11 +33,11 @@ public abstract class AbstractRefundService implements RefundService {
     private TaskService taskService;
 
     /**
-     * 通用发送退单MQ消息
+     * 提交后发送退单相关回调
      * @param notifyTaskEntity 回调任务
      * @param refundType 退单类型
      */
-    protected void sendRefundNotifyMQMessage(NotifyTaskEntity notifyTaskEntity, String refundType) {
+    protected void sendRefundNotifyMessage(NotifyTaskEntity notifyTaskEntity, String refundType) {
         if (null != notifyTaskEntity) {
             threadPoolExecutor.execute(() -> {
                 Map<String, Integer> notifyResultMap = null;
@@ -50,6 +50,11 @@ public abstract class AbstractRefundService implements RefundService {
                 }
             });
         }
+    }
+
+    protected void sendRefundNotifications(RefundNotifyTasks tasks, String refundType) {
+        sendRefundNotifyMessage(tasks.refund(), refundType);
+        sendRefundNotifyMessage(tasks.headerChanged(), "新团长");
     }
 
     /**
@@ -72,24 +77,6 @@ public abstract class AbstractRefundService implements RefundService {
             return;
         }
         log.info("恢复拼团组队库存完成 - 订单ID：{}，恢复Key：{}，当前恢复量：{}", orderRefundMessage.getOrderId(), recoveryTeamStockKey, recoverCount);
-    }
-
-    @Override
-    public void newHeaderNotify(String newLeaderUserId, String orderId, GroupBuyTeamEntity groupBuyTeamEntity) {
-        // 回调任务
-        NotifyTaskEntity notifyTaskEntity = tradeRepository.newHeaderNotify(newLeaderUserId, orderId, groupBuyTeamEntity);
-        if (null != notifyTaskEntity) {
-            threadPoolExecutor.execute(() -> {
-                Map<String, Integer> notifyResultMap = null;
-                try {
-                    notifyResultMap = taskService.execNotifyJob(notifyTaskEntity);
-                    log.info("新团长回调通知 - 新团长ID：{}，结果:{}", newLeaderUserId, JSON.toJSONString(notifyResultMap));
-                } catch (Exception e) {
-                    log.error("新团长回调通知失败 - 新团长ID：{}，结果:{}", newLeaderUserId, JSON.toJSONString(notifyResultMap), e);
-                    throw new AppException(e.getMessage());
-                }
-            });
-        }
     }
 
 }

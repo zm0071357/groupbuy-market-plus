@@ -103,6 +103,18 @@ public class RefundOrderRepositoryUnitTest {
         Assert.assertEquals(Integer.valueOf(-1), teamCaptor.getValue().getCompleteCount());
     }
 
+    @Test
+    public void test_teamInCompletePaidRefund_teamCompletedConcurrently_rollback() {
+        when(groupBuyTeamOrderDao.updateOrderStatusRefund(any(GroupBuyTeamOrder.class))).thenReturn(1);
+        when(groupBuyTeamDao.updateTeamByTeamInCompletePaidRefund(any(GroupBuyTeam.class))).thenReturn(0);
+
+        AppException exception = Assert.assertThrows(AppException.class, () ->
+                tradeRepository.teamInCompletePaidRefund(RefundOrderAggregate.buildTeamInCompletePaidRefundAggregate(refundOrderEntity, -1, -1)));
+
+        Assert.assertEquals(ResponseCodeEnum.UPDATE_ZERO.getCode(), exception.getCode());
+        verifyNoInteractions(notifyTaskDao);
+    }
+
     private void assertRefundOrderReq(Integer expectStatus) {
         ArgumentCaptor<GroupBuyTeamOrder> captor = ArgumentCaptor.forClass(GroupBuyTeamOrder.class);
         verify(groupBuyTeamOrderDao).updateOrderStatusRefund(captor.capture());

@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit;
 public class RefundRepeatNode extends AbstractRefundOrderSupport<PreRefundEntity, DefaultRefundStrategyFactory.DynamicContext, RefundResEntity> {
 
     @Resource
-    private RefundUserNode refundUserNode;
+    private RefundOrderNode refundOrderNode;
 
     @Resource
     private RefundEndNode refundEndNode;
@@ -72,6 +72,6 @@ public class RefundRepeatNode extends AbstractRefundOrderSupport<PreRefundEntity
         if (RefundStatusEnum.REPEAT.equals(dynamicContext.getRefundStatusEnum())) {
             return refundEndNode;
         }
-        return refundUserNode;
+        return refundOrderNode;
     }
 }

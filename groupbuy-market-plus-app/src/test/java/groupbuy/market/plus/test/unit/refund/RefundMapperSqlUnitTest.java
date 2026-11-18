@@ -69,6 +69,19 @@ public class RefundMapperSqlUnitTest {
         Assert.assertTrue(sql, sql.contains("where team_id = ? and complete_count < target_count and status = 0"));
     }
 
+    @Test
+    public void test_progressRefundSql_requiresTeamStillInProgress() {
+        GroupBuyTeam param = new GroupBuyTeam();
+        param.setTeamId("TEAM12345678");
+        param.setLockCount(-1);
+        param.setCompleteCount(-1);
+        String prefix = "groupbuy.market.plus.infrastructure.dao.GroupBuyTeamDao.";
+        String where = "where team_id = ? and status = 0";
+
+        Assert.assertTrue(sql(prefix + "updateTeamByTeamInCompleteUnPaidRefund", param).contains(where));
+        Assert.assertTrue(sql(prefix + "updateTeamByTeamInCompletePaidRefund", param).contains(where));
+    }
+
     private void parse(String resource) throws Exception {
         try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream(resource)) {
             Assert.assertNotNull("找不到映射文件：" + resource, inputStream);

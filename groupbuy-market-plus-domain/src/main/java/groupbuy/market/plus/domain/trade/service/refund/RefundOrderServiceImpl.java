@@ -65,6 +65,7 @@ public class RefundOrderServiceImpl implements RefundOrderService {
         Integer successCount = 0;
         Integer repeatCount = 0;
         Integer failCount = 0;
+        Integer skippedCount = 0;
 
         if (!preRefundEntityList.isEmpty()) {
             // 遍历订单集合进行退单
@@ -83,6 +84,8 @@ public class RefundOrderServiceImpl implements RefundOrderService {
                     successCount ++;
                 } else if (refundResEntity.getRefundStatusEnum().equals(RefundStatusEnum.REPEAT)) {
                     repeatCount ++;
+                } else if (refundResEntity.getRefundStatusEnum().equals(RefundStatusEnum.SKIPPED)) {
+                    skippedCount ++;
                 } else {
                     failCount ++;
                 }
@@ -94,6 +97,7 @@ public class RefundOrderServiceImpl implements RefundOrderService {
         resultMap.put("successCount", successCount);
         resultMap.put("repeatCount", repeatCount);
         resultMap.put("failCount", failCount);
+        resultMap.put("skippedCount", skippedCount);
 
         return resultMap;
     }

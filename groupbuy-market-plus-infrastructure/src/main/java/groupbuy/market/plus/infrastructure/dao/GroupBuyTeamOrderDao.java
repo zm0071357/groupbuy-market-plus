@@ -79,6 +79,9 @@ public interface GroupBuyTeamOrderDao {
      */
     GroupBuyTeamOrder getPreRefundOrder(GroupBuyTeamOrder groupBuyTeamOrderReq);
 
+    /** 获取指定组队内订单的当前团长标记，由持有组队写锁的退单事务调用。 */
+    Integer getOrderHeaderFlag(@Param("teamId") String teamId, @Param("orderId") String orderId);
+
     /**
      * 获取新团长ID
      * @param teamId 拼团组队ID

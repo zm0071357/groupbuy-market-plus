@@ -2,7 +2,7 @@ package groupbuy.market.plus.domain.trade.service.refund.strategy.impl;
 
 import groupbuy.market.plus.domain.trade.adapter.event.OrderRefundMessage;
 import groupbuy.market.plus.domain.trade.model.aggregate.RefundOrderAggregate;
-import groupbuy.market.plus.domain.trade.model.entity.NotifyTaskEntity;
+import groupbuy.market.plus.domain.trade.model.valobj.RefundNotifyTasks;
 import groupbuy.market.plus.domain.trade.model.entity.RefundOrderEntity;
 import groupbuy.market.plus.domain.trade.service.refund.strategy.AbstractRefundService;
 import lombok.extern.slf4j.Slf4j;
@@ -20,9 +20,9 @@ public class TeamInCompleteUnPaidRefund extends AbstractRefundService {
     public void refundOrder(RefundOrderEntity refundOrderEntity) {
         log.info("退单开始，类型；拼团组队未完成 - 未支付，用户ID：{}，订单ID：{}", refundOrderEntity.getUserId(), refundOrderEntity.getOrderId());
         // 退单
-        NotifyTaskEntity notifyTaskEntity = tradeRepository.teamInCompleteUnPaidRefund(RefundOrderAggregate.buildTeamInCompleteUnPaidRefundAggregate(refundOrderEntity, -1));
+        RefundNotifyTasks tasks = tradeRepository.teamInCompleteUnPaidRefund(RefundOrderAggregate.buildTeamInCompleteUnPaidRefundAggregate(refundOrderEntity, -1));
         // 发送MQ消息
-        sendRefundNotifyMQMessage(notifyTaskEntity, "拼团组队未完成 - 未支付");
+        sendRefundNotifications(tasks, "拼团组队未完成 - 未支付");
     }
 
     @Override

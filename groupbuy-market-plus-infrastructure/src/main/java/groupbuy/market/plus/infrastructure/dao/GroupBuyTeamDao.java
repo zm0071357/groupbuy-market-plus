@@ -38,6 +38,9 @@ public interface GroupBuyTeamDao {
      */
     GroupBuyTeam getTeamById(String teamId);
 
+    /** 在交易写事务中锁定指定组队，统一组队和订单的加锁顺序。 */
+    GroupBuyTeam getTeamByIdForUpdate(String teamId);
+
     /**
      * 更新拼团组队进度 - 完成数量+1
      * @param teamId 组队ID

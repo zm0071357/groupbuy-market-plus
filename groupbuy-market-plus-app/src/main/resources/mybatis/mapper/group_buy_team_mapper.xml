@@ -64,6 +64,13 @@
         where team_id = #{teamId}
     </select>
 
+    <select id="getTeamByIdForUpdate" resultMap="dataMap" parameterType="java.lang.String">
+        select team_id, activity_id, status, notify_type, header_refund_notify_url
+        from group_buy_team
+        where team_id = #{teamId}
+        for update
+    </select>
+
     <!-- 仅拼单中(0)的组队可增加完成量 -->
     <update id="updateTeamAddCompleteCount" parameterType="java.lang.String">
         <![CDATA[

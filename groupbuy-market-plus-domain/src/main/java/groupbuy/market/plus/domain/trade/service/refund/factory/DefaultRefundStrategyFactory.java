@@ -50,11 +50,6 @@ public class DefaultRefundStrategyFactory {
         private GroupBuyTeamEntity groupBuyTeamEntity;
 
         /**
-         * 新团长用户ID
-         */
-        private String newLeaderUserId;
-
-        /**
          * 退单状态枚举
          */
         private RefundStatusEnum refundStatusEnum;
