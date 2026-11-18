@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 /**
@@ -32,6 +33,17 @@ public class GroupBuyTeamEntity {
      * 商品ID
      */
     private String goodsId;
+
+    /** 档位适用的来源与渠道。 */
+    private String source;
+    private String channel;
+
+    /** 开团时选定的档位，普通团为空。 */
+    private Long tierId;
+
+    /** 档位组队保存的商品原价和团员价，单位为元。 */
+    private BigDecimal originalPrice;
+    private BigDecimal memberPrice;
 
     /**
      * 拼团开始时间

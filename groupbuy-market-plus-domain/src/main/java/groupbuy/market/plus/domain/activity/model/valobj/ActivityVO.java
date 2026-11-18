@@ -43,6 +43,10 @@ public class ActivityVO {
      */
     private List<GroupBuyDiscount> groupBuyDiscountList;
 
+    /** 可选拼团档位，空集合表示普通拼团。 */
+    @Builder.Default
+    private List<GroupBuyTierVO> tiers = List.of();
+
     /**
      * 拼团方式（0自动成团、1达成目标拼团）
      */

@@ -37,6 +37,9 @@ public class GroupBuyTeam {
      */
     private String goodsId;
 
+    /** 开团时选定的档位，普通团为空。 */
+    private Long tierId;
+
     /**
      * 渠道
      */

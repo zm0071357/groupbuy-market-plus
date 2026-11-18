@@ -16,6 +16,9 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 public class LockOrderResponseDTO {
 
+    /** 当前拼团组队 ID，包含未支付订单重试的原组队。 */
+    private String teamId;
+
     /**
      * 订单ID
      */

@@ -4,6 +4,7 @@ import groupbuy.market.plus.domain.trade.model.entity.ActivityEntity;
 import groupbuy.market.plus.domain.trade.model.entity.CheckLockEntity;
 import groupbuy.market.plus.domain.trade.model.entity.CheckLockResEntity;
 import groupbuy.market.plus.domain.trade.model.entity.InviteEntity;
+import groupbuy.market.plus.domain.trade.model.entity.GroupBuyTeamEntity;
 import groupbuy.market.plus.domain.trade.service.lock.filter.ActivityFilter;
 import groupbuy.market.plus.domain.trade.service.lock.filter.InviteFilter;
 import groupbuy.market.plus.domain.trade.service.lock.filter.TeamFilter;
@@ -50,6 +51,9 @@ public class LockOrderLinkFactory {
          * 邀请返利实体
          */
         private InviteEntity inviteEntity;
+
+        /** 通过活动、商品与有效期校验的参团组队。 */
+        private GroupBuyTeamEntity joinedTeam;
 
         /**
          * 获取抢占key

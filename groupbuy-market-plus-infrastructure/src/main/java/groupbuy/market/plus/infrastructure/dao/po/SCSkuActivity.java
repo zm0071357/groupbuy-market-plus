@@ -43,6 +43,9 @@ public class SCSkuActivity {
      */
     private String goodsId;
 
+    /** 可选拼团档位 JSON，NULL 表示普通拼团。 */
+    private String tiersJson;
+
     /**
      * 创建时间
      */

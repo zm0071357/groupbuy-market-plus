@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 /**
  * 商品活动配置值对象
  */
@@ -33,5 +35,9 @@ public class SCSkuActivityVO {
      * 商品ID
      */
     private String goodsId;
+
+    /** 可选拼团档位，空集合表示普通拼团。 */
+    @Builder.Default
+    private List<GroupBuyTierVO> tiers = List.of();
 
 }

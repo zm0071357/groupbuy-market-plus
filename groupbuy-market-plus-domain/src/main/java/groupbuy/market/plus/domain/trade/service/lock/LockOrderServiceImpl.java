@@ -1,5 +1,6 @@
 package groupbuy.market.plus.domain.trade.service.lock;
 
+import groupbuy.market.plus.domain.activity.model.valobj.GroupBuyTierVO;
 import groupbuy.market.plus.domain.trade.adapter.repository.TradeRepository;
 import groupbuy.market.plus.domain.trade.model.aggregate.LockOrderAggregate;
 import groupbuy.market.plus.domain.trade.model.entity.*;
@@ -11,11 +12,13 @@ import groupbuy.market.plus.types.design.framework.link.multition.chain.Business
 import groupbuy.market.plus.types.enums.ResponseCodeEnum;
 import groupbuy.market.plus.types.exception.AppException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -50,32 +53,61 @@ public class LockOrderServiceImpl implements LockOrderService{
     }
 
     private LockOrderEntity doLockOrder(UserEntity userEntity, GroupBuyTeamEntity groupBuyTeamEntity, OrderDetailEntity orderDetailEntity) throws Exception {
+        // 只有无组队、无邀请码的请求才是开团，可依据当前活动配置选择档位。
+        if (StringUtils.isBlank(groupBuyTeamEntity.getTeamId()) && StringUtils.isBlank(userEntity.getInviteId())) {
+            applyOpeningTier(groupBuyTeamEntity, orderDetailEntity);
+        }
         // 责任链过滤
         CheckLockEntity checkLockEntity = CheckLockEntity.builder()
                 .activityId(groupBuyTeamEntity.getActivityId())
                 .goodsId(orderDetailEntity.getGoodsId())
+                .source(orderDetailEntity.getSource())
+                .channel(orderDetailEntity.getChannel())
                 .userId(userEntity.getUserId())
                 .teamId(groupBuyTeamEntity.getTeamId())
+                .tierId(groupBuyTeamEntity.getTierId())
                 .inviteId(userEntity.getInviteId())
                 .build();
         CheckLockResEntity checkLockResEntity = lockOrderLink.apply(checkLockEntity, new LockOrderLinkFactory.DynamicContext());
         // 以责任链最终确定的组队为准（仅凭邀请码参团时由邀请码补全），保证 Redis 抢占与数据库落库为同一组队
         groupBuyTeamEntity.setTeamId(checkLockEntity.getTeamId());
-        LockOrderAggregate orderAggregate = LockOrderAggregate.builder()
-                .userEntity(userEntity)
-                .groupBuyTeamEntity(groupBuyTeamEntity)
-                .orderDetailEntity(orderDetailEntity)
-                .checkLockResEntity(checkLockResEntity)
-                .build();
         try {
-            // 尝试锁单
-            return tradeRepository.lockOrder(orderAggregate);
+            GroupBuyTeamEntity joinedTeam = checkLockResEntity.getJoinedTeam();
+            if (joinedTeam != null && joinedTeam.getTierId() != null) {
+                // 参团使用开团时保存的金额和组队时段，活动改价后旧团仍按原价参团。
+                orderDetailEntity.setOriginalPrice(joinedTeam.getOriginalPrice());
+                orderDetailEntity.setPayPrice(joinedTeam.getMemberPrice());
+                orderDetailEntity.setDeductionPrice(joinedTeam.getOriginalPrice().subtract(joinedTeam.getMemberPrice()));
+                groupBuyTeamEntity.setStartTime(joinedTeam.getStartTime());
+                groupBuyTeamEntity.setEndTime(joinedTeam.getEndTime());
+            }
+            return tradeRepository.lockOrder(LockOrderAggregate.builder()
+                    .userEntity(userEntity)
+                    .groupBuyTeamEntity(groupBuyTeamEntity)
+                    .orderDetailEntity(orderDetailEntity)
+                    .checkLockResEntity(checkLockResEntity)
+                    .build());
         } catch (Exception e) {
             // 锁单失败时恢复可用位置
             Long recoverTeamStockCount = tradeRepository.recoverTeamStock(checkLockResEntity.getTeamStockRecoverKey(), groupBuyTeamEntity.getValidTime());
             log.info("锁单失败 - 恢复可用位置，恢复Key：{}，当前恢复量：{}", checkLockResEntity.getTeamStockRecoverKey(), recoverTeamStockCount);
             throw e;
         }
+    }
+
+    private void applyOpeningTier(GroupBuyTeamEntity team, OrderDetailEntity order) {
+        List<GroupBuyTierVO> tiers = GroupBuyTierVO.validate(order.getTiers(), order.getOriginalPrice());
+        if (tiers.isEmpty() && team.getTierId() == null) {
+            return;
+        }
+        GroupBuyTierVO tier = tiers.stream()
+                .filter(candidate -> candidate.tierId().equals(team.getTierId()))
+                .findFirst()
+                .orElseThrow(() -> new AppException(ResponseCodeEnum.E0035.getCode(), ResponseCodeEnum.E0035.getInfo()));
+
+        team.setTargetCount(tier.targetCount());
+        order.setPayPrice(tier.memberPrice());
+        order.setDeductionPrice(order.getOriginalPrice().subtract(tier.memberPrice()));
     }
 
     @Override

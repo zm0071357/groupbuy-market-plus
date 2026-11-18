@@ -4,6 +4,7 @@ import groupbuy.market.plus.domain.trade.adapter.repository.TradeRepository;
 import groupbuy.market.plus.domain.trade.model.entity.ActivityEntity;
 import groupbuy.market.plus.domain.trade.model.entity.CheckLockEntity;
 import groupbuy.market.plus.domain.trade.model.entity.CheckLockResEntity;
+import groupbuy.market.plus.domain.trade.model.entity.GroupBuyTeamEntity;
 import groupbuy.market.plus.domain.trade.service.lock.factory.LockOrderLinkFactory;
 import groupbuy.market.plus.types.design.framework.link.multition.handler.LogicHandler;
 import groupbuy.market.plus.types.enums.ResponseCodeEnum;
@@ -38,7 +39,9 @@ public class TeamStockFilter implements LogicHandler<CheckLockEntity, LockOrderL
         String teamId = checkLockEntity.getTeamId();
         // 抢占库存
         log.info("锁单责任链 - 拼团组队可用位置过滤节点，尝试抢占可用位置，用户ID：{}", checkLockEntity.getUserId());
-        Integer target = dynamicContext.getActivityEntity().getTarget();    // 目标量
+        // 组队目标在开团时确定，同一活动的不同档位可以有不同名额。
+        GroupBuyTeamEntity joinedTeam = dynamicContext.getJoinedTeam();
+        Integer target = joinedTeam.getTargetCount();
         Integer validTime = dynamicContext.getActivityEntity().getValidTime();      // 拼团有效时间
         String teamStockOccupyKey = dynamicContext.getTeamStockOccupyKey(teamId);      // 抢占Key
         String teamStockRecoverKey = dynamicContext.getTeamStockRecoverKey(teamId);        // 恢复Key
@@ -50,6 +53,7 @@ public class TeamStockFilter implements LogicHandler<CheckLockEntity, LockOrderL
         }
         return CheckLockResEntity.builder()
                 .isHeader(false)
+                .joinedTeam(joinedTeam)
                 .teamStockRecoverKey(teamStockRecoverKey)
                 .inviteUserId(dynamicContext.getInviteEntity() == null ? null : dynamicContext.getInviteEntity().getInviteUserId())
                 .build();

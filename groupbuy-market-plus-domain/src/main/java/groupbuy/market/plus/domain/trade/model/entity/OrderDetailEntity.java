@@ -1,11 +1,13 @@
 package groupbuy.market.plus.domain.trade.model.entity;
 
+import groupbuy.market.plus.domain.activity.model.valobj.GroupBuyTierVO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 /**
  * 锁单订单详情实体
@@ -55,5 +57,9 @@ public class OrderDetailEntity {
      * 支付价格
      */
     private BigDecimal payPrice;
+
+    /** 试算返回的开团档位配置。 */
+    @Builder.Default
+    private List<GroupBuyTierVO> tiers = List.of();
 
 }

@@ -1,5 +1,6 @@
 package groupbuy.market.plus.infrastructure.adapter.repository;
 
+import com.alibaba.fastjson.JSON;
 import groupbuy.market.plus.domain.activity.adapter.repository.ActivityRepository;
 import groupbuy.market.plus.domain.activity.model.entity.IndexTeamEntity;
 import groupbuy.market.plus.domain.activity.model.valobj.*;
@@ -110,6 +111,8 @@ public class ActivityRepositoryImpl implements ActivityRepository {
                 .chanel(scSkuActivity.getChannel())
                 .activityId(scSkuActivity.getActivityId())
                 .goodsId(scSkuActivity.getGoodsId())
+                .tiers(scSkuActivity.getTiersJson() == null
+                        ? List.of() : JSON.parseArray(scSkuActivity.getTiersJson(), GroupBuyTierVO.class))
                 .build();
     }
 
@@ -145,6 +148,8 @@ public class ActivityRepositoryImpl implements ActivityRepository {
         for (GroupBuyTeam groupBuyTeam : userTeamList) {
             indexTeamEntityList.add(IndexTeamEntity.builder()
                             .teamId(groupBuyTeam.getTeamId())
+                            .tierId(groupBuyTeam.getTierId())
+                            .memberPrice(groupBuyTeam.getTierId() == null ? null : groupBuyTeam.getPayPrice())
                             .targetCount(groupBuyTeam.getTargetCount())
                             .completeCount(groupBuyTeam.getCompleteCount())
                             .lockCount(groupBuyTeam.getLockCount())

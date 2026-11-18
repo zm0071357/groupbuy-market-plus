@@ -21,6 +21,9 @@ public class LockOrderRequestDTO {
      */
     private String teamId;
 
+    /** 自选档位团开团时必填，参团时可省略。 */
+    private Long tierId;
+
     /**
      * 活动ID
      */

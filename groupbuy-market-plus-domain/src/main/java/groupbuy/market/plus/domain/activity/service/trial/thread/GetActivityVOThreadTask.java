@@ -32,6 +32,10 @@ public class GetActivityVOThreadTask implements Callable<ActivityVO> {
         if (scSkuActivityVO == null) {
             return null;
         }
-        return activityRepository.getActivityById(scSkuActivityVO.getActivityId());
+        ActivityVO activity = activityRepository.getActivityById(scSkuActivityVO.getActivityId());
+        if (activity != null) {
+            activity.setTiers(scSkuActivityVO.getTiers());
+        }
+        return activity;
     }
 }

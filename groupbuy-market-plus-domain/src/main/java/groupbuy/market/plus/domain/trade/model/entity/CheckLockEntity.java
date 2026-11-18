@@ -22,6 +22,10 @@ public class CheckLockEntity {
     /** 本次锁单商品 ID */
     private String goodsId;
 
+    /** 档位适用的来源与渠道。 */
+    private String source;
+    private String channel;
+
     /**
      * 用户ID
      */
@@ -31,6 +35,9 @@ public class CheckLockEntity {
      * 组队ID
      */
     private String teamId;
+
+    /** 请求选择的拼团档位，参团时可省略。 */
+    private Long tierId;
 
     /**
      * 邀请码

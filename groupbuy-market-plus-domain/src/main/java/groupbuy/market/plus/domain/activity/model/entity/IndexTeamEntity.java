@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 /**
@@ -21,6 +22,11 @@ public class IndexTeamEntity {
      * 组队ID
      */
     private String teamId;
+
+    /** 开团时的档位和团员价，普通团为空。 */
+    private Long tierId;
+
+    private BigDecimal memberPrice;
 
     /**
      * 目标数量

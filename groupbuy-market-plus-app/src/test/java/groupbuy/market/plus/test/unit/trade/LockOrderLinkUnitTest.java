@@ -172,6 +172,7 @@ public class LockOrderLinkUnitTest {
                 .activityId(activityId)
                 .goodsId(GOODS_ID)
                 .teamStatusEnum(teamStatusEnum)
+                .targetCount(3)
                 .startTime(new Date(System.currentTimeMillis() - 600_000))
                 .endTime(new Date(System.currentTimeMillis() + endOffsetMillis))
                 .build();

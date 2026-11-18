@@ -13,6 +13,7 @@ import groupbuy.market.plus.infrastructure.dao.po.*;
 import groupbuy.market.plus.infrastructure.dcc.DCCServiceImpl;
 import groupbuy.market.plus.types.common.Constants;
 import groupbuy.market.plus.types.common.GroupBuyConstants;
+import groupbuy.market.plus.domain.activity.model.valobj.GroupBuyPrice;
 import groupbuy.market.plus.types.enums.ResponseCodeEnum;
 import groupbuy.market.plus.types.exception.AppException;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +30,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
@@ -133,6 +133,7 @@ public class TradeRepositoryImpl implements TradeRepository {
                     .teamId(teamId)
                     .activityId(groupBuyTeamEntity.getActivityId())
                     .goodsId(groupBuyTeamEntity.getGoodsId())
+                    .tierId(groupBuyTeamEntity.getTierId())
                     .source(orderDetailEntity.getSource())
                     .channel(orderDetailEntity.getChannel())
                     .originalPrice(orderDetailEntity.getOriginalPrice())
@@ -162,7 +163,8 @@ public class TradeRepositoryImpl implements TradeRepository {
         // 用户拼团订单写入数据库
         String orderId = GroupBuyConstants.ORDER.concat(RandomStringUtils.randomNumeric(12));
         // 团长有额外优惠
-        BigDecimal payPrice = calculatePayPrice(checkLockResEntity.getIsHeader(), orderDetailEntity.getPayPrice());
+        BigDecimal payPrice = checkLockResEntity.getIsHeader()
+                ? GroupBuyPrice.leaderPrice(orderDetailEntity.getPayPrice()) : orderDetailEntity.getPayPrice();
         BigDecimal deductionPrice = orderDetailEntity.getOriginalPrice().subtract(payPrice);
         String sign = checkLockResEntity.getIsHeader() ? GroupBuyConstants.HEADER : GroupBuyConstants.MEMBER;
         String bizId = groupBuyTeamEntity.getActivityId() + Constants.UNDERSCORE +
@@ -202,25 +204,6 @@ public class TradeRepositoryImpl implements TradeRepository {
                 .payPrice(payPrice)
                 .orderStatusEnum(OrderStatusEnum.CREATE)
                 .build();
-    }
-
-    /**
-     * 根据是否为团长进行最终支付价格计算
-     * @param isHeader 是否为团长
-     * @param payPrice 支付价格
-     * @return
-     */
-    private BigDecimal calculatePayPrice(Boolean isHeader, BigDecimal payPrice) {
-        // 团长有额外优惠
-        if (isHeader) {
-            BigDecimal endPrice = payPrice.multiply(GroupBuyConstants.HeaderDiscount).setScale(2, RoundingMode.HALF_UP);
-            // 最少支付0.01
-            if (endPrice.compareTo(GroupBuyConstants.MinPrice) < 0) {
-                return GroupBuyConstants.MinPrice;
-            }
-            return endPrice;
-        }
-        return payPrice;
     }
 
     @Override
@@ -294,6 +277,11 @@ public class TradeRepositoryImpl implements TradeRepository {
                 .teamId(teamId)
                 .activityId(groupBuyTeam.getActivityId())
                 .goodsId(groupBuyTeam.getGoodsId())
+                .tierId(groupBuyTeam.getTierId())
+                .source(groupBuyTeam.getSource())
+                .channel(groupBuyTeam.getChannel())
+                .originalPrice(groupBuyTeam.getOriginalPrice())
+                .memberPrice(groupBuyTeam.getPayPrice())
                 .startTime(groupBuyTeam.getStartTime())
                 .endTime(groupBuyTeam.getEndTime())
                 .targetCount(groupBuyTeam.getTargetCount())

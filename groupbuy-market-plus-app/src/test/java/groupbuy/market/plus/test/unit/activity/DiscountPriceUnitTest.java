@@ -4,11 +4,10 @@ import groupbuy.market.plus.domain.activity.model.valobj.ActivityVO;
 import groupbuy.market.plus.domain.activity.model.valobj.DiscountTypeEnum;
 import groupbuy.market.plus.domain.activity.service.discount.DisCountService;
 import groupbuy.market.plus.domain.activity.service.discount.impl.*;
-import groupbuy.market.plus.infrastructure.adapter.repository.TradeRepositoryImpl;
+import groupbuy.market.plus.domain.activity.model.valobj.GroupBuyPrice;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.lang.reflect.Method;
 import java.math.BigDecimal;
 
 /**
@@ -54,17 +53,9 @@ public class DiscountPriceUnitTest {
     }
 
     @Test
-    public void test_headerPrice_roundToCent() throws Exception {
-        Method method = TradeRepositoryImpl.class.getDeclaredMethod("calculatePayPrice", Boolean.class, BigDecimal.class);
-        method.setAccessible(true);
-        TradeRepositoryImpl tradeRepository = new TradeRepositoryImpl();
-
-        // 84.99 × 0.95 = 80.7405 → 80.74
-        Assert.assertEquals(new BigDecimal("80.74"), method.invoke(tradeRepository, true, new BigDecimal("84.99")));
-        // 团员不打折
-        Assert.assertEquals(new BigDecimal("84.99"), method.invoke(tradeRepository, false, new BigDecimal("84.99")));
-        // 0.01 × 0.95 → 最低 0.01
-        Assert.assertEquals(0, new BigDecimal("0.01").compareTo((BigDecimal) method.invoke(tradeRepository, true, new BigDecimal("0.01"))));
+    public void test_headerPrice_roundToCent() {
+        Assert.assertEquals(new BigDecimal("80.74"), GroupBuyPrice.leaderPrice(new BigDecimal("84.99")));
+        Assert.assertEquals(new BigDecimal("0.01"), GroupBuyPrice.leaderPrice(new BigDecimal("0.01")));
     }
 
     private void assertPrice(String expected, DisCountService disCountService, String originalPrice, String marketExpr) {

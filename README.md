@@ -7,7 +7,7 @@
 | 能力 | 说明 |
 |---|---|
 | 商品页试算 | 按活动配置计算原价、优惠金额、实付价，支持直减 / 满减 / 折扣 / 满折扣 / N 元购 5 种优惠，支持人群标签限定 |
-| 拼团组队 | 团长开团、团员参团，Redis 无锁抢占组队名额，团长额外 95 折 |
+| 拼团组队 | 支持普通拼团和自选档位团，Redis 按组队目标人数抢占名额，团长额外 95 折 |
 | 锁单 | 用户下单时占用组队名额，同一外部交易单号幂等 |
 | 结算 | 商城支付成功后结算，凑满人数即拼团完成并触发回调 |
 | 退单 | 区分「未成团未支付 / 未成团已支付 / 已成团已支付」三种场景，团长退单自动转移团长身份并通知新团长 |
@@ -88,7 +88,7 @@ sequenceDiagram
 
 ### 2. 数据库
 
-> 仓库暂未提供建表脚本，需要自行准备。
+> 基础表需要自行准备。已有数据库按版本执行 [自选档位迁移脚本](db/migration/2026-11-18-tiered-group-buy.sql)。
 
 涉及的数据表：
 
@@ -97,12 +97,30 @@ sequenceDiagram
 | `activity` | 拼团活动配置（目标人数、有效时长、参与次数上限、人群标签等） |
 | `discount` | 优惠配置（优惠类型、营销计划 ZJ/MJ/ZK/MZK/N、计算表达式、人群标签） |
 | `sku` | 商品信息 |
-| `sc_sku_activity` | 来源、渠道、商品与活动的关联 |
+| `sc_sku_activity` | 来源、渠道、商品与活动的关联，及该映射的可选拼团档位 |
 | `crowd_tags` / `crowd_tags_user` / `crowd_tags_job` | 人群标签、标签用户、标签任务 |
-| `group_buy_team` | 拼团组队（目标量、锁单量、完成量、状态、有效期、回调配置） |
+| `group_buy_team` | 拼团组队（含开团档位、人数、价格、状态、有效期及回调配置） |
 | `group_buy_team_order` | 拼团订单（外部交易单号、价格、状态、邀请人） |
 | `notify_task` | 回调任务（按 `task_id` 唯一标识，建议为其建立唯一索引） |
 | `invite` | 邀请码 |
+
+#### 自选档位配置
+
+先在目标库执行迁移脚本，确认两列已添加、现有记录的新列为空，再部署应用。所有实例升级后，从现有普通团活动配置出发，设置对应商品、来源和渠道的档位。保留原活动与普通优惠配置，商品页的 `goods.payPrice` 继续返回原试算口径，选档下单使用 `tiers` 给出的报价。
+
+```sql
+UPDATE sc_sku_activity
+SET tiers_json = '[
+  {"tierId": 1, "targetCount": 3, "memberPrice": 79.00},
+  {"tierId": 2, "targetCount": 5, "memberPrice": 69.00}
+]'
+WHERE activity_id = 100123 AND goods_id = '9890001'
+  AND source = 's01' AND channel = 'c01';
+```
+
+上述 ID 为示例，执行前先核对目标行和商品原价。档位 ID 为正整数，同一配置内唯一。成团人数至少为 2，按人数升序展示，人数越多价格越低。团员价以元计，最多精确到分，在 0.01 元与商品原价之间。团长价为团员价的 95%，四舍五入到分，最低 0.01 元。
+
+需要停止开放新档位时，将对应映射的 `tiers_json` 设为 `NULL`。现有档位团仍按开团时保存的人数和价格继续交易。回滚旧版应用前，应先关闭档位并等待在途档位团处理完成。迁移的两列允许为空，可以保留以备再次部署。
 
 ### 3. 配置
 
@@ -170,6 +188,8 @@ java -jar groupbuy-market-plus-app/target/groupbuy-market-plus-app.jar
 }
 ```
 
+有资格的用户在 `data.tiers` 中收到可选开团档位，每档包含 `tierId`、`targetCount`、`memberPrice` 和 `leaderPrice`。普通团和不具备资格的用户返回空档位列表。可加入的档位组队在 `teamList` 中携带开团时的 `tierId` 和 `memberPrice`，改价后仍按该组队的价格参团。
+
 ### 锁单 `/trade/lock_order`
 
 ```json
@@ -191,10 +211,12 @@ java -jar groupbuy-market-plus-app/target/groupbuy-market-plus-app.jar
 ```
 
 - `teamId` 为空表示开团（成为团长），不为空表示加入该组队。
-- `inviteId` 为邀请码，凭码参团时填写。
+- `inviteId` 为邀请码，凭码参团时填写。只传邀请码也会解析出参团组队。
+- 自选档位团开团时传入 `tierId`（如 `1`），参团时可省略。如同时传入，必须和已选组队的档位一致。档位团须在同一来源和渠道内参团。普通团省略 `tierId`。
+- 锁单成功返回 `teamId`，商城可以用它查询进度或生成邀请。重复请求同一笔未支付订单时返回原组队和原金额。
 - `notifyType`：`1` HTTP（填 `notifyUrl`、`headerRefundNotifyUrl`），`2` MQ（填 `notifyMQ`、`refundNotifyMQ`、`headerRefundNotifyMQ`）。
 
-锁单响应的 `deductionPrice` 是总优惠，等于 `originalPrice - payPrice`，包含团长额外优惠。未支付订单重试时按原订单金额返回。用户不具备活动参与资格时返回 `E0033`，参团商品与开团商品不一致时返回 `E0034`。
+锁单响应的 `deductionPrice` 是总优惠，等于 `originalPrice - payPrice`，包含团长额外优惠。未支付订单重试时按原订单金额返回。用户不具备活动参与资格时返回 `E0033`，参团商品与开团商品不一致时返回 `E0034`。自选档位缺失、无效或与组队不一致时返回 `E0035`，档位配置校验失败返回 `E0036`，档位团来源或渠道不一致返回 `E0037`。
 
 ### 结算 `/trade/settle_order`
 

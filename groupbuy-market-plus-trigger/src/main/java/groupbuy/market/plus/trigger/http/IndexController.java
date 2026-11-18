@@ -8,9 +8,12 @@ import groupbuy.market.plus.api.response.Response;
 import groupbuy.market.plus.domain.activity.model.entity.IndexTeamEntity;
 import groupbuy.market.plus.domain.activity.model.entity.MarketProductEntity;
 import groupbuy.market.plus.domain.activity.model.entity.TrialBalanceEntity;
+import groupbuy.market.plus.domain.activity.model.valobj.GroupBuyPrice;
+import groupbuy.market.plus.domain.activity.model.valobj.GroupBuyTierVO;
 import groupbuy.market.plus.domain.activity.model.valobj.StatisticsVO;
 import groupbuy.market.plus.domain.activity.service.IndexGroupBuyMarketService;
 import groupbuy.market.plus.types.enums.ResponseCodeEnum;
+import groupbuy.market.plus.types.exception.AppException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.bind.annotation.*;
@@ -51,6 +54,18 @@ public class IndexController implements IndexService {
                             .build());
 
             Long activityId = trialBalanceEntity.getActivityVO().getActivityId();
+            boolean eligible = Boolean.TRUE.equals(trialBalanceEntity.getIsEnable());
+            List<IndexResponseDTO.Tier> tiers = eligible
+                    ? GroupBuyTierVO.validate(trialBalanceEntity.getActivityVO().getTiers(), trialBalanceEntity.getOriginalPrice())
+                            .stream()
+                            .map(tier -> IndexResponseDTO.Tier.builder()
+                                    .tierId(tier.tierId())
+                                    .targetCount(tier.targetCount())
+                                    .memberPrice(tier.memberPrice())
+                                    .leaderPrice(GroupBuyPrice.leaderPrice(tier.memberPrice()))
+                                    .build())
+                            .toList()
+                    : List.of();
             // 查询拼团组队信息
             List<IndexTeamEntity> teamEntityList = indexGroupBuyMarketService.getTeamList(activityId, indexRequestDTO.getUserId(), indexRequestDTO.getGoodsId(), indexRequestDTO.getSource(),
                     indexRequestDTO.getChannel(), 1, 2);
@@ -70,6 +85,8 @@ public class IndexController implements IndexService {
                 for (IndexTeamEntity indexTeamEntity : teamEntityList) {
                     teamList.add(IndexResponseDTO.Team.builder()
                                     .teamId(indexTeamEntity.getTeamId())
+                                    .tierId(eligible ? indexTeamEntity.getTierId() : null)
+                                    .memberPrice(eligible ? indexTeamEntity.getMemberPrice() : null)
                                     .targetCount(indexTeamEntity.getTargetCount())
                                     .completeCount(indexTeamEntity.getCompleteCount())
                                     .lockCount(indexTeamEntity.getLockCount())
@@ -88,6 +105,7 @@ public class IndexController implements IndexService {
 
             IndexResponseDTO indexResponseDTO = IndexResponseDTO.builder()
                     .goods(goods)
+                    .tiers(tiers)
                     .teamList(teamList)
                     .statistics(statistics)
                     .build();
@@ -99,6 +117,10 @@ public class IndexController implements IndexService {
                     .build();
 
         } catch (Exception e) {
+            if (e instanceof AppException appException && ResponseCodeEnum.E0036.getCode().equals(appException.getCode())) {
+                log.warn("商品拼团档位配置不可用，商品ID：{}", indexRequestDTO.getGoodsId());
+                return Response.<IndexResponseDTO>builder().code(appException.getCode()).info(appException.getInfo()).build();
+            }
             log.info("获取商品详情页面数据失败，商品ID：{}，错误信息：{}", indexRequestDTO.getGoodsId(), e);
             return Response.<IndexResponseDTO>builder()
                     .code(ResponseCodeEnum.UN_ERROR.getCode())

@@ -19,6 +19,9 @@ public class CheckLockResEntity {
      */
     private Boolean isHeader;
 
+    /** 参团时已校验的组队，开团时为空。 */
+    private GroupBuyTeamEntity joinedTeam;
+
     /**
      * 恢复Key - 用于锁单失败恢复可用位置
      */

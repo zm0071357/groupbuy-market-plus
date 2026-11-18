@@ -25,6 +25,9 @@ public class IndexResponseDTO {
      */
     private Goods goods;
 
+    /** 当前用户可选择的开团档位，普通团时为空列表。 */
+    private List<Tier> tiers;
+
     /**
      * 拼团组队信息
      */
@@ -68,6 +71,11 @@ public class IndexResponseDTO {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class Team {
+
+        /** 开团时保留的档位及团员实付价，普通团时为空。 */
+        private Long tierId;
+
+        private BigDecimal memberPrice;
 
         /**
          * 组队ID
@@ -149,4 +157,16 @@ public class IndexResponseDTO {
         private Integer allTeamUserCount;
     }
 
+
+    /** 商品页可选的开团档位，价格单位为元。 */
+    @Data
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class Tier {
+        private Long tierId;
+        private Integer targetCount;
+        private BigDecimal memberPrice;
+        private BigDecimal leaderPrice;
+    }
 }
