@@ -88,9 +88,22 @@ public class LockOrderActivityCheckUnitTest {
         verify(lockOrderService).lockOrder(any(UserEntity.class), any(GroupBuyTeamEntity.class), any(OrderDetailEntity.class));
     }
 
+    @Test
+    public void rejectsIneligibleUserBeforeLockingWithOrWithoutInvite() throws Exception {
+        TrialBalanceEntity trial = buildTrial(ACTIVITY_ID);
+        trial.setIsEnable(false);
+        when(indexGroupBuyMarketService.indexMarketTrial(any(MarketProductEntity.class))).thenReturn(trial);
+
+        Assert.assertEquals(ResponseCodeEnum.E0033.getCode(), tradeController.lockOrder(request).getCode());
+        request.setInviteId("INVITE001");
+        Assert.assertEquals(ResponseCodeEnum.E0033.getCode(), tradeController.lockOrder(request).getCode());
+        verify(lockOrderService, never()).lockOrder(any(), any(), any());
+    }
+
     private TrialBalanceEntity buildTrial(Long activityId) {
         return TrialBalanceEntity.builder()
                 .goodsId("9890001")
+                .isEnable(true)
                 .originalPrice(new BigDecimal("100.00"))
                 .deductionPrice(new BigDecimal("20.00"))
                 .payPrice(new BigDecimal("80.00"))

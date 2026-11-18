@@ -52,6 +52,8 @@ public enum ResponseCodeEnum {
     E0030("E0030", "组队与活动不匹配"),
     E0031("E0031", "请求处理中，请勿重复提交"),
     E0032("E0032", "来源渠道与订单不一致"),
+    E0033("E0033", "当前用户不具备该活动的参与资格"),
+    E0034("E0034", "组队与商品不匹配"),
     ;
     private String code;
     private String info;

@@ -26,6 +26,7 @@ public class TrialEndNode extends AbstractGroupBuyMarketSupport<MarketProductEnt
                 .deductionPrice(dynamicContext.getDeductionPrice() == null ? BigDecimal.ZERO : dynamicContext.getDeductionPrice())
                 .payPrice(dynamicContext.getPayPrice() == null ? dynamicContext.getSkuVO().getOriginalPrice() : dynamicContext.getPayPrice())
                 .activityVO(dynamicContext.getActivityVO())
+                .isEnable(dynamicContext.isDiscount())
                 .build();
     }
 

@@ -194,6 +194,8 @@ java -jar groupbuy-market-plus-app/target/groupbuy-market-plus-app.jar
 - `inviteId` 为邀请码，凭码参团时填写。
 - `notifyType`：`1` HTTP（填 `notifyUrl`、`headerRefundNotifyUrl`），`2` MQ（填 `notifyMQ`、`refundNotifyMQ`、`headerRefundNotifyMQ`）。
 
+锁单响应的 `deductionPrice` 是总优惠，等于 `originalPrice - payPrice`，包含团长额外优惠。未支付订单重试时按原订单金额返回。用户不具备活动参与资格时返回 `E0033`，参团商品与开团商品不一致时返回 `E0034`。
+
 ### 结算 `/trade/settle_order`
 
 ```json

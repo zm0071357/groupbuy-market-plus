@@ -27,7 +27,7 @@ public class LockOrderResponseDTO {
     private BigDecimal originalPrice;
 
     /**
-     * 折扣价格
+     * 总优惠金额（原价减最终实付）
      */
     private BigDecimal deductionPrice;
 

@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.Date;
+import java.util.Objects;
 
 /**
  * 组队过滤节点 - 参团时校验组队存在、属于本活动、拼单中且在有效期内
@@ -49,6 +50,9 @@ public class TeamFilter implements LogicHandler<CheckLockEntity, LockOrderLinkFa
             throw new AppException(ResponseCodeEnum.E0029.getCode(), ResponseCodeEnum.E0029.getInfo());
         }
 
+        if (!Objects.equals(checkLockEntity.getGoodsId(), groupBuyTeamEntity.getGoodsId())) {
+            throw new AppException(ResponseCodeEnum.E0034.getCode(), ResponseCodeEnum.E0034.getInfo());
+        }
         return next(checkLockEntity, dynamicContext);
     }
 

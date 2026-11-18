@@ -19,6 +19,9 @@ public class CheckLockEntity {
      */
     private Long activityId;
 
+    /** 本次锁单商品 ID */
+    private String goodsId;
+
     /**
      * 用户ID
      */

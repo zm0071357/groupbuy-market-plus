@@ -30,6 +30,7 @@ import static org.mockito.Mockito.*;
 @RunWith(MockitoJUnitRunner.class)
 public class LockOrderLinkUnitTest {
 
+    private static final String GOODS_ID = "9890001";
     private static final Long ACTIVITY_ID = 100123L;
     private static final String TEAM_ID = "TEAM12345678";
     private static final String INVITE_ID = "INVITE001";
@@ -132,6 +133,18 @@ public class LockOrderLinkUnitTest {
         verify(tradeRepository, never()).getTeamById(anyString());
     }
 
+    @Test
+    public void rejectsOtherGoodsBeforeStockReservationForTeamAndInvite() {
+        CheckLockEntity direct = buildCheckLock(TEAM_ID, null);
+        CheckLockEntity invite = buildCheckLock(null, INVITE_ID);
+        direct.setGoodsId("9890002");
+        invite.setGoodsId("9890002");
+
+        assertReject(direct, ResponseCodeEnum.E0034);
+        assertReject(invite, ResponseCodeEnum.E0034);
+        verify(tradeRepository, never()).occupyTeamStock(anyInt(), anyInt(), anyString(), anyString());
+    }
+
     private void assertReject(CheckLockEntity checkLockEntity, ResponseCodeEnum expected) {
         try {
             lockOrderLink.apply(checkLockEntity, new LockOrderLinkFactory.DynamicContext());
@@ -146,6 +159,7 @@ public class LockOrderLinkUnitTest {
     private CheckLockEntity buildCheckLock(String teamId, String inviteId) {
         return CheckLockEntity.builder()
                 .activityId(ACTIVITY_ID)
+                .goodsId(GOODS_ID)
                 .userId(USER_ID)
                 .teamId(teamId)
                 .inviteId(inviteId)
@@ -156,6 +170,7 @@ public class LockOrderLinkUnitTest {
         return GroupBuyTeamEntity.builder()
                 .teamId(TEAM_ID)
                 .activityId(activityId)
+                .goodsId(GOODS_ID)
                 .teamStatusEnum(teamStatusEnum)
                 .startTime(new Date(System.currentTimeMillis() - 600_000))
                 .endTime(new Date(System.currentTimeMillis() + endOffsetMillis))

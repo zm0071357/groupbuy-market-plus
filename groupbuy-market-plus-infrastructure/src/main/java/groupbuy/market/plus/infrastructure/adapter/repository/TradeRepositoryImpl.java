@@ -163,6 +163,7 @@ public class TradeRepositoryImpl implements TradeRepository {
         String orderId = GroupBuyConstants.ORDER.concat(RandomStringUtils.randomNumeric(12));
         // 团长有额外优惠
         BigDecimal payPrice = calculatePayPrice(checkLockResEntity.getIsHeader(), orderDetailEntity.getPayPrice());
+        BigDecimal deductionPrice = orderDetailEntity.getOriginalPrice().subtract(payPrice);
         String sign = checkLockResEntity.getIsHeader() ? GroupBuyConstants.HEADER : GroupBuyConstants.MEMBER;
         String bizId = groupBuyTeamEntity.getActivityId() + Constants.UNDERSCORE +
                 userEntity.getUserId() + Constants.UNDERSCORE +
@@ -181,7 +182,7 @@ public class TradeRepositoryImpl implements TradeRepository {
                     .source(orderDetailEntity.getSource())
                     .channel(orderDetailEntity.getChannel())
                     .originalPrice(orderDetailEntity.getOriginalPrice())
-                    .deductionPrice(orderDetailEntity.getDeductionPrice())
+                    .deductionPrice(deductionPrice)
                     .payPrice(payPrice)
                     .isHeader(checkLockResEntity.getIsHeader() ? 1 : 0)
                     .status(OrderStatusEnum.CREATE.getCode())
@@ -197,7 +198,7 @@ public class TradeRepositoryImpl implements TradeRepository {
                 .orderId(orderId)
                 .isHeader(checkLockResEntity.getIsHeader())
                 .originalPrice(orderDetailEntity.getOriginalPrice())
-                .deductionPrice(orderDetailEntity.getDeductionPrice())
+                .deductionPrice(deductionPrice)
                 .payPrice(payPrice)
                 .orderStatusEnum(OrderStatusEnum.CREATE)
                 .build();
@@ -231,12 +232,17 @@ public class TradeRepositoryImpl implements TradeRepository {
         if (groupBuyTeamOrder == null) {
             return null;
         }
+        BigDecimal originalPrice = groupBuyTeamOrder.getOriginalPrice();
+        BigDecimal payPrice = groupBuyTeamOrder.getPayPrice();
+        // 历史团长订单可能只保存了活动优惠，重试按订单实际金额重算。
+        BigDecimal deductionPrice = originalPrice != null && payPrice != null
+                ? originalPrice.subtract(payPrice) : groupBuyTeamOrder.getDeductionPrice();
         return LockOrderEntity.builder()
                 .teamId(groupBuyTeamOrder.getTeamId())
                 .orderId(groupBuyTeamOrder.getOrderId())
                 .isHeader(Integer.valueOf(1).equals(groupBuyTeamOrder.getIsHeader()))
                 .originalPrice(groupBuyTeamOrder.getOriginalPrice())
-                .deductionPrice(groupBuyTeamOrder.getDeductionPrice())
+                .deductionPrice(deductionPrice)
                 .payPrice(groupBuyTeamOrder.getPayPrice())
                 .orderStatusEnum(OrderStatusEnum.valueOf(groupBuyTeamOrder.getStatus()))
                 .build();
@@ -287,6 +293,7 @@ public class TradeRepositoryImpl implements TradeRepository {
         return GroupBuyTeamEntity.builder()
                 .teamId(teamId)
                 .activityId(groupBuyTeam.getActivityId())
+                .goodsId(groupBuyTeam.getGoodsId())
                 .startTime(groupBuyTeam.getStartTime())
                 .endTime(groupBuyTeam.getEndTime())
                 .targetCount(groupBuyTeam.getTargetCount())

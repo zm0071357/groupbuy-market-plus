@@ -53,6 +53,7 @@ public class LockOrderServiceImpl implements LockOrderService{
         // 责任链过滤
         CheckLockEntity checkLockEntity = CheckLockEntity.builder()
                 .activityId(groupBuyTeamEntity.getActivityId())
+                .goodsId(orderDetailEntity.getGoodsId())
                 .userId(userEntity.getUserId())
                 .teamId(groupBuyTeamEntity.getTeamId())
                 .inviteId(userEntity.getInviteId())

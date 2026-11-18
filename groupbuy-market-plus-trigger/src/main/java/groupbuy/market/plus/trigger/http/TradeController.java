@@ -124,6 +124,10 @@ public class TradeController implements TradeService {
                         .build();
             }
 
+            if (!Boolean.TRUE.equals(trialBalanceEntity.getIsEnable())) {
+                throw new AppException(ResponseCodeEnum.E0033.getCode(), ResponseCodeEnum.E0033.getInfo());
+            }
+
             // 锁单
             lockOrderEntity = lockOrderService.lockOrder(
                     UserEntity.builder()
