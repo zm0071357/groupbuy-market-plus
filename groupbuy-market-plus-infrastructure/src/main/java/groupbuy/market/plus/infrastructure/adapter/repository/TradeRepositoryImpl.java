@@ -34,7 +34,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 @Slf4j
@@ -397,32 +396,26 @@ public class TradeRepositoryImpl implements TradeRepository {
         return notifyTaskDao.updateNotifyTaskFail(taskId);
     }
 
+    // 团长已占一个位置。只给获准的请求递增计数，避免失败回减与其他请求交错。
+    private static final String OCCUPY_TEAM_STOCK_SCRIPT = """
+            local requested = tonumber(redis.call('get', KEYS[1]) or '0') + 1
+            local recovered = tonumber(redis.call('get', KEYS[2]) or '0')
+            if requested + 1 > tonumber(ARGV[1]) + recovered then
+                return 0
+            end
+            redis.call('incr', KEYS[1])
+            redis.call('pexpire', KEYS[1], ARGV[2])
+            redis.call('pexpire', KEYS[2], ARGV[2])
+            return 1
+            """;
+
     @Override
     public boolean occupyTeamStock(Integer target, Integer validTime, String teamStockOccupyKey, String teamStockRecoverKey) {
-        // 获取恢复量 - 没有恢复量时，get()方法会返回0
-        // 恢复量：当拼团锁单最后失败，失败了需要把这个位置给恢复，其他用户可以抢占这个恢复位置，原来抢占失败的位置视为已经占有
-        long teamStockRecoverCount = redissonClient.getAtomicLong(teamStockRecoverKey).get();
-        // 抢占量+1，再加上团长原先就占有的一个位置即为目前的总抢占量
-        RAtomicLong teamStockOccupy = redissonClient.getAtomicLong(teamStockOccupyKey);
-        long teamStockOccupyCount = teamStockOccupy.incrementAndGet() + 1;
-        // 抢占Key、恢复Key 设置过期时间（拼团有效时间 + 60分钟），组队结束后自动清理
-        Duration teamStockExpire = getTeamStockExpire(validTime);
-        teamStockOccupy.expire(teamStockExpire);
-        redissonClient.getAtomicLong(teamStockRecoverKey).expire(teamStockExpire);
-        // 抢占量大于恢复量+目标量 - 位置已经不够了，返回失败
-        if (teamStockOccupyCount > teamStockRecoverCount + target) {
-            // 回滚本次自增 - 失败的抢占不占用位置，避免抢占量虚高导致后续恢复的位置无法再被抢占
-            teamStockOccupy.decrementAndGet();
-            return false;
-        }
-        // 给每个产生的值加锁兜底，虽然incr操作是原子的，基本不会产生一样的值
-        // 但在实际生产中，遇到过集群的运维配置问题，以及业务运营配置数据问题，导致incr得到的值相同
-        String lockKey = teamStockOccupyKey + Constants.UNDERSCORE + teamStockOccupyCount;
-        boolean lock = redissonClient.getBucket(lockKey).trySet("lock", validTime + 60, TimeUnit.MINUTES);
-        if (!lock) {
-            log.info("拼团抢占可用位置加锁失败：{}", lockKey);
-        }
-        return lock;
+        Long occupied = redissonClient.getScript(StringCodec.INSTANCE).eval(RScript.Mode.READ_WRITE,
+                OCCUPY_TEAM_STOCK_SCRIPT, RScript.ReturnType.INTEGER,
+                Arrays.asList(teamStockOccupyKey, teamStockRecoverKey),
+                String.valueOf(target), String.valueOf(getTeamStockExpire(validTime).toMillis()));
+        return Long.valueOf(1).equals(occupied);
     }
 
     @Override
@@ -438,7 +431,7 @@ public class TradeRepositoryImpl implements TradeRepository {
     }
 
     /**
-     * 组队库存相关 Key 的过期时间：拼团有效时间 + 60分钟，与抢占位置加锁保持一致
+     * 组队库存相关 Key 的过期时间：拼团有效时间 + 60分钟
      */
     private Duration getTeamStockExpire(Integer validTime) {
         return Duration.ofMinutes((validTime == null ? 0 : validTime) + 60L);
@@ -458,8 +451,8 @@ public class TradeRepositoryImpl implements TradeRepository {
 
     @Override
     public Long recoverTeamStockOnce(String teamStockRecoverKey, String orderId, Integer validTime) {
-        // 防重标记与抢占位置的加锁保持相同过期时间：拼团有效时间 + 60分钟
-        long expireMillis = TimeUnit.MINUTES.toMillis((validTime == null ? 0 : validTime) + 60);
+        // 防重标记与库存计数使用相同的过期时间。
+        long expireMillis = getTeamStockExpire(validTime).toMillis();
         String recoverOnceKey = teamStockRecoverKey + Constants.UNDERSCORE + orderId;
         Long recoverCount = redissonClient.getScript(StringCodec.INSTANCE).eval(RScript.Mode.READ_WRITE,
                 RECOVER_TEAM_STOCK_ONCE_SCRIPT, RScript.ReturnType.INTEGER,

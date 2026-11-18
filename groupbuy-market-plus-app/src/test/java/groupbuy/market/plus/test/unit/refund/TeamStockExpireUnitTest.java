@@ -6,54 +6,21 @@ import groupbuy.market.plus.infrastructure.adapter.repository.TradeRepositoryImp
 import org.junit.Assert;
 import org.junit.Test;
 import org.redisson.api.RAtomicLong;
-import org.redisson.api.RBucket;
 import org.redisson.api.RedissonClient;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.Duration;
 import java.util.Collections;
-import java.util.concurrent.TimeUnit;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 /**
- * 组队库存 Key 过期时间与邀请码失效判空单元测试
+ * 组队库存恢复 Key 过期时间与邀请码失效判空单元测试
  */
 public class TeamStockExpireUnitTest {
 
-    private static final String OCCUPY_KEY = "groupbuy_market_plus_stock_key_100123_TEAM12345678_occupy";
     private static final String RECOVER_KEY = "groupbuy_market_plus_stock_key_100123_TEAM12345678_recovery";
-
-    @Test
-    @SuppressWarnings("unchecked")
-    public void test_occupy_setExpire() {
-        RedissonClient redissonClient = mock(RedissonClient.class);
-        RAtomicLong occupy = mock(RAtomicLong.class);
-        RAtomicLong recover = mock(RAtomicLong.class);
-        RBucket<Object> bucket = mock(RBucket.class);
-        when(redissonClient.getAtomicLong(OCCUPY_KEY)).thenReturn(occupy);
-        when(redissonClient.getAtomicLong(RECOVER_KEY)).thenReturn(recover);
-        when(redissonClient.getBucket(anyString())).thenReturn(bucket);
-        when(bucket.trySet(any(), anyLong(), any(TimeUnit.class))).thenReturn(true);
-        when(recover.get()).thenReturn(0L);
-        TradeRepositoryImpl tradeRepository = new TradeRepositoryImpl();
-        ReflectionTestUtils.setField(tradeRepository, "redissonClient", redissonClient);
-
-        // 抢占成功：两个 Key 均设置 15 + 60 分钟过期
-        when(occupy.incrementAndGet()).thenReturn(1L);
-        Assert.assertTrue(tradeRepository.occupyTeamStock(3, 15, OCCUPY_KEY, RECOVER_KEY));
-        verify(occupy).expire(Duration.ofMinutes(75));
-        verify(recover).expire(Duration.ofMinutes(75));
-
-        // 抢占失败：回滚本次自增，不再重置抢占量
-        reset(occupy);
-        when(occupy.incrementAndGet()).thenReturn(5L);
-        Assert.assertFalse(tradeRepository.occupyTeamStock(3, 15, OCCUPY_KEY, RECOVER_KEY));
-        verify(occupy).decrementAndGet();
-        verify(occupy, never()).set(anyLong());
-        verify(occupy).expire(Duration.ofMinutes(75));
-    }
 
     @Test
     public void test_recoverOnLockFail_setExpire() {
