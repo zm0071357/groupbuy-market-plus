@@ -8,6 +8,7 @@ import groupbuy.market.plus.domain.trade.model.entity.UserEntity;
 import groupbuy.market.plus.domain.trade.model.valobj.NotifyConfigVO;
 import groupbuy.market.plus.domain.trade.model.valobj.NotifyTypeEnum;
 import groupbuy.market.plus.infrastructure.adapter.repository.TradeRepositoryImpl;
+import groupbuy.market.plus.infrastructure.adapter.repository.SkipGroupLedger;
 import groupbuy.market.plus.infrastructure.dao.GroupBuyTeamDao;
 import groupbuy.market.plus.infrastructure.dao.GroupBuyTeamOrderDao;
 import groupbuy.market.plus.infrastructure.dao.NotifyTaskDao;
@@ -43,6 +44,9 @@ public class SettleOrderRepositoryUnitTest {
 
     @Mock
     private NotifyTaskDao notifyTaskDao;
+
+    @Mock
+    private SkipGroupLedger skipGroupLedger;
 
     @InjectMocks
     private TradeRepositoryImpl tradeRepository;

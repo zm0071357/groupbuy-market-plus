@@ -32,7 +32,8 @@ public class TeamStatusFilter implements LogicHandler<CheckInviteEntity, InviteL
         if (teamProgressVO == null) {
             throw new AppException(ResponseCodeEnum.E0015.getCode(), ResponseCodeEnum.E0015.getInfo());
         }
-        if (!teamProgressVO.getStatus().equals(TeamStatusEnum.PROGRESS.getStatus())) {
+        if (Boolean.TRUE.equals(teamProgressVO.getSkipGroup())
+                || !teamProgressVO.getStatus().equals(TeamStatusEnum.PROGRESS.getStatus())) {
             throw new AppException(ResponseCodeEnum.E0023.getCode(), ResponseCodeEnum.E0023.getInfo());
         }
         return tradeRepository.invite(checkInviteEntity.getInviteUserId(), checkInviteEntity.getTeamId());

@@ -8,6 +8,7 @@
         <result column="activity_id" property="activityId"/>
         <result column="goods_id" property="goodsId"/>
         <result column="tier_id" property="tierId"/>
+        <result column="skip_group" property="skipGroup"/>
         <result column="source" property="source"/>
         <result column="channel" property="channel"/>
         <result column="original_price" property="originalPrice"/>
@@ -33,12 +34,12 @@
         insert into group_buy_team(
             team_id, activity_id, goods_id, tier_id, source, channel, original_price,
             deduction_price, pay_price, target_count, complete_count, lock_count,
-            status, start_time, end_time, notify_type, notify_url, notify_mq,
+            status, start_time, end_time, notify_type, notify_url, notify_mq, skip_group,
             refund_notify_mq, header_refund_notify_url, header_refund_notify_mq, create_time, update_time
         ) values(
                     #{teamId}, #{activityId}, #{goodsId}, #{tierId,jdbcType=BIGINT}, #{source}, #{channel}, #{originalPrice}, #{deductionPrice}, #{payPrice},
                     #{targetCount}, #{completeCount}, #{lockCount}, 0, #{startTime}, #{endTime}, #{notifyType}, #{notifyUrl},
-                    #{notifyMQ}, #{refundNotifyMQ}, #{headerRefundNotifyUrl}, #{headerRefundNotifyMQ}, now(), now()
+                    #{notifyMQ}, coalesce(#{skipGroup,jdbcType=TINYINT}, 0), #{refundNotifyMQ}, #{headerRefundNotifyUrl}, #{headerRefundNotifyMQ}, now(), now()
                 )
     </insert>
 
@@ -52,21 +53,21 @@
     </update>
 
     <select id="getTeamProgress" resultMap="dataMap" parameterType="java.lang.String">
-        select status, target_count, complete_count, lock_count
+        select status, target_count, complete_count, lock_count, skip_group
         from group_buy_team
         where team_id = #{teamId}
     </select>
 
     <select id="getTeamById" resultMap="dataMap" parameterType="java.lang.String">
         select team_id, activity_id, goods_id, tier_id, source, channel, original_price, pay_price, target_count, complete_count, lock_count,
-               status, notify_type, notify_url, refund_notify_mq, header_refund_notify_url, header_refund_notify_mq,
+               status, notify_type, notify_url, refund_notify_mq, header_refund_notify_url, header_refund_notify_mq, skip_group,
                start_time, end_time
         from group_buy_team
         where team_id = #{teamId}
     </select>
 
     <select id="getTeamByIdForUpdate" resultMap="dataMap" parameterType="java.lang.String">
-        select team_id, activity_id, status, notify_type, header_refund_notify_url
+        select team_id, activity_id, status, notify_type, header_refund_notify_url, skip_group
         from group_buy_team
         where team_id = #{teamId}
         for update
@@ -112,7 +113,7 @@
     <select id="getRandomTeam" resultMap="dataMap">
         select team_id, tier_id, pay_price, target_count, complete_count, lock_count, start_time, end_time
         from group_buy_team
-        where status = 0 and lock_count &lt; target_count and end_time > now() and team_id in
+        where status = 0 and skip_group = 0 and lock_count &lt; target_count and end_time > now() and team_id in
         <foreach item="teamId" collection="teamIdList" open="(" separator="," close=")">
             #{teamId}
         </foreach>

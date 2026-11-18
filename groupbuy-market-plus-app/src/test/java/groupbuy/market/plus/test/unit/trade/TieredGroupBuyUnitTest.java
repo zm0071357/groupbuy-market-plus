@@ -22,6 +22,7 @@ import groupbuy.market.plus.domain.trade.service.lock.LockOrderServiceImpl;
 import groupbuy.market.plus.domain.trade.service.lock.factory.LockOrderLinkFactory;
 import groupbuy.market.plus.domain.trade.service.lock.filter.*;
 import groupbuy.market.plus.infrastructure.adapter.repository.TradeRepositoryImpl;
+import groupbuy.market.plus.infrastructure.adapter.repository.SkipGroupLedger;
 import groupbuy.market.plus.infrastructure.dao.GroupBuyTeamDao;
 import groupbuy.market.plus.infrastructure.dao.GroupBuyTeamOrderDao;
 import groupbuy.market.plus.infrastructure.dao.NotifyTaskDao;
@@ -68,6 +69,7 @@ public class TieredGroupBuyUnitTest {
         ReflectionTestUtils.setField(repository, "groupBuyTeamDao", teamDao);
         ReflectionTestUtils.setField(repository, "groupBuyTeamOrderDao", orderDao);
         ReflectionTestUtils.setField(repository, "notifyTaskDao", notifyTaskDao);
+        ReflectionTestUtils.setField(repository, "skipGroupLedger", mock(SkipGroupLedger.class));
 
         // 模拟数据库保存组队，让开团、参团及结算使用同一份持久化状态。
         doAnswer(call -> {

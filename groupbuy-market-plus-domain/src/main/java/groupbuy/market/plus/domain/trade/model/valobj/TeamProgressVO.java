@@ -19,6 +19,9 @@ public class TeamProgressVO {
      */
     private Integer status;
 
+    /** 是否为免拼交易，缺省走现有拼团规则。 */
+    private Boolean skipGroup;
+
     /**
      * 目标量
      */

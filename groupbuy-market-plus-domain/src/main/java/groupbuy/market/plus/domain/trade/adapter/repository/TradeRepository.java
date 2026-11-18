@@ -6,6 +6,7 @@ import groupbuy.market.plus.domain.trade.model.aggregate.RefundThreadTaskAggrega
 import groupbuy.market.plus.domain.trade.model.aggregate.SettleOrderAggregate;
 import groupbuy.market.plus.domain.trade.model.entity.*;
 import groupbuy.market.plus.domain.trade.model.valobj.TeamProgressVO;
+import groupbuy.market.plus.domain.trade.model.valobj.SkipGroupBalanceVO;
 import groupbuy.market.plus.domain.trade.model.valobj.RefundNotifyTasks;
 
 import java.util.Date;
@@ -238,4 +239,7 @@ public interface TradeRepository {
      * @param timeoutTeamIdList 超时的拼团ID集合
      */
     void inviteExpire(List<String> timeoutTeamIdList);
+    /** 获取用户在当前来源渠道的免拼次数与累计进度。 */
+    SkipGroupBalanceVO getSkipGroupBalance(String userId, String source, String channel);
+
 }

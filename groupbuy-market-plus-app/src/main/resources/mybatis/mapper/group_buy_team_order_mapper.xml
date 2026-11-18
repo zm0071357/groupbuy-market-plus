@@ -76,7 +76,7 @@
     </update>
 
     <select id="getCompleteTeamOutTradeNoList" resultMap="dataMap" parameterType="java.lang.String">
-        select invite_user_id, out_trade_no
+        select order_id, user_id, source, channel, invite_user_id, out_trade_no
         from group_buy_team_order
         where team_id = #{teamId} and status = 1
     </select>

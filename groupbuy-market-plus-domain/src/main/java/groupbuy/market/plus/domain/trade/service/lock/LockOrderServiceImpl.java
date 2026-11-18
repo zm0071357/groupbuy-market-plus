@@ -1,10 +1,12 @@
 package groupbuy.market.plus.domain.trade.service.lock;
 
 import groupbuy.market.plus.domain.activity.model.valobj.GroupBuyTierVO;
+import groupbuy.market.plus.domain.activity.model.valobj.GroupBuyPrice;
 import groupbuy.market.plus.domain.trade.adapter.repository.TradeRepository;
 import groupbuy.market.plus.domain.trade.model.aggregate.LockOrderAggregate;
 import groupbuy.market.plus.domain.trade.model.entity.*;
 import groupbuy.market.plus.domain.trade.model.valobj.TeamProgressVO;
+import groupbuy.market.plus.domain.trade.model.valobj.SkipGroupBalanceVO;
 import groupbuy.market.plus.domain.trade.service.lock.factory.LockOrderLinkFactory;
 import groupbuy.market.plus.types.common.Constants;
 import groupbuy.market.plus.types.common.GroupBuyConstants;
@@ -54,7 +56,9 @@ public class LockOrderServiceImpl implements LockOrderService{
 
     private LockOrderEntity doLockOrder(UserEntity userEntity, GroupBuyTeamEntity groupBuyTeamEntity, OrderDetailEntity orderDetailEntity) throws Exception {
         // 只有无组队、无邀请码的请求才是开团，可依据当前活动配置选择档位。
-        if (StringUtils.isBlank(groupBuyTeamEntity.getTeamId()) && StringUtils.isBlank(userEntity.getInviteId())) {
+        if (Boolean.TRUE.equals(groupBuyTeamEntity.getSkipGroup())) {
+            prepareSkipGroup(userEntity, groupBuyTeamEntity, orderDetailEntity);
+        } else if (StringUtils.isBlank(groupBuyTeamEntity.getTeamId()) && StringUtils.isBlank(userEntity.getInviteId())) {
             applyOpeningTier(groupBuyTeamEntity, orderDetailEntity);
         }
         // 责任链过滤
@@ -93,6 +97,23 @@ public class LockOrderServiceImpl implements LockOrderService{
             log.info("锁单失败 - 恢复可用位置，恢复Key：{}，当前恢复量：{}", checkLockResEntity.getTeamStockRecoverKey(), recoverTeamStockCount);
             throw e;
         }
+    }
+
+    private void prepareSkipGroup(UserEntity user, GroupBuyTeamEntity team, OrderDetailEntity order) {
+        if (StringUtils.isNotBlank(team.getTeamId()) || StringUtils.isNotBlank(user.getInviteId()) || team.getTierId() != null) {
+            throw new AppException(ResponseCodeEnum.E0046.getCode(), ResponseCodeEnum.E0046.getInfo());
+        }
+        if (!GroupBuyPrice.isValidOffer(order.getSkipGroupPrice(), order.getOriginalPrice())) {
+            throw new AppException(ResponseCodeEnum.E0044.getCode(), ResponseCodeEnum.E0044.getInfo());
+        }
+        team.setTargetCount(1);
+        order.setPayPrice(order.getSkipGroupPrice().setScale(2));
+        order.setDeductionPrice(order.getOriginalPrice().subtract(order.getPayPrice()));
+    }
+
+    @Override
+    public SkipGroupBalanceVO getSkipGroupBalance(String userId, String source, String channel) {
+        return tradeRepository.getSkipGroupBalance(userId, source, channel);
     }
 
     private void applyOpeningTier(GroupBuyTeamEntity team, OrderDetailEntity order) {

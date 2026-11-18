@@ -12,6 +12,7 @@ import groupbuy.market.plus.domain.trade.model.entity.LockOrderEntity;
 import groupbuy.market.plus.domain.trade.model.entity.OrderDetailEntity;
 import groupbuy.market.plus.domain.trade.model.entity.UserEntity;
 import groupbuy.market.plus.domain.trade.model.valobj.OrderStatusEnum;
+import groupbuy.market.plus.domain.trade.model.valobj.TeamProgressVO;
 import groupbuy.market.plus.domain.trade.service.lock.LockOrderService;
 import groupbuy.market.plus.trigger.http.TradeController;
 import groupbuy.market.plus.types.enums.ResponseCodeEnum;
@@ -97,6 +98,16 @@ public class LockOrderActivityCheckUnitTest {
         Assert.assertEquals(ResponseCodeEnum.E0033.getCode(), tradeController.lockOrder(request).getCode());
         request.setInviteId("INVITE001");
         Assert.assertEquals(ResponseCodeEnum.E0033.getCode(), tradeController.lockOrder(request).getCode());
+        verify(lockOrderService, never()).lockOrder(any(), any(), any());
+    }
+
+    @Test
+    public void rejectsJoiningSkipGroupBeforeCapacityChecks() throws Exception {
+        request.setTeamId("TEAM-SKIP");
+        when(lockOrderService.getTeamProgress("TEAM-SKIP")).thenReturn(TeamProgressVO.builder()
+                .skipGroup(true).targetCount(1).lockCount(1).build());
+
+        Assert.assertEquals(ResponseCodeEnum.E0046.getCode(), tradeController.lockOrder(request).getCode());
         verify(lockOrderService, never()).lockOrder(any(), any(), any());
     }
 

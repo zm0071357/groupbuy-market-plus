@@ -44,6 +44,9 @@ public class GroupBuyTeamEntity {
     /** 开团时选定的档位，普通团为空。 */
     private Long tierId;
 
+    /** 是否为免拼交易，缺省走现有拼团规则。 */
+    private Boolean skipGroup;
+
     /** 档位组队保存的商品原价和团员价，单位为元。 */
     private BigDecimal originalPrice;
     private BigDecimal memberPrice;

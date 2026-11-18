@@ -1,6 +1,5 @@
 package groupbuy.market.plus.domain.activity.model.valobj;
 
-import groupbuy.market.plus.types.common.GroupBuyConstants;
 import groupbuy.market.plus.types.enums.ResponseCodeEnum;
 import groupbuy.market.plus.types.exception.AppException;
 
@@ -23,9 +22,7 @@ public record GroupBuyTierVO(Long tierId, Integer targetCount, BigDecimal member
         for (GroupBuyTierVO tier : tiers) {
             if (tier == null || tier.tierId() == null || tier.tierId() <= 0 || !tierIds.add(tier.tierId())
                     || tier.targetCount() == null || tier.targetCount() < 2
-                    || tier.memberPrice() == null || tier.memberPrice().stripTrailingZeros().scale() > 2
-                    || tier.memberPrice().compareTo(GroupBuyConstants.MinPrice) < 0
-                    || originalPrice == null || tier.memberPrice().compareTo(originalPrice) > 0) {
+                    || !GroupBuyPrice.isValidOffer(tier.memberPrice(), originalPrice)) {
                 throw new AppException(ResponseCodeEnum.E0036.getCode(), ResponseCodeEnum.E0036.getInfo());
             }
         }

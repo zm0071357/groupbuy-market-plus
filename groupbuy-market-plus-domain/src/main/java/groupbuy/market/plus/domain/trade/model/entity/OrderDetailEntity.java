@@ -58,6 +58,9 @@ public class OrderDetailEntity {
      */
     private BigDecimal payPrice;
 
+    /** 活动配置的免拼实付价，空表示未启用。 */
+    private BigDecimal skipGroupPrice;
+
     /** 试算返回的开团档位配置。 */
     @Builder.Default
     private List<GroupBuyTierVO> tiers = List.of();

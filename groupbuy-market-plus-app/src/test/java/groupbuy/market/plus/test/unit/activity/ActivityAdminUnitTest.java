@@ -76,6 +76,18 @@ public class ActivityAdminUnitTest {
         assertEquals("E0041", assertThrows(AppException.class, () -> service.publish(1L)).getCode());
     }
 
+    @Test
+    public void previewsIndependentSkipPriceAndRejectsInvalidConfiguration() throws Exception {
+        MockMvc mvc = mvc(TOKEN);
+        String enabled = DRAFT_JSON.replace("\"validMinutes\":30", "\"skipGroupEnabled\":true,\"skipGroupPrice\":75,\"validMinutes\":30");
+        mvc.perform(post(BASE + "/preview").header("Authorization", "Bearer " + TOKEN)
+                        .contentType("application/json").content(enabled))
+                .andExpect(jsonPath("$.data.skipGroupPrice").value(75));
+        mvc.perform(post(BASE + "/preview").header("Authorization", "Bearer " + TOKEN)
+                        .contentType("application/json").content(enabled.replace("75", "101")))
+                .andExpect(jsonPath("$.code").value("E0044"));
+    }
+
     private MockMvc mvc(String token) {
         ActivityAdminController controller = new ActivityAdminController();
         ReflectionTestUtils.setField(controller, "service", service);
@@ -91,6 +103,6 @@ public class ActivityAdminUnitTest {
 
     private ActivityDraftVO draft() {
         return new ActivityDraftVO("首发团", "9890001", "s01", "c01", Instant.now(),
-                Instant.now().plusSeconds(3600), 30, 1, List.of(new GroupBuyTierVO(1L, 3, new BigDecimal("79"))));
+                Instant.now().plusSeconds(3600), 30, 1, List.of(new GroupBuyTierVO(1L, 3, new BigDecimal("79"))), null, null);
     }
 }

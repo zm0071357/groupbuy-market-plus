@@ -4,6 +4,7 @@ import groupbuy.market.plus.types.common.Constants;
 import lombok.*;
 import org.apache.commons.lang3.StringUtils;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
@@ -17,6 +18,9 @@ public class ActivityVO {
      * 活动ID
      */
     private Long activityId;
+
+    /** 活动配置的免拼实付价，空表示未启用。 */
+    private BigDecimal skipGroupPrice;
 
     /** 运营活动的开团开关，历史活动为空。 */
     private Boolean openingEnabled;

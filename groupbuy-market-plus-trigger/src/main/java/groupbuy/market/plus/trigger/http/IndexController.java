@@ -12,6 +12,8 @@ import groupbuy.market.plus.domain.activity.model.valobj.GroupBuyPrice;
 import groupbuy.market.plus.domain.activity.model.valobj.GroupBuyTierVO;
 import groupbuy.market.plus.domain.activity.model.valobj.StatisticsVO;
 import groupbuy.market.plus.domain.activity.service.IndexGroupBuyMarketService;
+import groupbuy.market.plus.domain.trade.model.valobj.SkipGroupBalanceVO;
+import groupbuy.market.plus.domain.trade.service.lock.LockOrderService;
 import groupbuy.market.plus.types.enums.ResponseCodeEnum;
 import groupbuy.market.plus.types.exception.AppException;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +33,9 @@ public class IndexController implements IndexService {
 
     @Resource
     private IndexGroupBuyMarketService indexGroupBuyMarketService;
+
+    @Resource
+    private LockOrderService lockOrderService;
 
     @PostMapping("/calc")
     @Override
@@ -108,9 +113,16 @@ public class IndexController implements IndexService {
                     .allTeamUserCount(statisticsVO.getAllTeamUserCount())
                     .build();
 
+            IndexResponseDTO.SkipGroup skipGroup = null;
+            if (eligible && canOpen && GroupBuyPrice.isValidOffer(activity.getSkipGroupPrice(), trialBalanceEntity.getOriginalPrice())) {
+                SkipGroupBalanceVO balance = lockOrderService.getSkipGroupBalance(indexRequestDTO.getUserId(),
+                        indexRequestDTO.getSource(), indexRequestDTO.getChannel());
+                skipGroup = new IndexResponseDTO.SkipGroup(activity.getSkipGroupPrice(), balance.available(), balance.ordersUntilNext());
+            }
             IndexResponseDTO indexResponseDTO = IndexResponseDTO.builder()
                     .goods(goods)
                     .tiers(tiers)
+                    .skipGroup(skipGroup)
                     .teamList(teamList)
                     .statistics(statistics)
                     .build();

@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 
@@ -37,6 +38,9 @@ public class SCSkuActivity {
      * 活动ID
      */
     private Long activityId;
+
+    /** 活动配置的免拼实付价，空表示未启用。 */
+    private BigDecimal skipGroupPrice;
 
     /**
      * 商品ID

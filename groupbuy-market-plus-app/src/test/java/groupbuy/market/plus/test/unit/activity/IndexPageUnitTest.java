@@ -39,7 +39,7 @@ public class IndexPageUnitTest {
         Map<String, Object> teamParam = new HashMap<>();
         teamParam.put("teamIdList", Collections.singletonList("TEAM12345678"));
         String teamSql = MapperTestSupport.sql(configuration, NAMESPACE_TEAM + "getRandomTeam", teamParam);
-        Assert.assertTrue("应过滤满员与过期组队：" + teamSql, teamSql.contains("where status = 0 and lock_count < target_count and end_time > now()"));
+        Assert.assertTrue("应过滤免拼、满员与过期组队：" + teamSql, teamSql.contains("where status = 0 and skip_group = 0 and lock_count < target_count and end_time > now()"));
     }
 
     @Test

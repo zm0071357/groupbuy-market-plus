@@ -6,6 +6,7 @@ import groupbuy.market.plus.domain.activity.adapter.repository.ActivityAdminRepo
 import groupbuy.market.plus.domain.activity.model.entity.ManagedActivityEntity;
 import groupbuy.market.plus.domain.activity.model.valobj.ActivityDraftVO;
 import groupbuy.market.plus.domain.activity.model.valobj.GroupBuyTierVO;
+import groupbuy.market.plus.domain.activity.model.valobj.GroupBuyPrice;
 import groupbuy.market.plus.infrastructure.dao.ActivityAdminDao;
 import groupbuy.market.plus.infrastructure.dao.ActivityDao;
 import groupbuy.market.plus.infrastructure.dao.SCSkuActivityDao;
@@ -95,8 +96,13 @@ public class ActivityAdminRepositoryImpl implements ActivityAdminRepository {
             throw failure(ResponseCodeEnum.E0040);
         }
         List<GroupBuyTierVO> tiers = GroupBuyTierVO.validate(expectedDraft.tiers(), sku.getOriginalPrice());
+        if (Boolean.TRUE.equals(expectedDraft.skipGroupEnabled())
+                && !GroupBuyPrice.isValidOffer(expectedDraft.skipGroupPrice(), sku.getOriginalPrice())) {
+            throw failure(ResponseCodeEnum.E0044);
+        }
         SCSkuActivity mapping = SCSkuActivity.builder().activityId(id).goodsId(sku.getGoodsId())
-                .source(sku.getSource()).channel(sku.getChannel()).tiersJson(encode(tiers)).build();
+                .source(sku.getSource()).channel(sku.getChannel()).tiersJson(encode(tiers))
+                .skipGroupPrice(Boolean.TRUE.equals(expectedDraft.skipGroupEnabled()) ? expectedDraft.skipGroupPrice() : null).build();
 
         try {
             activityDao.insertManaged(Activity.builder().activityId(id).activityName(expectedDraft.name())

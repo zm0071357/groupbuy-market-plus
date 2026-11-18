@@ -11,6 +11,12 @@ public final class GroupBuyPrice {
     private GroupBuyPrice() {
     }
 
+    /** 判断活动报价能否按分计价，且在最低支付价和商品原价之间。 */
+    public static boolean isValidOffer(BigDecimal price, BigDecimal originalPrice) {
+        return price != null && originalPrice != null && price.stripTrailingZeros().scale() <= 2
+                && price.compareTo(GroupBuyConstants.MinPrice) >= 0 && price.compareTo(originalPrice) <= 0;
+    }
+
     /** 团长在团员价基础上享额外折扣，实付金额保留两位小数且最低为 0.01 元。 */
     public static BigDecimal leaderPrice(BigDecimal memberPrice) {
         return memberPrice.multiply(GroupBuyConstants.HeaderDiscount)

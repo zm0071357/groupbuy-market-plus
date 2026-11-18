@@ -4,6 +4,7 @@ import groupbuy.market.plus.domain.activity.adapter.repository.ActivityAdminRepo
 import groupbuy.market.plus.domain.activity.model.entity.ManagedActivityEntity;
 import groupbuy.market.plus.domain.activity.model.valobj.ActivityDraftVO;
 import groupbuy.market.plus.domain.activity.model.valobj.GroupBuyTierVO;
+import groupbuy.market.plus.domain.activity.model.valobj.GroupBuyPrice;
 import groupbuy.market.plus.types.enums.ResponseCodeEnum;
 import groupbuy.market.plus.types.exception.AppException;
 import org.springframework.stereotype.Service;
@@ -55,9 +56,15 @@ public class ActivityAdminService {
         if (product == null) {
             throw failure(ResponseCodeEnum.E0040);
         }
+        boolean skipGroupEnabled = Boolean.TRUE.equals(draft.skipGroupEnabled());
+        if (skipGroupEnabled && !GroupBuyPrice.isValidOffer(draft.skipGroupPrice(), product.originalPrice())
+                || !skipGroupEnabled && draft.skipGroupPrice() != null) {
+            throw failure(ResponseCodeEnum.E0044);
+        }
         return new ActivityDraftVO(draft.name().strip(), draft.goodsId(), draft.source(), draft.channel(),
                 draft.startTime(), draft.endTime(), draft.validMinutes(), draft.userLimit(),
-                GroupBuyTierVO.validate(draft.tiers(), product.originalPrice()));
+                GroupBuyTierVO.validate(draft.tiers(), product.originalPrice()), skipGroupEnabled,
+                skipGroupEnabled ? draft.skipGroupPrice().setScale(2) : null);
     }
 
     /** 保存新草稿。 */

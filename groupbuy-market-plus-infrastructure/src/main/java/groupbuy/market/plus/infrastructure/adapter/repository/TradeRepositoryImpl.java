@@ -53,6 +53,9 @@ public class TradeRepositoryImpl implements TradeRepository {
     private NotifyTaskDao notifyTaskDao;
 
     @Resource
+    private SkipGroupLedger skipGroupLedger;
+
+    @Resource
     private InviteDao inviteDao;
 
     @Resource
@@ -143,6 +146,7 @@ public class TradeRepositoryImpl implements TradeRepository {
                     .activityId(groupBuyTeamEntity.getActivityId())
                     .goodsId(groupBuyTeamEntity.getGoodsId())
                     .tierId(groupBuyTeamEntity.getTierId())
+                    .skipGroup(groupBuyTeamEntity.getSkipGroup())
                     .source(orderDetailEntity.getSource())
                     .channel(orderDetailEntity.getChannel())
                     .originalPrice(orderDetailEntity.getOriginalPrice())
@@ -171,8 +175,12 @@ public class TradeRepositoryImpl implements TradeRepository {
 
         // 用户拼团订单写入数据库
         String orderId = GroupBuyConstants.ORDER.concat(RandomStringUtils.randomNumeric(12));
-        // 团长有额外优惠
-        BigDecimal payPrice = checkLockResEntity.getIsHeader()
+        boolean skipGroup = Boolean.TRUE.equals(groupBuyTeamEntity.getSkipGroup());
+        if (skipGroup) {
+            skipGroupLedger.reserve(orderId, userEntity.getUserId(), orderDetailEntity.getSource(), orderDetailEntity.getChannel());
+        }
+        // 运营配置的免拼价是最终实付价。
+        BigDecimal payPrice = checkLockResEntity.getIsHeader() && !skipGroup
                 ? GroupBuyPrice.leaderPrice(orderDetailEntity.getPayPrice()) : orderDetailEntity.getPayPrice();
         BigDecimal deductionPrice = orderDetailEntity.getOriginalPrice().subtract(payPrice);
         String sign = checkLockResEntity.getIsHeader() ? GroupBuyConstants.HEADER : GroupBuyConstants.MEMBER;
@@ -241,6 +249,11 @@ public class TradeRepositoryImpl implements TradeRepository {
     }
 
     @Override
+    public SkipGroupBalanceVO getSkipGroupBalance(String userId, String source, String channel) {
+        return skipGroupLedger.balance(userId, source, channel);
+    }
+
+    @Override
     public TeamProgressVO getTeamProgress(String teamId)  {
         GroupBuyTeam groupBuyTeam = groupBuyTeamDao.getTeamProgress(teamId);
         if (groupBuyTeam == null) {
@@ -248,6 +261,7 @@ public class TradeRepositoryImpl implements TradeRepository {
         }
         return TeamProgressVO.builder()
                 .status(groupBuyTeam.getStatus())
+                .skipGroup(groupBuyTeam.getSkipGroup())
                 .targetCount(groupBuyTeam.getTargetCount())
                 .completeCount(groupBuyTeam.getCompleteCount())
                 .lockCount(groupBuyTeam.getLockCount())
@@ -287,6 +301,7 @@ public class TradeRepositoryImpl implements TradeRepository {
                 .activityId(groupBuyTeam.getActivityId())
                 .goodsId(groupBuyTeam.getGoodsId())
                 .tierId(groupBuyTeam.getTierId())
+                .skipGroup(groupBuyTeam.getSkipGroup())
                 .source(groupBuyTeam.getSource())
                 .channel(groupBuyTeam.getChannel())
                 .originalPrice(groupBuyTeam.getOriginalPrice())
@@ -318,7 +333,7 @@ public class TradeRepositoryImpl implements TradeRepository {
         OrderPaySuccessEntity orderPaySuccessEntity = settleOrderAggregate.getOrderPaySuccessEntity();
         log.info("结算开始，用户ID：{}，外部交易单号：{}", userEntity.getUserId(), orderPaySuccessEntity.getOutTradeNo());
 
-        groupBuyTeamDao.getTeamByIdForUpdate(groupBuyTeamEntity.getTeamId());
+        GroupBuyTeam lockedTeam = groupBuyTeamDao.getTeamByIdForUpdate(groupBuyTeamEntity.getTeamId());
 
         // 更新订单状态为消费完成
         GroupBuyTeamOrder groupBuyTeamOrderReq = new GroupBuyTeamOrder();
@@ -346,6 +361,14 @@ public class TradeRepositoryImpl implements TradeRepository {
             log.info("拼团目标完成，组队ID：{}", groupBuyTeamEntity.getTeamId());
             // 回调任务
             List<GroupBuyTeamOrder> groupBuyTeamOrderList = groupBuyTeamOrderDao.getCompleteTeamOutTradeNoList(groupBuyTeamEntity.getTeamId());
+            if (lockedTeam != null && Boolean.TRUE.equals(lockedTeam.getSkipGroup())) {
+                if (groupBuyTeamOrderList.size() != 1) {
+                    throw new AppException(ResponseCodeEnum.UPDATE_ZERO.getCode(), ResponseCodeEnum.UPDATE_ZERO.getInfo());
+                }
+                skipGroupLedger.consume(groupBuyTeamOrderList.get(0).getOrderId());
+            } else {
+                skipGroupLedger.earn(groupBuyTeamOrderList);
+            }
             List<String> outTradeNoList = new ArrayList<>();
             List<String> inviteUserIdList = new ArrayList<>();
             for (GroupBuyTeamOrder groupBuyTeamOrder : groupBuyTeamOrderList) {
@@ -546,6 +569,9 @@ public class TradeRepositoryImpl implements TradeRepository {
             throw new AppException(ResponseCodeEnum.UPDATE_ZERO.getCode(), ResponseCodeEnum.UPDATE_ZERO.getInfo());
         }
 
+        if (lockedTeam != null && Boolean.TRUE.equals(lockedTeam.getSkipGroup())) {
+            skipGroupLedger.release(refundOrderEntity.getOrderId());
+        }
         NotifyTaskEntity headerTask = transferHeader(refundOrderEntity, lockedTeam);
 
         // 回调任务
@@ -675,6 +701,8 @@ public class TradeRepositoryImpl implements TradeRepository {
         if (updateTeamCount != 1) {
             throw new AppException(ResponseCodeEnum.UPDATE_ZERO.getCode(), ResponseCodeEnum.UPDATE_ZERO.getInfo());
         }
+
+        skipGroupLedger.revokeEarning(refundOrderEntity.getOrderId());
 
         // 回调任务
         String taskId = refundOrderEntity.getTeamId() + Constants.UNDERSCORE +

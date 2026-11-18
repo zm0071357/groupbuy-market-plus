@@ -5,6 +5,7 @@ import groupbuy.market.plus.domain.trade.model.entity.LockOrderEntity;
 import groupbuy.market.plus.domain.trade.model.entity.OrderDetailEntity;
 import groupbuy.market.plus.domain.trade.model.entity.UserEntity;
 import groupbuy.market.plus.domain.trade.model.valobj.TeamProgressVO;
+import groupbuy.market.plus.domain.trade.model.valobj.SkipGroupBalanceVO;
 
 public interface LockOrderService {
 
@@ -33,5 +34,8 @@ public interface LockOrderService {
     TeamProgressVO getTeamProgress(String teamId);
 
 
+
+    /** 获取用户在当前来源渠道的免拼次数与累计进度。 */
+    SkipGroupBalanceVO getSkipGroupBalance(String userId, String source, String channel);
 
 }

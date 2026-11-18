@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="groupbuy.market.plus.infrastructure.dao.SkipGroupDao">
+    <select id="getAccount" resultType="groupbuy.market.plus.infrastructure.dao.po.SkipGroupAccount">
+        select earned_count as earnedCount, held_count as heldCount, used_count as usedCount
+        from group_buy_skip_account
+        where user_id = #{userId} and source = #{source} and channel = #{channel}
+    </select>
+    <!-- 唯一键冲突时锁定已有记录，确保首笔累计和并发占用串行。 -->
+    <insert id="ensureAccount">
+        insert into group_buy_skip_account (user_id, source, channel)
+        values (#{userId}, #{source}, #{channel})
+        on duplicate key update earned_count = earned_count
+    </insert>
+    <update id="reserve">
+        update group_buy_skip_account set held_count = held_count + 1
+        where user_id = #{userId} and source = #{source} and channel = #{channel}
+          and earned_count div 2 > held_count + used_count
+    </update>
+    <!-- 计数更新随订单事务提交，退款可能使已消耗次数高于当前可赚取次数。 -->
+    <update id="updateCounts">
+        update group_buy_skip_account
+        set earned_count = earned_count + #{earnedCount}, held_count = held_count + #{heldCount},
+            used_count = used_count + #{usedCount}
+        where user_id = #{userId} and source = #{source} and channel = #{channel}
+          and earned_count + #{earnedCount} >= 0 and held_count + #{heldCount} >= 0
+    </update>
+    <resultMap id="record" type="groupbuy.market.plus.infrastructure.dao.po.SkipGroupRecord">
+        <constructor>
+            <idArg column="order_id" javaType="String"/>
+            <arg column="user_id" javaType="String"/>
+            <arg column="source" javaType="String"/>
+            <arg column="channel" javaType="String"/>
+            <arg column="state" javaType="String"/>
+        </constructor>
+    </resultMap>
+    <select id="getRecordForUpdate" resultMap="record">
+        select order_id, user_id, source, channel, state
+        from group_buy_skip_record where order_id = #{orderId} for update
+    </select>
+    <insert id="insertRecord">
+        insert into group_buy_skip_record (order_id, user_id, source, channel, state)
+        values (#{orderId}, #{userId}, #{source}, #{channel}, #{state})
+    </insert>
+    <update id="updateRecord">
+        update group_buy_skip_record set state = #{to}
+        where order_id = #{orderId} and state = #{from}
+    </update>
+</mapper>

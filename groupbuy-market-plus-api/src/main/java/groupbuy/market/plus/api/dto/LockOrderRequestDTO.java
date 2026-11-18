@@ -24,6 +24,9 @@ public class LockOrderRequestDTO {
     /** 自选档位团开团时必填，参团时可省略。 */
     private Long tierId;
 
+    /** 是否为免拼交易，缺省走现有拼团规则。 */
+    private Boolean skipGroup;
+
     /**
      * 活动ID
      */

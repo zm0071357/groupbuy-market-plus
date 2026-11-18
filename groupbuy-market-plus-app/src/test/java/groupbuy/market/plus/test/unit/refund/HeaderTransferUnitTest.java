@@ -4,6 +4,7 @@ import groupbuy.market.plus.domain.trade.model.aggregate.RefundOrderAggregate;
 import groupbuy.market.plus.domain.trade.model.entity.RefundOrderEntity;
 import groupbuy.market.plus.domain.trade.model.valobj.TeamStatusEnum;
 import groupbuy.market.plus.infrastructure.adapter.repository.TradeRepositoryImpl;
+import groupbuy.market.plus.infrastructure.adapter.repository.SkipGroupLedger;
 import groupbuy.market.plus.infrastructure.dao.GroupBuyTeamDao;
 import groupbuy.market.plus.infrastructure.dao.GroupBuyTeamOrderDao;
 import groupbuy.market.plus.infrastructure.dao.NotifyTaskDao;
@@ -47,6 +48,7 @@ public class HeaderTransferUnitTest {
         groupBuyTeamOrderDao = mock(GroupBuyTeamOrderDao.class);
         groupBuyTeamDao = mock(GroupBuyTeamDao.class);
         tradeRepository = new TradeRepositoryImpl();
+        ReflectionTestUtils.setField(tradeRepository, "skipGroupLedger", mock(SkipGroupLedger.class));
         ReflectionTestUtils.setField(tradeRepository, "groupBuyTeamOrderDao", groupBuyTeamOrderDao);
         ReflectionTestUtils.setField(tradeRepository, "groupBuyTeamDao", groupBuyTeamDao);
         notifyTaskDao = mock(NotifyTaskDao.class);

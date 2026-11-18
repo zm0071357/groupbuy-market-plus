@@ -3,6 +3,7 @@ package groupbuy.market.plus.test.unit.refund;
 import groupbuy.market.plus.domain.trade.model.aggregate.RefundOrderAggregate;
 import groupbuy.market.plus.domain.trade.model.entity.RefundOrderEntity;
 import groupbuy.market.plus.infrastructure.adapter.repository.TradeRepositoryImpl;
+import groupbuy.market.plus.infrastructure.adapter.repository.SkipGroupLedger;
 import groupbuy.market.plus.infrastructure.dao.GroupBuyTeamDao;
 import groupbuy.market.plus.infrastructure.dao.GroupBuyTeamOrderDao;
 import groupbuy.market.plus.infrastructure.dao.NotifyTaskDao;
@@ -38,6 +39,9 @@ public class RefundOrderRepositoryUnitTest {
 
     @Mock
     private NotifyTaskDao notifyTaskDao;
+
+    @Mock
+    private SkipGroupLedger skipGroupLedger;
 
     @InjectMocks
     private TradeRepositoryImpl tradeRepository;

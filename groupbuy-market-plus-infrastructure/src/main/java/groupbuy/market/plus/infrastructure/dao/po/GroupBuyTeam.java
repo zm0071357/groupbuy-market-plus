@@ -40,6 +40,9 @@ public class GroupBuyTeam {
     /** 开团时选定的档位，普通团为空。 */
     private Long tierId;
 
+    /** 是否为免拼交易，缺省走现有拼团规则。 */
+    private Boolean skipGroup;
+
     /**
      * 渠道
      */

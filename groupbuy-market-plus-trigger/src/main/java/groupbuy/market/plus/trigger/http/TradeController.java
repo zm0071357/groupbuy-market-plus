@@ -89,7 +89,7 @@ public class TradeController implements TradeService {
             }
 
             // 拼团目标量是否完成
-            if (!StringUtils.isBlank(lockOrderRequestDTO.getTeamId())) {
+            if (!Boolean.TRUE.equals(lockOrderRequestDTO.getSkipGroup()) && !StringUtils.isBlank(lockOrderRequestDTO.getTeamId())) {
                 log.info("查询当前组队拼团进度，组队ID：{}", lockOrderRequestDTO.getTeamId());
                 TeamProgressVO teamProgressVO = lockOrderService.getTeamProgress(lockOrderRequestDTO.getTeamId());
                 if (teamProgressVO == null) {
@@ -97,6 +97,9 @@ public class TradeController implements TradeService {
                             .code(ResponseCodeEnum.ILLEGAL_PARAMETER.getCode())
                             .info(ResponseCodeEnum.ILLEGAL_PARAMETER.getInfo())
                             .build();
+                }
+                if (Boolean.TRUE.equals(teamProgressVO.getSkipGroup())) {
+                    throw new AppException(ResponseCodeEnum.E0046.getCode(), ResponseCodeEnum.E0046.getInfo());
                 }
                 if (teamProgressVO.getLockCount() >= teamProgressVO.getTargetCount()) {
                     return Response.<LockOrderResponseDTO>builder()
@@ -138,6 +141,7 @@ public class TradeController implements TradeService {
                     GroupBuyTeamEntity.builder()
                             .teamId(lockOrderRequestDTO.getTeamId())
                             .tierId(lockOrderRequestDTO.getTierId())
+                            .skipGroup(lockOrderRequestDTO.getSkipGroup())
                             .openingEnabled(trialBalanceEntity.getActivityVO().getOpeningEnabled())
                             .activityId(lockOrderRequestDTO.getActivityId())
                             .goodsId(lockOrderRequestDTO.getGoodsId())
@@ -160,6 +164,7 @@ public class TradeController implements TradeService {
                             .channel(lockOrderRequestDTO.getChannel())
                             .goodsId(trialBalanceEntity.getGoodsId())
                             .tiers(trialBalanceEntity.getActivityVO().getTiers())
+                            .skipGroupPrice(trialBalanceEntity.getActivityVO().getSkipGroupPrice())
                             .goodsName(trialBalanceEntity.getGoodsName())
                             .originalPrice(trialBalanceEntity.getOriginalPrice())
                             .deductionPrice(trialBalanceEntity.getDeductionPrice())

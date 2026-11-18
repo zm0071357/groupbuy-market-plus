@@ -28,6 +28,9 @@ public class IndexResponseDTO {
     /** 当前用户可选择的开团档位，普通团时为空列表。 */
     private List<Tier> tiers;
 
+    /** 可用的免拼配置及当前用户进度，未开放时为空。 */
+    private SkipGroup skipGroup;
+
     /**
      * 拼团组队信息
      */
@@ -169,4 +172,6 @@ public class IndexResponseDTO {
         private BigDecimal memberPrice;
         private BigDecimal leaderPrice;
     }
+    /** 商品免拼实付价（元）、可用次数和距离下次获得机会的订单数。 */
+    public record SkipGroup(BigDecimal payPrice, long available, long ordersUntilNext) {}
 }

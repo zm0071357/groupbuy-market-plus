@@ -37,7 +37,7 @@
     <update id="replaceInactiveMapping">
         update sc_sku_activity m
         left join activity a on a.activity_id = m.activity_id
-        set m.activity_id = #{activityId}, m.tiers_json = #{tiersJson}, m.update_time = now()
+        set m.activity_id = #{activityId}, m.tiers_json = #{tiersJson}, m.skip_group_price = #{skipGroupPrice,jdbcType=DECIMAL}, m.update_time = now()
         where m.goods_id = #{goodsId} and m.source = #{source} and m.channel = #{channel}
           and (a.activity_id is null or a.status != 1 or a.opening_enabled = 0 or a.end_time &lt; now())
           and not exists (
@@ -46,7 +46,7 @@
           )
     </update>
     <insert id="insertMapping">
-        insert into sc_sku_activity (activity_id, goods_id, source, channel, tiers_json, create_time, update_time)
-        values (#{activityId}, #{goodsId}, #{source}, #{channel}, #{tiersJson}, now(), now())
+        insert into sc_sku_activity (activity_id, goods_id, source, channel, tiers_json, skip_group_price, create_time, update_time)
+        values (#{activityId}, #{goodsId}, #{source}, #{channel}, #{tiersJson}, #{skipGroupPrice,jdbcType=DECIMAL}, now(), now())
     </insert>
 </mapper>
