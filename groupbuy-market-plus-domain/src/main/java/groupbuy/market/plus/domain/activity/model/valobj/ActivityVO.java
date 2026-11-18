@@ -140,14 +140,8 @@ public class ActivityVO {
      *
      */
     public boolean isVisible() {
-        String[] split = this.tagScope.split(Constants.SPLIT);
-        if (split.length > 0 && StringUtils.isNotBlank(split[0]) && split[0].equals("1")) {
-            return false;
-        }
-        else if (split.length > 0 && StringUtils.isNotBlank(split[0]) && split[0].equals("2")) {
-            return true;
-        }
-        return true;
+        String[] split = StringUtils.defaultString(tagScope).split(Constants.SPLIT);
+        return split.length == 0 || !"1".equals(split[0]);
     }
 
     /**
@@ -157,14 +151,8 @@ public class ActivityVO {
      * 没设置 - 可参与
      */
     public boolean isEnable() {
-        String[] split = this.tagScope.split(Constants.SPLIT);
-        if (split.length == 2 && StringUtils.isNotBlank(split[1]) && split[1].equals("1")) {
-            return false;
-        }
-        else if (split.length == 2 && StringUtils.isNotBlank(split[1]) && split[1].equals("2")) {
-            return true;
-        }
-        return true;
+        String[] split = StringUtils.defaultString(tagScope).split(Constants.SPLIT);
+        return split.length != 2 || !"1".equals(split[1]);
     }
 
 }

@@ -1,5 +1,7 @@
 package groupbuy.market.plus.test.unit.tag;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import groupbuy.market.plus.domain.activity.model.entity.MarketProductEntity;
 import groupbuy.market.plus.domain.activity.model.valobj.ActivityVO;
 import groupbuy.market.plus.domain.activity.model.valobj.DiscountTypeEnum;
@@ -62,6 +64,30 @@ public class TagFailClosedUnitTest {
             DefaultActivityStrategyFactory.DynamicContext context = runTagNode(tagScope);
             Assert.assertFalse("tagScope=" + tagScope + " 标签数据缺失时不可享用优惠", context.isDiscount());
         }
+    }
+
+    @Test
+    public void historicalActivityWithoutTagScopeCanBeSerializedForTrial() {
+        for (String tagScope : new String[]{null, ""}) {
+            ActivityVO activity = ActivityVO.builder().activityId(100123L).tagScope(tagScope).build();
+
+            // 试算会将整个活动写入日志，序列化时调用两个布尔 getter。
+            JSONObject snapshot = JSON.parseObject(JSON.toJSONString(activity));
+
+            Assert.assertTrue(snapshot.getBooleanValue("visible"));
+            Assert.assertTrue(snapshot.getBooleanValue("enable"));
+        }
+    }
+
+    @Test
+    public void configuredTagScopeStillAppliesBothRestrictions() {
+        ActivityVO activity = ActivityVO.builder().tagScope("1,2").build();
+        Assert.assertFalse(activity.isVisible());
+        Assert.assertTrue(activity.isEnable());
+
+        activity.setTagScope("2,1");
+        Assert.assertTrue(activity.isVisible());
+        Assert.assertFalse(activity.isEnable());
     }
 
     private DefaultActivityStrategyFactory.DynamicContext runTagNode(String tagScope) throws Exception {
