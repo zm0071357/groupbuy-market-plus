@@ -88,6 +88,19 @@ public class ActivityAdminUnitTest {
                 .andExpect(jsonPath("$.code").value("E0044"));
     }
 
+    @Test
+    public void allowsOldBringsNewOnTiersButRejectsCombinationWithSkipGroup() throws Exception {
+        MockMvc mvc = mvc(TOKEN);
+        String oldBringsNew = DRAFT_JSON.replace("\"validMinutes\":30", "\"eligibilityShopId\":\"shop-a\",\"validMinutes\":30");
+        mvc.perform(post(BASE + "/preview").header("Authorization", "Bearer " + TOKEN)
+                        .contentType("application/json").content(oldBringsNew))
+                .andExpect(jsonPath("$.data.eligibilityShopId").value("shop-a"));
+        String withSkip = oldBringsNew.replace("\"validMinutes\":30", "\"skipGroupEnabled\":true,\"skipGroupPrice\":75,\"validMinutes\":30");
+        mvc.perform(post(BASE + "/preview").header("Authorization", "Bearer " + TOKEN)
+                        .contentType("application/json").content(withSkip))
+                .andExpect(jsonPath("$.code").value("E0050"));
+    }
+
     private MockMvc mvc(String token) {
         ActivityAdminController controller = new ActivityAdminController();
         ReflectionTestUtils.setField(controller, "service", service);
@@ -103,6 +116,6 @@ public class ActivityAdminUnitTest {
 
     private ActivityDraftVO draft() {
         return new ActivityDraftVO("首发团", "9890001", "s01", "c01", Instant.now(),
-                Instant.now().plusSeconds(3600), 30, 1, List.of(new GroupBuyTierVO(1L, 3, new BigDecimal("79"))), null, null);
+                Instant.now().plusSeconds(3600), 30, 1, List.of(new GroupBuyTierVO(1L, 3, new BigDecimal("79"))), null, null, null);
     }
 }

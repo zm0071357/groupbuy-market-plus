@@ -1,10 +1,12 @@
 package groupbuy.market.plus.test.unit.trade;
 
 import groupbuy.market.plus.domain.trade.adapter.repository.TradeRepository;
+import groupbuy.market.plus.domain.trade.adapter.port.ShopOrderCountPort;
 import groupbuy.market.plus.domain.trade.model.entity.*;
 import groupbuy.market.plus.domain.trade.model.valobj.ActivityStatusEnum;
 import groupbuy.market.plus.domain.trade.model.valobj.InviteStatusEnum;
 import groupbuy.market.plus.domain.trade.model.valobj.TeamStatusEnum;
+import groupbuy.market.plus.domain.trade.service.lock.CustomerEligibilityService;
 import groupbuy.market.plus.domain.trade.service.lock.factory.LockOrderLinkFactory;
 import groupbuy.market.plus.domain.trade.service.lock.filter.*;
 import groupbuy.market.plus.types.design.framework.link.multition.chain.BusinessLinkedList;
@@ -19,6 +21,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Date;
+import java.util.OptionalLong;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -39,6 +42,9 @@ public class LockOrderLinkUnitTest {
     @Mock
     private TradeRepository tradeRepository;
 
+    @Mock
+    private ShopOrderCountPort orderCount;
+
     private BusinessLinkedList<CheckLockEntity, LockOrderLinkFactory.DynamicContext, CheckLockResEntity> lockOrderLink;
 
     @Before
@@ -51,7 +57,12 @@ public class LockOrderLinkUnitTest {
         for (Object filter : new Object[]{activityFilter, inviteFilter, teamFilter, userFilter, teamStockFilter}) {
             ReflectionTestUtils.setField(filter, "tradeRepository", tradeRepository);
         }
-        lockOrderLink = new LockOrderLinkFactory().lockOrderLink(activityFilter, inviteFilter, teamFilter, userFilter, teamStockFilter);
+        CustomerEligibilityService eligibility = new CustomerEligibilityService();
+        ReflectionTestUtils.setField(eligibility, "shopOrderCountPort", orderCount);
+        CustomerEligibilityFilter customerFilter = new CustomerEligibilityFilter();
+        ReflectionTestUtils.setField(customerFilter, "customerEligibilityService", eligibility);
+        lockOrderLink = new LockOrderLinkFactory().lockOrderLink(activityFilter, inviteFilter, teamFilter,
+                userFilter, customerFilter, teamStockFilter);
 
         ActivityEntity activityEntity = new ActivityEntity();
         activityEntity.setActivityId(ACTIVITY_ID);
@@ -131,6 +142,7 @@ public class LockOrderLinkUnitTest {
 
         Assert.assertTrue(result.getIsHeader());
         verify(tradeRepository, never()).getTeamById(anyString());
+        verifyNoInteractions(orderCount);
     }
 
     @Test
@@ -156,6 +168,58 @@ public class LockOrderLinkUnitTest {
         CheckLockResEntity result = lockOrderLink.apply(buildCheckLock(null, INVITE_ID), new LockOrderLinkFactory.DynamicContext());
         Assert.assertFalse(result.getIsHeader());
         Assert.assertEquals(TEAM_ID, result.getJoinedTeam().getTeamId());
+    }
+
+    @Test
+    public void opensOnlyFromSixOrdersAndExcludesCurrentOrder() throws Exception {
+        CheckLockEntity opening = buildCheckLock(null, null);
+        opening.setEligibilityShopId("shop-a");
+        opening.setOutTradeNo("current-order");
+        when(orderCount.count("shop-a", USER_ID, "current-order"))
+                .thenReturn(OptionalLong.of(5), OptionalLong.of(6));
+
+        assertReject(opening, ResponseCodeEnum.E0047);
+        Assert.assertTrue(lockOrderLink.apply(opening, new LockOrderLinkFactory.DynamicContext()).getIsHeader());
+        verify(orderCount, times(2)).count("shop-a", USER_ID, "current-order");
+    }
+
+    @Test
+    public void existingTeamUsesItsOwnShopForDirectAndInviteJoins() throws Exception {
+        configureOldBringsNewTeam();
+        when(orderCount.count("shop-snapshot", USER_ID, "current-order"))
+                .thenReturn(OptionalLong.of(5), OptionalLong.of(5), OptionalLong.of(6));
+
+        CheckLockEntity direct = joiningRequest(TEAM_ID, null);
+        CheckLockEntity invite = joiningRequest(null, INVITE_ID);
+        Assert.assertFalse(lockOrderLink.apply(direct, new LockOrderLinkFactory.DynamicContext()).getIsHeader());
+        Assert.assertFalse(lockOrderLink.apply(invite, new LockOrderLinkFactory.DynamicContext()).getIsHeader());
+        assertReject(joiningRequest(null, INVITE_ID), ResponseCodeEnum.E0048);
+
+        verify(orderCount, times(3)).count("shop-snapshot", USER_ID, "current-order");
+        verify(tradeRepository, times(2)).occupyTeamStock(anyInt(), anyInt(), anyString(), anyString());
+    }
+
+    @Test
+    public void missingCountRejectsJoiningBeforeReservingStock() {
+        configureOldBringsNewTeam();
+        when(orderCount.count("shop-snapshot", USER_ID, "current-order")).thenReturn(OptionalLong.empty());
+
+        assertReject(joiningRequest(TEAM_ID, null), ResponseCodeEnum.E0049);
+        verify(tradeRepository, never()).occupyTeamStock(anyInt(), anyInt(), anyString(), anyString());
+    }
+
+    private void configureOldBringsNewTeam() {
+        GroupBuyTeamEntity team = buildTeam(ACTIVITY_ID, TeamStatusEnum.PROGRESS, 600_000);
+        team.setEligibilityShopId("shop-snapshot");
+        when(tradeRepository.getTeamById(TEAM_ID)).thenReturn(team);
+        when(tradeRepository.checkUserTakeTeamCount(TEAM_ID, USER_ID)).thenReturn(0);
+    }
+
+    private CheckLockEntity joiningRequest(String teamId, String inviteId) {
+        CheckLockEntity request = buildCheckLock(teamId, inviteId);
+        request.setEligibilityShopId("shop-current");
+        request.setOutTradeNo("current-order");
+        return request;
     }
 
     private void assertReject(CheckLockEntity checkLockEntity, ResponseCodeEnum expected) {

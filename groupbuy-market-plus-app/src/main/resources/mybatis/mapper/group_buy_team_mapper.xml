@@ -9,6 +9,7 @@
         <result column="goods_id" property="goodsId"/>
         <result column="tier_id" property="tierId"/>
         <result column="skip_group" property="skipGroup"/>
+        <result column="eligibility_shop_id" property="eligibilityShopId"/>
         <result column="source" property="source"/>
         <result column="channel" property="channel"/>
         <result column="original_price" property="originalPrice"/>
@@ -34,12 +35,12 @@
         insert into group_buy_team(
             team_id, activity_id, goods_id, tier_id, source, channel, original_price,
             deduction_price, pay_price, target_count, complete_count, lock_count,
-            status, start_time, end_time, notify_type, notify_url, notify_mq, skip_group,
+            status, start_time, end_time, notify_type, notify_url, notify_mq, skip_group, eligibility_shop_id,
             refund_notify_mq, header_refund_notify_url, header_refund_notify_mq, create_time, update_time
         ) values(
                     #{teamId}, #{activityId}, #{goodsId}, #{tierId,jdbcType=BIGINT}, #{source}, #{channel}, #{originalPrice}, #{deductionPrice}, #{payPrice},
                     #{targetCount}, #{completeCount}, #{lockCount}, 0, #{startTime}, #{endTime}, #{notifyType}, #{notifyUrl},
-                    #{notifyMQ}, coalesce(#{skipGroup,jdbcType=TINYINT}, 0), #{refundNotifyMQ}, #{headerRefundNotifyUrl}, #{headerRefundNotifyMQ}, now(), now()
+                    #{notifyMQ}, coalesce(#{skipGroup,jdbcType=TINYINT}, 0), #{eligibilityShopId,jdbcType=VARCHAR}, #{refundNotifyMQ}, #{headerRefundNotifyUrl}, #{headerRefundNotifyMQ}, now(), now()
                 )
     </insert>
 
@@ -60,7 +61,7 @@
 
     <select id="getTeamById" resultMap="dataMap" parameterType="java.lang.String">
         select team_id, activity_id, goods_id, tier_id, source, channel, original_price, pay_price, target_count, complete_count, lock_count,
-               status, notify_type, notify_url, refund_notify_mq, header_refund_notify_url, header_refund_notify_mq, skip_group,
+               status, notify_type, notify_url, refund_notify_mq, header_refund_notify_url, header_refund_notify_mq, skip_group, eligibility_shop_id,
                start_time, end_time
         from group_buy_team
         where team_id = #{teamId}

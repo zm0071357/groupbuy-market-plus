@@ -59,7 +59,7 @@ public class TeamFilter implements LogicHandler<CheckLockEntity, LockOrderLinkFa
         if (checkLockEntity.getTierId() != null && !checkLockEntity.getTierId().equals(groupBuyTeamEntity.getTierId())) {
             throw new AppException(ResponseCodeEnum.E0035.getCode(), ResponseCodeEnum.E0035.getInfo());
         }
-        if (groupBuyTeamEntity.getTierId() != null
+        if ((groupBuyTeamEntity.getTierId() != null || groupBuyTeamEntity.getEligibilityShopId() != null)
                 && (!Objects.equals(checkLockEntity.getSource(), groupBuyTeamEntity.getSource())
                 || !Objects.equals(checkLockEntity.getChannel(), groupBuyTeamEntity.getChannel()))) {
             throw new AppException(ResponseCodeEnum.E0037.getCode(), ResponseCodeEnum.E0037.getInfo());

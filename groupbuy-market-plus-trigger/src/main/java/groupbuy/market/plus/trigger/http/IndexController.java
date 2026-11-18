@@ -14,6 +14,7 @@ import groupbuy.market.plus.domain.activity.model.valobj.StatisticsVO;
 import groupbuy.market.plus.domain.activity.service.IndexGroupBuyMarketService;
 import groupbuy.market.plus.domain.trade.model.valobj.SkipGroupBalanceVO;
 import groupbuy.market.plus.domain.trade.service.lock.LockOrderService;
+import groupbuy.market.plus.domain.trade.service.lock.CustomerEligibilityService;
 import groupbuy.market.plus.types.enums.ResponseCodeEnum;
 import groupbuy.market.plus.types.exception.AppException;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +37,9 @@ public class IndexController implements IndexService {
 
     @Resource
     private LockOrderService lockOrderService;
+
+    @Resource
+    private CustomerEligibilityService customerEligibilityService;
 
     @PostMapping("/calc")
     @Override
@@ -114,7 +118,7 @@ public class IndexController implements IndexService {
                     .build();
 
             IndexResponseDTO.SkipGroup skipGroup = null;
-            if (eligible && canOpen && GroupBuyPrice.isValidOffer(activity.getSkipGroupPrice(), trialBalanceEntity.getOriginalPrice())) {
+            if (eligible && canOpen && activity.getEligibilityShopId() == null && GroupBuyPrice.isValidOffer(activity.getSkipGroupPrice(), trialBalanceEntity.getOriginalPrice())) {
                 SkipGroupBalanceVO balance = lockOrderService.getSkipGroupBalance(indexRequestDTO.getUserId(),
                         indexRequestDTO.getSource(), indexRequestDTO.getChannel());
                 skipGroup = new IndexResponseDTO.SkipGroup(activity.getSkipGroupPrice(), balance.available(), balance.ordersUntilNext());
@@ -123,6 +127,7 @@ public class IndexController implements IndexService {
                     .goods(goods)
                     .tiers(tiers)
                     .skipGroup(skipGroup)
+                    .customerEligibility(customerEligibility(indexRequestDTO.getUserId(), activity.getEligibilityShopId(), eligible, canOpen))
                     .teamList(teamList)
                     .statistics(statistics)
                     .build();
@@ -144,6 +149,22 @@ public class IndexController implements IndexService {
                     .info(ResponseCodeEnum.UN_ERROR.getInfo())
                     .build();
         }
+    }
+
+    private IndexResponseDTO.CustomerEligibility customerEligibility(String userId, String shopId,
+                                                                      boolean eligible, boolean canOpen) {
+        if (shopId == null) {
+            return null;
+        }
+        if (!eligible) {
+            String code = ResponseCodeEnum.E0033.getCode();
+            return new IndexResponseDTO.CustomerEligibility(false, false, code, code);
+        }
+        CustomerEligibilityService.Qualification qualification = customerEligibilityService.qualify(shopId, userId, null);
+        ResponseCodeEnum openRejection = canOpen ? qualification.rejection(false) : ResponseCodeEnum.E0038;
+        ResponseCodeEnum joinRejection = qualification.rejection(true);
+        return new IndexResponseDTO.CustomerEligibility(openRejection == null, joinRejection == null,
+                openRejection == null ? null : openRejection.getCode(), joinRejection == null ? null : joinRejection.getCode());
     }
 
 }

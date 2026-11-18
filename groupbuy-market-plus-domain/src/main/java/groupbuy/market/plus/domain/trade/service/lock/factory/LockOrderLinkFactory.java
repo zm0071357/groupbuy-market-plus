@@ -6,6 +6,7 @@ import groupbuy.market.plus.domain.trade.model.entity.CheckLockResEntity;
 import groupbuy.market.plus.domain.trade.model.entity.InviteEntity;
 import groupbuy.market.plus.domain.trade.model.entity.GroupBuyTeamEntity;
 import groupbuy.market.plus.domain.trade.service.lock.filter.ActivityFilter;
+import groupbuy.market.plus.domain.trade.service.lock.filter.CustomerEligibilityFilter;
 import groupbuy.market.plus.domain.trade.service.lock.filter.InviteFilter;
 import groupbuy.market.plus.domain.trade.service.lock.filter.TeamFilter;
 import groupbuy.market.plus.domain.trade.service.lock.filter.TeamStockFilter;
@@ -27,9 +28,9 @@ import org.springframework.stereotype.Service;
 public class LockOrderLinkFactory {
 
     @Bean("lockOrderLink")
-    public BusinessLinkedList<CheckLockEntity, DynamicContext, CheckLockResEntity> lockOrderLink(ActivityFilter activityFilter, InviteFilter inviteFilter, TeamFilter teamFilter, UserFilter userFilter, TeamStockFilter teamStockFilter) {
+    public BusinessLinkedList<CheckLockEntity, DynamicContext, CheckLockResEntity> lockOrderLink(ActivityFilter activityFilter, InviteFilter inviteFilter, TeamFilter teamFilter, UserFilter userFilter, CustomerEligibilityFilter customerEligibilityFilter, TeamStockFilter teamStockFilter) {
         // 组装链 - 邀请码节点在组队、用户节点之前，确保仅凭邀请码参团时，组队有效性与「不可参与同一组队」校验同样生效
-        LinkArmory<CheckLockEntity, DynamicContext, CheckLockResEntity> linkArmory = new LinkArmory<>("锁单责任链", activityFilter, inviteFilter, teamFilter, userFilter, teamStockFilter);
+        LinkArmory<CheckLockEntity, DynamicContext, CheckLockResEntity> linkArmory = new LinkArmory<>("锁单责任链", activityFilter, inviteFilter, teamFilter, userFilter, customerEligibilityFilter, teamStockFilter);
         return linkArmory.getLogicLink();
     }
 

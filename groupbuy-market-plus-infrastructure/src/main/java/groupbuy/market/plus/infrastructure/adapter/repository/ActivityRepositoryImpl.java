@@ -114,6 +114,7 @@ public class ActivityRepositoryImpl implements ActivityRepository {
                 .activityId(scSkuActivity.getActivityId())
                 .goodsId(scSkuActivity.getGoodsId())
                 .skipGroupPrice(scSkuActivity.getSkipGroupPrice())
+                .eligibilityShopId(scSkuActivity.getEligibilityShopId())
                 .tiers(scSkuActivity.getTiersJson() == null
                         ? List.of() : JSON.parseArray(scSkuActivity.getTiersJson(), GroupBuyTierVO.class))
                 .build();

@@ -32,6 +32,9 @@ public class GroupBuyTeam {
      */
     private Long activityId;
 
+    /** 老带新资格所属店铺，空表示不限新老客。 */
+    private String eligibilityShopId;
+
     /**
      * 商品ID
      */

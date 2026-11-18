@@ -10,12 +10,13 @@
         <result column="goods_id" property="goodsId"/>
         <result column="tiers_json" property="tiersJson"/>
         <result column="skip_group_price" property="skipGroupPrice"/>
+        <result column="eligibility_shop_id" property="eligibilityShopId"/>
         <result column="create_time" property="createTime"/>
         <result column="update_time" property="updateTime"/>
     </resultMap>
 
     <select id="getSCSkuActivityByIdWithSC" parameterType="groupbuy.market.plus.infrastructure.dao.po.SCSkuActivity" resultMap="dataMap">
-        select source, channel, activity_id, goods_id, tiers_json, skip_group_price
+        select source, channel, activity_id, goods_id, tiers_json, skip_group_price, eligibility_shop_id
         from sc_sku_activity
         where goods_id = #{goodsId} and source = #{source} and channel = #{channel}
     </select>

@@ -11,7 +11,7 @@ public final class ActivityAdminDTO {
 
     /** 活动配置，时间带时区，validMinutes 单位为分钟。 */
     public record Draft(String name, String goodsId, String source, String channel, Instant startTime, Instant endTime,
-                        Integer validMinutes, Integer userLimit, List<Tier> tiers, Boolean skipGroupEnabled, BigDecimal skipGroupPrice) {}
+                        Integer validMinutes, Integer userLimit, List<Tier> tiers, Boolean skipGroupEnabled, BigDecimal skipGroupPrice, String eligibilityShopId) {}
 
     /** 档位价格单位为元，leaderPrice 由服务端计算。 */
     public record Tier(Long tierId, Integer targetCount, BigDecimal memberPrice, BigDecimal leaderPrice) {}

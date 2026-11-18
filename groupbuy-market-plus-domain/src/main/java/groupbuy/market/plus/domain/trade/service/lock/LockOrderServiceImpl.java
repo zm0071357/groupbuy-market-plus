@@ -64,6 +64,8 @@ public class LockOrderServiceImpl implements LockOrderService{
         // 责任链过滤
         CheckLockEntity checkLockEntity = CheckLockEntity.builder()
                 .activityId(groupBuyTeamEntity.getActivityId())
+                .eligibilityShopId(groupBuyTeamEntity.getEligibilityShopId())
+                .outTradeNo(orderDetailEntity.getOutTradeNo())
                 .goodsId(orderDetailEntity.getGoodsId())
                 .source(orderDetailEntity.getSource())
                 .channel(orderDetailEntity.getChannel())
@@ -100,6 +102,9 @@ public class LockOrderServiceImpl implements LockOrderService{
     }
 
     private void prepareSkipGroup(UserEntity user, GroupBuyTeamEntity team, OrderDetailEntity order) {
+        if (team.getEligibilityShopId() != null) {
+            throw new AppException(ResponseCodeEnum.E0050.getCode(), ResponseCodeEnum.E0050.getInfo());
+        }
         if (StringUtils.isNotBlank(team.getTeamId()) || StringUtils.isNotBlank(user.getInviteId()) || team.getTierId() != null) {
             throw new AppException(ResponseCodeEnum.E0046.getCode(), ResponseCodeEnum.E0046.getInfo());
         }

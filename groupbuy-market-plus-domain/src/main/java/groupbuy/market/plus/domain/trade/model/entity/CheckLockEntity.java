@@ -19,6 +19,12 @@ public class CheckLockEntity {
      */
     private Long activityId;
 
+    /** 老带新资格所属店铺，空表示不限新老客。 */
+    private String eligibilityShopId;
+
+    /** 本次商城订单号，查询历史次数时排除。 */
+    private String outTradeNo;
+
     /** 本次锁单商品 ID */
     private String goodsId;
 

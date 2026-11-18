@@ -86,14 +86,14 @@ public class ActivityAdminController {
                 .map(tier -> tier == null ? null : new GroupBuyTierVO(tier.tierId(), tier.targetCount(), tier.memberPrice()))
                 .toList();
         return new ActivityDraftVO(draft.name(), draft.goodsId(), draft.source(), draft.channel(),
-                draft.startTime(), draft.endTime(), draft.validMinutes(), draft.userLimit(), tiers, draft.skipGroupEnabled(), draft.skipGroupPrice());
+                draft.startTime(), draft.endTime(), draft.validMinutes(), draft.userLimit(), tiers, draft.skipGroupEnabled(), draft.skipGroupPrice(), draft.eligibilityShopId());
     }
 
     private ActivityAdminDTO.Draft toDto(ActivityDraftVO draft) {
         List<ActivityAdminDTO.Tier> tiers = draft.tiers().stream().map(tier -> new ActivityAdminDTO.Tier(
                 tier.tierId(), tier.targetCount(), tier.memberPrice(), GroupBuyPrice.leaderPrice(tier.memberPrice()))).toList();
         return new ActivityAdminDTO.Draft(draft.name(), draft.goodsId(), draft.source(), draft.channel(),
-                draft.startTime(), draft.endTime(), draft.validMinutes(), draft.userLimit(), tiers, draft.skipGroupEnabled(), draft.skipGroupPrice());
+                draft.startTime(), draft.endTime(), draft.validMinutes(), draft.userLimit(), tiers, draft.skipGroupEnabled(), draft.skipGroupPrice(), draft.eligibilityShopId());
     }
 
     private ActivityAdminDTO.Activity toDto(ManagedActivityEntity activity) {

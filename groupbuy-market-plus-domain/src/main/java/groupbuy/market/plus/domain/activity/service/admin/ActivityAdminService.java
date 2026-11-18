@@ -45,6 +45,8 @@ public class ActivityAdminService {
     public ActivityDraftVO preview(ActivityDraftVO draft) {
         if (draft == null || !text(draft.name(), 64) || !text(draft.goodsId(), 32)
                 || !text(draft.source(), 16) || !text(draft.channel(), 16)
+                || draft.eligibilityShopId() != null && (!text(draft.eligibilityShopId(), 64)
+                     || draft.eligibilityShopId().codePoints().anyMatch(Character::isISOControl))
                 || draft.startTime() == null || draft.endTime() == null || !draft.startTime().isBefore(draft.endTime())
                 || draft.validMinutes() == null || draft.validMinutes() < 1 || draft.validMinutes() > 10080
                 || draft.userLimit() == null || draft.userLimit() < 1 || draft.userLimit() > 10000
@@ -57,6 +59,9 @@ public class ActivityAdminService {
             throw failure(ResponseCodeEnum.E0040);
         }
         boolean skipGroupEnabled = Boolean.TRUE.equals(draft.skipGroupEnabled());
+        if (skipGroupEnabled && draft.eligibilityShopId() != null) {
+            throw failure(ResponseCodeEnum.E0050);
+        }
         if (skipGroupEnabled && !GroupBuyPrice.isValidOffer(draft.skipGroupPrice(), product.originalPrice())
                 || !skipGroupEnabled && draft.skipGroupPrice() != null) {
             throw failure(ResponseCodeEnum.E0044);
@@ -64,7 +69,7 @@ public class ActivityAdminService {
         return new ActivityDraftVO(draft.name().strip(), draft.goodsId(), draft.source(), draft.channel(),
                 draft.startTime(), draft.endTime(), draft.validMinutes(), draft.userLimit(),
                 GroupBuyTierVO.validate(draft.tiers(), product.originalPrice()), skipGroupEnabled,
-                skipGroupEnabled ? draft.skipGroupPrice().setScale(2) : null);
+                skipGroupEnabled ? draft.skipGroupPrice().setScale(2) : null, draft.eligibilityShopId());
     }
 
     /** 保存新草稿。 */

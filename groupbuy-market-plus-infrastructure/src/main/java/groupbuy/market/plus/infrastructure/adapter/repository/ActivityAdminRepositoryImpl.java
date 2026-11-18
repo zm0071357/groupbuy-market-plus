@@ -102,7 +102,8 @@ public class ActivityAdminRepositoryImpl implements ActivityAdminRepository {
         }
         SCSkuActivity mapping = SCSkuActivity.builder().activityId(id).goodsId(sku.getGoodsId())
                 .source(sku.getSource()).channel(sku.getChannel()).tiersJson(encode(tiers))
-                .skipGroupPrice(Boolean.TRUE.equals(expectedDraft.skipGroupEnabled()) ? expectedDraft.skipGroupPrice() : null).build();
+                .skipGroupPrice(Boolean.TRUE.equals(expectedDraft.skipGroupEnabled()) ? expectedDraft.skipGroupPrice() : null)
+                .eligibilityShopId(expectedDraft.eligibilityShopId()).build();
 
         try {
             activityDao.insertManaged(Activity.builder().activityId(id).activityName(expectedDraft.name())

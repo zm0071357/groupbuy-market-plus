@@ -142,6 +142,7 @@ public class TradeController implements TradeService {
                             .teamId(lockOrderRequestDTO.getTeamId())
                             .tierId(lockOrderRequestDTO.getTierId())
                             .skipGroup(lockOrderRequestDTO.getSkipGroup())
+                            .eligibilityShopId(trialBalanceEntity.getActivityVO().getEligibilityShopId())
                             .openingEnabled(trialBalanceEntity.getActivityVO().getOpeningEnabled())
                             .activityId(lockOrderRequestDTO.getActivityId())
                             .goodsId(lockOrderRequestDTO.getGoodsId())

@@ -29,6 +29,9 @@ public class GroupBuyTeamEntity {
      */
     private Long activityId;
 
+    /** 老带新资格所属店铺，空表示不限新老客。 */
+    private String eligibilityShopId;
+
     /** 运营活动的开团开关，历史活动为空。 */
     private Boolean openingEnabled;
 

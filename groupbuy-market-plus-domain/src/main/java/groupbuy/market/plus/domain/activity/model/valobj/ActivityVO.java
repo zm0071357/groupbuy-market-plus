@@ -19,6 +19,9 @@ public class ActivityVO {
      */
     private Long activityId;
 
+    /** 老带新资格所属店铺，空表示不限新老客。 */
+    private String eligibilityShopId;
+
     /** 活动配置的免拼实付价，空表示未启用。 */
     private BigDecimal skipGroupPrice;
 

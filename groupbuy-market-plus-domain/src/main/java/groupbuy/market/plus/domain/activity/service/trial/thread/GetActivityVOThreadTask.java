@@ -36,6 +36,7 @@ public class GetActivityVOThreadTask implements Callable<ActivityVO> {
         if (activity != null) {
             activity.setTiers(scSkuActivityVO.getTiers());
             activity.setSkipGroupPrice(scSkuActivityVO.getSkipGroupPrice());
+            activity.setEligibilityShopId(scSkuActivityVO.getEligibilityShopId());
         }
         return activity;
     }

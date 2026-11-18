@@ -129,7 +129,7 @@ public class TieredGroupBuyUnitTest {
         ReflectionTestUtils.setField(lockService, "tradeRepository", repository);
         ReflectionTestUtils.setField(lockService, "redissonClient", redis);
         ReflectionTestUtils.setField(lockService, "lockOrderLink", new LockOrderLinkFactory()
-                .lockOrderLink(activity, invite, team, user, stock));
+                .lockOrderLink(activity, invite, team, user, new CustomerEligibilityFilter(), stock));
         ReflectionTestUtils.setField(tradeController, "lockOrderService", lockService);
         ReflectionTestUtils.setField(tradeController, "indexGroupBuyMarketService", trialService);
         setTrial(TIERS, "100");

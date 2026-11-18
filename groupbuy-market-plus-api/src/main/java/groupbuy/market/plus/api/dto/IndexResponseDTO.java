@@ -31,6 +31,9 @@ public class IndexResponseDTO {
     /** 可用的免拼配置及当前用户进度，未开放时为空。 */
     private SkipGroup skipGroup;
 
+    /** 老带新活动的用户资格，仅在活动配置了老带新时返回。 */
+    private CustomerEligibility customerEligibility;
+
     /**
      * 拼团组队信息
      */
@@ -174,4 +177,6 @@ public class IndexResponseDTO {
     }
     /** 商品免拼实付价（元）、可用次数和距离下次获得机会的订单数。 */
     public record SkipGroup(BigDecimal payPrice, long available, long ordersUntilNext) {}
+    /** 当前用户能否开团或参团及对应的拒绝原因。 */
+    public record CustomerEligibility(boolean canOpen, boolean canJoin, String openRejectCode, String joinRejectCode) {}
 }
